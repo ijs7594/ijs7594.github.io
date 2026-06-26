@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>貴焿技能中心 · Skills Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:   #2C1A0E;
+      --brown-mid:    #5C3317;
+      --brown-main:   #8B5E3C;
+      --caramel:      #C17B4E;
+      --sand:         #D4A574;
+      --cream:        #F5EDE0;
+      --warm-white:   #FAF7F2;
+      --card-bg:      #FFFFFF;
+      --text-dark:    #2C1A0E;
+      --text-mid:     #6B4C35;
+      --text-light:   #9E7B60;
+      --green:        #4CAF7D;
+      --blue:         #4A90C4;
+      --purple:       #8B6BAE;
+      --border:       #EDE0D0;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px;
+      min-width: 200px;
+      background: var(--brown-dark);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      position: fixed;
+      height: 100vh;
+      top: 0; left: 0;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--caramel);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .brand-name {
+      color: var(--cream);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .brand-sub {
+      color: var(--sand);
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    nav { padding: 16px 0; flex: 1; }
+
+    .nav-section-label {
+      color: rgba(255,255,255,0.3);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      padding: 8px 16px 4px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 16px;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 0;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255,255,255,0.08);
+      color: var(--cream);
+    }
+
+    .nav-item.active {
+      border-left: 3px solid var(--caramel);
+      color: var(--sand);
+    }
+
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.3);
+      font-size: 11px;
+    }
+
+    /* ── Main ── */
+    .main {
+      margin-left: 200px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .topbar-sub {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+
+    .topbar-badge {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      color: var(--text-mid);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .content {
+      padding: 28px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1;
+    }
+
+    .stat-unit {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    /* ── Section Header ── */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .section-count {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    /* ── Skill Cards ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .skill-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      transition: box-shadow 0.2s, transform 0.15s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skill-card:hover {
+      box-shadow: 0 4px 18px rgba(44,26,14,0.1);
+      transform: translateY(-2px);
+    }
+
+    .skill-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .skill-card.green::before { background: var(--green); }
+    .skill-card.caramel::before { background: var(--caramel); }
+    .skill-card.purple::before { background: var(--purple); }
+
+    .skill-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .skill-card.green .skill-icon { background: rgba(76,175,125,0.12); }
+    .skill-card.caramel .skill-icon { background: rgba(193,123,78,0.12); }
+    .skill-card.purple .skill-icon { background: rgba(139,107,174,0.12); }
+
+    .skill-cmd {
+      font-size: 11px;
+      font-family: "SF Mono", "Menlo", monospace;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    .skill-card.green .skill-cmd { color: var(--green); }
+    .skill-card.caramel .skill-cmd { color: var(--caramel); }
+    .skill-card.purple .skill-cmd { color: var(--purple); }
+
+    .skill-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+
+    .skill-desc {
+      font-size: 12.5px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .skill-tag {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--cream);
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+    }
+
+    .skill-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .skill-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--green);
+    }
+
+    .skill-status::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .skill-use-btn {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .skill-use-btn:hover { opacity: 0.8; }
+
+    .skill-card.green .skill-use-btn { background: rgba(76,175,125,0.15); color: var(--green); }
+    .skill-card.caramel .skill-use-btn { background: rgba(193,123,78,0.15); color: var(--caramel); }
+    .skill-card.purple .skill-use-btn { background: rgba(139,107,174,0.15); color: var(--purple); }
+
+    /* ── Flow Cards ── */
+    .flow-section { margin-bottom: 28px; }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .flow-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .flow-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .flow-step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-mid);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text {
+      font-size: 12px;
+      color: var(--text-mid);
+      line-height: 1.5;
+    }
+
+    /* ── Quote ── */
+    .quote-bar {
+      background: var(--brown-dark);
+      border-radius: 12px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .quote-icon { font-size: 22px; }
+
+    .quote-text {
+      font-size: 13px;
+      color: var(--cream);
+      font-style: italic;
+      opacity: 0.9;
+    }
+
+    .quote-src {
+      font-size: 11px;
+      color: var(--sand);
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .skills-grid, .flow-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🍜</div>
+    <div>
+      <div class="brand-name">貴焿</div>
+      <div class="brand-sub">技能中心</div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-section-label">主選單</div>
+    <a class="nav-item active" href="#">
+      <span class="nav-icon">⚡</span> 技能總覽
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">💬</span> 職涯對話
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📋</span> 學習打卡
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">🌱</span> 新人引導
+    </a>
+
+    <div class="nav-section-label" style="margin-top:12px;">分身</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🌾</span> 漢柏分身
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    貴焿古早味麵線羹<br>
+    Skills v1.0
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">技能中心</div>
+      <div class="topbar-sub">所有技能由漢柏分身提供支援</div>
+    </div>
+    <div class="topbar-badge">3 個技能已啟用</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">技能數量</div>
+        <div class="stat-value">3</div>
+        <div class="stat-unit">個已安裝</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">使用方式</div>
+        <div class="stat-value">/</div>
+        <div class="stat-unit">輸入指令啟動</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">對話引導</div>
+        <div class="stat-value">教練</div>
+        <div class="stat-unit">式一問一答</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">版本</div>
+        <div class="stat-value">v1</div>
+        <div class="stat-unit">持續優化中</div>
+      </div>
+    </div>
+
+    <!-- Quote -->
+    <div class="quote-bar">
+      <div class="quote-icon">✦</div>
+      <div>
+        <div class="quote-text">「使人和睦的人有福了。」</div>
+        <div class="quote-src">馬太福音 5:9 · 漢柏分身核心精神</div>
+      </div>
+    </div>
+
+    <!-- Skill Cards -->
+    <div class="section-header">
+      <div class="section-title">可用技能</div>
+      <div class="section-count">3 個</div>
+    </div>
+
+    <div class="skills-grid">
+
+      <!-- Career Chat -->
+      <div class="skill-card green">
+        <div class="skill-icon">💬</div>
+        <div class="skill-cmd">/career-chat</div>
+        <div class="skill-name">職涯對話</div>
+        <div class="skill-desc">
+          教練式一對一引導，幫你找到自己的方向。不直接給答案，用問題帶你挖掘內在的答案。
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">職涯引導</span>
+          <span class="skill-tag">教練式</span>
+          <span class="skill-tag">一對一</span>
+        </div>
+        <div class="skill-footer">
+          <div class="skill-status">啟用中</div>
+          <button class="skill-use-btn">啟動 →</button>
+        </div>
+      </div>
+
+      <!-- Daily Checkin -->
+      <div class="skill-card caramel">
+        <div class="skill-icon">📋</div>
+        <div class="skill-cmd">/daily-checkin</div>
+        <div class="skill-name">每日學習打卡</div>
+        <div class="skill-desc">
+          四個問題，五分鐘完成。記錄今天學了什麼、遇到什麼、亮點是什麼，讓成長有跡可循。
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">每日習慣</span>
+          <span class="skill-tag">學習記錄</span>
+          <span class="skill-tag">成長追蹤</span>
+        </div>
+        <div class="skill-footer">
+          <div class="skill-status">啟用中</div>
+          <button class="skill-use-btn">啟動 →</button>
+        </div>
+      </div>
+
+      <!-- Onboard -->
+      <div class="skill-card purple">
+        <div class="skill-icon">🌱</div>
+        <div class="skill-cmd">/team-onboard</div>
+        <div class="skill-name">新人引導</div>
+        <div class="skill-desc">
+          新夥伴加入第一天，由漢柏分身陪著走。介紹貴焿文化、第一週任務清單、遇到問題怎麼辦。
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">新人歡迎</span>
+          <span class="skill-tag">文化傳遞</span>
+          <span class="skill-tag">第一週</span>
+        </div>
+        <div class="skill-footer">
+          <div class="skill-status">啟用中</div>
+          <button class="skill-use-btn">啟動 →</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Flow Details -->
+    <div class="flow-section">
+      <div class="section-header">
+        <div class="section-title">技能流程</div>
+        <div class="section-count">每個技能的對話步驟</div>
+      </div>
+
+      <div class="flow-grid">
+
+        <div class="flow-card">
+          <div class="flow-card-title">💬 職涯對話流程</div>
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-text">確認你今天想聊什麼</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-text">依狀況進入：方向探索 / 卡關排除 / 角色轉換 / 被看見</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-text">用問題帶你找到自己的答案</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">4</div>
+            <div class="step-text">結尾確認今天的清晰度，給一句鼓勵</div>
+          </div>
+        </div>
+
+        <div class="flow-card">
+          <div class="flow-card-title">📋 每日打卡流程</div>
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-text">今天你做了什麼？</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-text">有沒有遇到卡關？</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-text">今天做得不錯的一件事？</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">4</div>
+            <div class="step-text">明天最想完成的一件事？→ 自動生成打卡記錄</div>
+          </div>
+        </div>
+
+        <div class="flow-card">
+          <div class="flow-card-title">🌱 新人引導流程</div>
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-text">歡迎 + 自我介紹</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-text">介紹貴焿文化與核心精神</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-text">給出第一週四項任務清單</div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">4</div>
+            <div class="step-text">說明求助管道，給出溫暖送別</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
