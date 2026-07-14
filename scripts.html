@@ -350,6 +350,11 @@
       <div class="modal-text" id="modal-cta"></div>
     </div>
 
+    <div class="modal-section" id="notes-section">
+      <div class="modal-label">拍攝備註</div>
+      <div class="modal-text" id="modal-notes" style="font-size:13px;line-height:2;color:var(--text-mid)"></div>
+    </div>
+
     <div class="modal-actions">
       <button class="copy-btn" onclick="copyScript()">複製腳本</button>
       <button class="modal-select-btn" id="modal-select-btn" onclick="modalAction('selected')">✅ 選拍</button>
@@ -496,6 +501,10 @@
     const ctaSec = document.getElementById('cta-section');
     if (s.cta) { document.getElementById('modal-cta').textContent = s.cta; ctaSec.style.display = 'block'; }
     else { ctaSec.style.display = 'none'; }
+
+    const notesSec = document.getElementById('notes-section');
+    if (s.production_notes) { document.getElementById('modal-notes').textContent = s.production_notes; notesSec.style.display = 'block'; }
+    else { notesSec.style.display = 'none'; }
 
     const selBtn = document.getElementById('modal-select-btn');
     const trBtn  = document.getElementById('modal-trash-btn');
