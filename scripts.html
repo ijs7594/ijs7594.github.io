@@ -64,11 +64,7 @@
     .nav-icon { font-size: 14px; width: 18px; text-align: center; }
     .nav-text { font-size: 12px; color: #fff; }
     .nav-sub  { font-size: 10px; color: var(--text-light); }
-
-    .sidebar-bottom {
-      padding: 16px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
+    .sidebar-bottom { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
 
     /* ── Main ── */
     .main { flex: 1; overflow-y: auto; background: var(--warm-white); }
@@ -81,7 +77,6 @@
     }
     .main-header-left h1 { font-size: 20px; font-weight: 700; color: var(--text-dark); }
     .main-header-left .sync-info { font-size: 12px; color: var(--text-light); margin-top: 2px; }
-
     .content { padding: 24px 28px; }
 
     /* ── Password Gate ── */
@@ -92,8 +87,7 @@
       z-index: 100;
     }
     .gate-box {
-      background: var(--card-bg);
-      border-radius: 16px; padding: 40px 36px;
+      background: var(--card-bg); border-radius: 16px; padding: 40px 36px;
       width: 360px; text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
@@ -102,8 +96,7 @@
     .gate-box input {
       width: 100%; padding: 10px 14px;
       border: 1px solid var(--border); border-radius: 8px;
-      font-size: 14px; margin-bottom: 12px; outline: none;
-      font-family: inherit;
+      font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit;
     }
     .gate-box input:focus { border-color: var(--caramel); }
     .gate-box button {
@@ -116,19 +109,18 @@
     .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
 
     /* ── Filter Tabs ── */
-    .filter-bar {
-      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
-    }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
     .filter-btn {
       padding: 6px 16px; border-radius: 20px;
       border: 1px solid var(--border);
       background: white; font-size: 13px;
-      color: var(--text-mid); cursor: pointer;
-      transition: all 0.15s;
+      color: var(--text-mid); cursor: pointer; transition: all 0.15s;
     }
-    .filter-btn.active {
-      background: var(--brown-main); color: white; border-color: var(--brown-main);
-    }
+    .filter-btn.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
+    .filter-btn.trash-btn { border-color: #fca5a5; color: #dc2626; }
+    .filter-btn.trash-btn.active { background: #dc2626; border-color: #dc2626; color: white; }
+    .filter-btn.select-btn { border-color: #86efac; color: #16a34a; }
+    .filter-btn.select-btn.active { background: #16a34a; border-color: #16a34a; color: white; }
 
     /* ── Script Cards ── */
     .scripts-grid {
@@ -136,24 +128,25 @@
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 16px;
     }
-
     .script-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px; padding: 20px;
-      cursor: pointer;
       transition: box-shadow 0.15s, border-color 0.15s;
+      display: flex; flex-direction: column;
     }
-    .script-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: var(--caramel); }
+    .script-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .script-card.selected { border-color: #86efac; background: #f0fdf4; }
+    .script-card.trashed { opacity: 0.6; }
 
     .card-top {
       display: flex; align-items: flex-start; justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 12px; cursor: pointer;
     }
     .card-title { font-size: 15px; font-weight: 700; color: var(--text-dark); line-height: 1.4; }
     .platform-badge {
       font-size: 11px; font-weight: 600; padding: 3px 10px;
-      border-radius: 12px; white-space: nowrap; margin-left: 8px;
+      border-radius: 12px; white-space: nowrap; margin-left: 8px; flex-shrink: 0;
     }
     .badge-ig    { background: #fce7f3; color: #be185d; }
     .badge-yt    { background: #fee2e2; color: #dc2626; }
@@ -162,20 +155,36 @@
 
     .card-hook {
       font-size: 13px; color: var(--text-mid);
-      line-height: 1.6; margin-bottom: 12px;
+      line-height: 1.6; margin-bottom: 12px; cursor: pointer;
       display: -webkit-box; -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical; overflow: hidden;
+      -webkit-box-orient: vertical; overflow: hidden; flex: 1;
     }
 
     .card-meta {
       display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
     }
     .card-date { font-size: 11px; color: var(--text-light); }
-    .card-status {
-      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    .card-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+    .status-draft    { background: #fef9c3; color: #92400e; }
+    .status-selected { background: #dcfce7; color: #166534; }
+    .status-published{ background: #dbeafe; color: #1d4ed8; }
+    .status-trashed  { background: #fee2e2; color: #dc2626; }
+
+    /* ── Card Actions ── */
+    .card-actions { display: flex; gap: 8px; }
+    .action-btn {
+      flex: 1; padding: 7px 0; border-radius: 8px;
+      border: 1px solid var(--border); font-size: 12px;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+      background: white; color: var(--text-mid);
     }
-    .status-draft { background: #fef9c3; color: #92400e; }
-    .status-published { background: #dcfce7; color: #166534; }
+    .action-btn:hover { border-color: var(--caramel); color: var(--brown-main); }
+    .action-select { border-color: #86efac; color: #16a34a; }
+    .action-select:hover { background: #f0fdf4; }
+    .action-trash  { border-color: #fca5a5; color: #dc2626; }
+    .action-trash:hover { background: #fff5f5; }
+    .action-restore { border-color: var(--border); color: var(--text-mid); }
 
     /* ── Script Modal ── */
     .modal-overlay {
@@ -183,15 +192,12 @@
       background: rgba(0,0,0,0.5);
       display: none; align-items: flex-start;
       justify-content: center;
-      padding: 40px 20px; z-index: 200;
-      overflow-y: auto;
+      padding: 40px 20px; z-index: 200; overflow-y: auto;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--card-bg);
-      border-radius: 16px; padding: 32px;
-      width: 100%; max-width: 680px;
-      position: relative;
+      background: var(--card-bg); border-radius: 16px; padding: 32px;
+      width: 100%; max-width: 680px; position: relative;
     }
     .modal-close {
       position: absolute; top: 16px; right: 16px;
@@ -211,18 +217,29 @@
       background: var(--warm-white); border-radius: 8px;
       padding: 16px; border: 1px solid var(--border);
     }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
     .copy-btn {
-      margin-top: 8px; padding: 7px 16px;
+      padding: 9px 20px;
       background: var(--brown-main); color: white;
       border: none; border-radius: 6px;
-      font-size: 13px; cursor: pointer;
+      font-size: 13px; cursor: pointer; font-family: inherit;
     }
     .copy-btn:hover { background: var(--brown-mid); }
+    .modal-select-btn {
+      padding: 9px 20px; border-radius: 6px;
+      border: 1px solid #86efac; color: #16a34a;
+      background: white; font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .modal-trash-btn {
+      padding: 9px 20px; border-radius: 6px;
+      border: 1px solid #fca5a5; color: #dc2626;
+      background: white; font-size: 13px; cursor: pointer; font-family: inherit;
+      margin-left: auto;
+    }
 
-    /* ── Empty state ── */
-    .empty { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    /* ── Empty / Loading ── */
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-light); grid-column: 1/-1; }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
-
     .loading { text-align: center; padding: 40px; color: var(--text-light); }
   </style>
 </head>
@@ -293,19 +310,20 @@
   <div class="main-header">
     <div class="main-header-left">
       <h1>腳本庫</h1>
-      <div class="sync-info">IG · YouTube · TikTok 內容管理</div>
+      <div class="sync-info" id="script-count">載入中…</div>
     </div>
     <button class="filter-btn" onclick="loadScripts()" style="border-color:var(--caramel);color:var(--caramel)">↻ 重新整理</button>
   </div>
 
   <div class="content">
     <div class="filter-bar">
-      <button class="filter-btn active" onclick="setFilter('all', this)">全部</button>
-      <button class="filter-btn" onclick="setFilter('IG', this)">📸 IG</button>
-      <button class="filter-btn" onclick="setFilter('YouTube', this)">▶️ YouTube</button>
-      <button class="filter-btn" onclick="setFilter('TikTok', this)">🎵 TikTok</button>
+      <button class="filter-btn active"    onclick="setFilter('all',this)">全部</button>
+      <button class="filter-btn"           onclick="setFilter('IG',this)">📸 IG</button>
+      <button class="filter-btn"           onclick="setFilter('YouTube',this)">▶️ YouTube</button>
+      <button class="filter-btn"           onclick="setFilter('TikTok',this)">🎵 TikTok</button>
+      <button class="filter-btn select-btn" onclick="setFilter('selected',this)">✅ 選拍</button>
+      <button class="filter-btn trash-btn" onclick="setFilter('trashed',this)">🗑 回收桶</button>
     </div>
-
     <div id="scripts-container" class="scripts-grid">
       <div class="loading">載入中…</div>
     </div>
@@ -323,16 +341,19 @@
       <div class="modal-label">開場 Hook</div>
       <div class="modal-text" id="modal-hook"></div>
     </div>
-
     <div class="modal-section">
       <div class="modal-label">完整腳本</div>
       <div class="modal-text" id="modal-content"></div>
-      <button class="copy-btn" onclick="copyScript()">複製腳本</button>
     </div>
-
     <div class="modal-section" id="cta-section">
       <div class="modal-label">CTA</div>
       <div class="modal-text" id="modal-cta"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="copy-btn" onclick="copyScript()">複製腳本</button>
+      <button class="modal-select-btn" id="modal-select-btn" onclick="modalAction('selected')">✅ 選拍</button>
+      <button class="modal-trash-btn" id="modal-trash-btn" onclick="modalAction('trashed')">🗑 不採用</button>
     </div>
   </div>
 </div>
@@ -344,6 +365,7 @@
 
   let currentFilter = 'all';
   let allScripts = [];
+  let currentModalId = null;
 
   // ── Auth ──
   function checkPw() {
@@ -356,15 +378,14 @@
       document.getElementById('pw-error').textContent = '密碼錯誤';
     }
   }
-
   if (sessionStorage.getItem('scripts_auth') === '1') {
     document.getElementById('gate').style.display = 'none';
     loadScripts();
   }
 
   // ── Filter ──
-  function setFilter(platform, btn) {
-    currentFilter = platform;
+  function setFilter(f, btn) {
+    currentFilter = f;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderScripts();
@@ -386,66 +407,119 @@
 
   // ── Render ──
   function renderScripts() {
-    const filtered = currentFilter === 'all'
-      ? allScripts
-      : allScripts.filter(s => s.platform === currentFilter);
+    let filtered;
+    if (currentFilter === 'trashed') {
+      filtered = allScripts.filter(s => s.status === 'trashed');
+    } else if (currentFilter === 'selected') {
+      filtered = allScripts.filter(s => s.status === 'selected');
+    } else if (currentFilter === 'all') {
+      filtered = allScripts.filter(s => s.status !== 'trashed');
+    } else {
+      filtered = allScripts.filter(s => s.platform === currentFilter && s.status !== 'trashed');
+    }
+
+    const active = allScripts.filter(s => s.status !== 'trashed');
+    const selected = allScripts.filter(s => s.status === 'selected');
+    const trashed = allScripts.filter(s => s.status === 'trashed');
+    document.getElementById('script-count').textContent =
+      `${active.length} 支腳本 · ${selected.length} 支選拍 · ${trashed.length} 支回收`;
 
     const container = document.getElementById('scripts-container');
-
     if (filtered.length === 0) {
-      container.innerHTML = `<div class="empty" style="grid-column:1/-1">
-        <div class="empty-icon">📭</div>
-        <div>還沒有腳本</div>
-        <div style="font-size:12px;margin-top:6px">傳訊息給漢柏分身，請他幫你生成第一支腳本</div>
+      const msgs = {
+        trashed: '回收桶是空的',
+        selected: '還沒有選拍的腳本',
+        all: '還沒有腳本'
+      };
+      container.innerHTML = `<div class="empty">
+        <div class="empty-icon">${currentFilter === 'trashed' ? '🗑' : '📭'}</div>
+        <div>${msgs[currentFilter] || '此分類沒有腳本'}</div>
       </div>`;
       return;
     }
 
-    container.innerHTML = filtered.map(s => `
-      <div class="script-card" onclick="openModal(${s.id})">
-        <div class="card-top">
+    container.innerHTML = filtered.map(s => {
+      const isSelected = s.status === 'selected';
+      const isTrashed  = s.status === 'trashed';
+      const actions = isTrashed
+        ? `<button class="action-btn action-restore" onclick="updateStatus(${s.id},'draft',event)">↩ 還原</button>`
+        : `<button class="action-btn action-select ${isSelected?'':'action-select'}" onclick="updateStatus(${s.id},${isSelected?"'draft'":"'selected'"},event)">${isSelected ? '✅ 已選拍' : '選拍'}</button>
+           <button class="action-btn action-trash" onclick="updateStatus(${s.id},'trashed',event)">🗑</button>`;
+
+      return `<div class="script-card ${isSelected?'selected':''} ${isTrashed?'trashed':''}" id="card-${s.id}">
+        <div class="card-top" onclick="openModal(${s.id})">
           <div class="card-title">${esc(s.title)}</div>
           <span class="platform-badge ${badgeClass(s.platform)}">${esc(s.platform)}</span>
         </div>
-        <div class="card-hook">${esc(s.hook || s.content.slice(0, 80))}</div>
+        <div class="card-hook" onclick="openModal(${s.id})">${esc(s.hook || s.content.slice(0,80))}</div>
         <div class="card-meta">
           <div class="card-date">${formatDate(s.created_at)}</div>
-          <span class="card-status ${s.status === 'published' ? 'status-published' : 'status-draft'}">${s.status === 'published' ? '已發佈' : '草稿'}</span>
+          <span class="card-status ${statusClass(s.status)}">${statusLabel(s.status)}</span>
         </div>
-      </div>
-    `).join('');
+        <div class="card-actions">${actions}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Update Status ──
+  async function updateStatus(id, newStatus, e) {
+    if (e) e.stopPropagation();
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/scripts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json', Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const s = allScripts.find(x => x.id === id);
+      if (s) s.status = newStatus;
+      renderScripts();
+    } catch {}
   }
 
   // ── Modal ──
   function openModal(id) {
     const s = allScripts.find(x => x.id === id);
     if (!s) return;
+    currentModalId = id;
 
     document.getElementById('modal-platform').innerHTML = `<span class="platform-badge ${badgeClass(s.platform)}">${esc(s.platform)}</span>`;
     document.getElementById('modal-title').textContent = s.title;
     document.getElementById('modal-content').textContent = s.content;
 
     const hookSec = document.getElementById('hook-section');
-    if (s.hook) {
-      document.getElementById('modal-hook').textContent = s.hook;
-      hookSec.style.display = 'block';
-    } else {
-      hookSec.style.display = 'none';
-    }
+    if (s.hook) { document.getElementById('modal-hook').textContent = s.hook; hookSec.style.display = 'block'; }
+    else { hookSec.style.display = 'none'; }
 
     const ctaSec = document.getElementById('cta-section');
-    if (s.cta) {
-      document.getElementById('modal-cta').textContent = s.cta;
-      ctaSec.style.display = 'block';
+    if (s.cta) { document.getElementById('modal-cta').textContent = s.cta; ctaSec.style.display = 'block'; }
+    else { ctaSec.style.display = 'none'; }
+
+    const selBtn = document.getElementById('modal-select-btn');
+    const trBtn  = document.getElementById('modal-trash-btn');
+    if (s.status === 'selected') {
+      selBtn.textContent = '↩ 取消選拍'; selBtn.style.borderColor = '#fca5a5'; selBtn.style.color = '#dc2626';
     } else {
-      ctaSec.style.display = 'none';
+      selBtn.textContent = '✅ 選拍'; selBtn.style.borderColor = '#86efac'; selBtn.style.color = '#16a34a';
     }
+    trBtn.textContent = s.status === 'trashed' ? '↩ 還原' : '🗑 不採用';
 
     document.getElementById('modal').classList.add('open');
   }
 
-  function closeModal() {
-    document.getElementById('modal').classList.remove('open');
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+  async function modalAction(action) {
+    if (!currentModalId) return;
+    const s = allScripts.find(x => x.id === currentModalId);
+    if (!s) return;
+    let newStatus;
+    if (action === 'selected') newStatus = s.status === 'selected' ? 'draft' : 'selected';
+    else newStatus = s.status === 'trashed' ? 'draft' : 'trashed';
+    await updateStatus(currentModalId, newStatus, null);
+    closeModal();
   }
 
   function copyScript() {
@@ -458,20 +532,11 @@
   }
 
   // ── Helpers ──
-  function badgeClass(platform) {
-    const map = { IG: 'badge-ig', YouTube: 'badge-yt', TikTok: 'badge-tt' };
-    return map[platform] || 'badge-other';
-  }
-
-  function esc(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', year: 'numeric' });
-  }
+  function badgeClass(p) { return {IG:'badge-ig',YouTube:'badge-yt',TikTok:'badge-tt'}[p]||'badge-other'; }
+  function statusClass(s) { return {draft:'status-draft',selected:'status-selected',published:'status-published',trashed:'status-trashed'}[s]||'status-draft'; }
+  function statusLabel(s) { return {draft:'草稿',selected:'選拍',published:'已發布',trashed:'不採用'}[s]||s; }
+  function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function formatDate(iso) { return iso ? new Date(iso).toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',year:'numeric'}) : ''; }
 </script>
 </body>
 </html>
