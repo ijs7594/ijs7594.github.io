@@ -58,17 +58,6 @@
     .add-store-btn:hover { background: var(--brown-mid); }
     .content { flex: 1; overflow-y: auto; padding: 24px; }
 
-    /* ── Password Gate ── */
-    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .gate-box h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
-    .gate-box p { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
-    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
-    .gate-box input:focus { border-color: var(--caramel); }
-    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .gate-box button:hover { background: var(--brown-mid); }
-    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
-
     /* ── Store cards ── */
     .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     .store-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; cursor: pointer; transition: box-shadow 0.15s; }
@@ -209,16 +198,6 @@
 </head>
 <body>
 
-<div class="gate" id="gate">
-  <div class="gate-box">
-    <h2>🔒 展店紀錄</h2>
-    <p>輸入密碼查看展店資料</p>
-    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
-    <button onclick="checkPw()">進入</button>
-    <div class="gate-error" id="pw-error"></div>
-  </div>
-</div>
-
 <nav class="sidebar">
   <div class="sidebar-brand">
     <div class="avatar-sq">🌱</div>
@@ -283,9 +262,9 @@
               <option>客訴</option><option>其他</option>
             </select>
             <select id="log-exp">
-              <option value="5">🌱 小心得 +5</option>
-              <option value="10" selected>🌿 中收穫 +10</option>
-              <option value="20">🌳 大突破 +20</option>
+              <option value="15">🌱 小心得 +15</option>
+              <option value="30" selected>🌿 中收穫 +30</option>
+              <option value="60">🌳 大突破 +60</option>
             </select>
           </div>
           <textarea id="log-content" placeholder="這次學到什麼、遇到什麼、下次會怎麼做不一樣……"></textarea>
