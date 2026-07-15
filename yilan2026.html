@@ -230,6 +230,33 @@
     .note-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
     .note-body  { font-size: 12px; color: var(--text-mid); line-height: 1.7; }
 
+    /* ── Tab bar ── */
+    .tab-bar {
+      display: flex; background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px; gap: 2px; overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 10px 14px; border: none; background: transparent;
+      cursor: pointer; border-bottom: 3px solid transparent;
+      font-family: inherit; transition: all 0.15s; color: var(--text-light);
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .tab-btn .tab-icon { font-size: 16px; }
+    .tab-btn:hover { color: var(--brown-main); background: var(--warm-white); }
+    .tab-btn.active {
+      color: var(--brown-main);
+      border-bottom-color: var(--brown-main);
+    }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
     /* mobile */
     @media (max-width: 640px) {
       .sidebar { display: none; }
@@ -274,7 +301,35 @@
     <div class="trip-badge">🏠 住宿已選定</div>
   </div>
 
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('overview', this)">
+      <span class="tab-icon">🗺️</span>總覽
+    </button>
+    <button class="tab-btn" onclick="switchTab('d1', this)">
+      <span class="tab-icon">1️⃣</span>7/20
+    </button>
+    <button class="tab-btn" onclick="switchTab('d2', this)">
+      <span class="tab-icon">2️⃣</span>7/21
+    </button>
+    <button class="tab-btn" onclick="switchTab('d3', this)">
+      <span class="tab-icon">3️⃣</span>7/22
+    </button>
+    <button class="tab-btn" onclick="switchTab('d4', this)">
+      <span class="tab-icon">4️⃣</span>7/23
+    </button>
+    <button class="tab-btn" onclick="switchTab('hotel', this)">
+      <span class="tab-icon">🏠</span>住宿
+    </button>
+    <button class="tab-btn" onclick="switchTab('notes', this)">
+      <span class="tab-icon">📋</span>備忘
+    </button>
+  </div>
+
   <div class="content">
+
+    <!-- TAB: 總覽 -->
+    <div id="tab-overview" class="tab-panel active">
 
     <!-- 數字總覽 -->
     <div class="summary-row">
@@ -384,7 +439,10 @@
       </div>
     </div>
 
-    <!-- Day 1 -->
+    </div><!-- /tab-overview -->
+
+    <!-- TAB: Day 1 -->
+    <div id="tab-d1" class="tab-panel">
     <div class="day-section">
       <div class="day-header">
         <div class="day-badge">Day 1 · 7/20（一）</div>
@@ -423,7 +481,10 @@
       </div>
     </div>
 
-    <!-- Day 2 -->
+    </div></div><!-- /day-section /tab-d1 -->
+
+    <!-- TAB: Day 2 -->
+    <div id="tab-d2" class="tab-panel">
     <div class="day-section">
       <div class="day-header">
         <div class="day-badge">Day 2 · 7/21（二）</div>
@@ -458,7 +519,10 @@
       </div>
     </div>
 
-    <!-- Day 3 -->
+    </div></div><!-- /day-section /tab-d2 -->
+
+    <!-- TAB: Day 3 -->
+    <div id="tab-d3" class="tab-panel">
     <div class="day-section">
       <div class="day-header">
         <div class="day-badge">Day 3 · 7/22（三）</div>
@@ -499,7 +563,10 @@
       </div>
     </div>
 
-    <!-- Day 4 -->
+    </div></div><!-- /day-section /tab-d3 -->
+
+    <!-- TAB: Day 4 -->
+    <div id="tab-d4" class="tab-panel">
     <div class="day-section">
       <div class="day-header">
         <div class="day-badge">Day 4 · 7/23（四）</div>
@@ -532,7 +599,10 @@
       </div>
     </div>
 
-    <!-- 住宿 -->
+    </div></div><!-- /day-section /tab-d4 -->
+
+    <!-- TAB: 住宿 -->
+    <div id="tab-hotel" class="tab-panel">
     <div class="highlights-card" style="background: linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%); margin-bottom: 16px;">
       <h3 style="color: #95d5b2;">🏠 住宿安排（3晚）</h3>
       <div class="highlight-list">
@@ -560,7 +630,10 @@
       </div>
     </div>
 
-    <!-- 備忘 -->
+    </div><!-- /tab-hotel -->
+
+    <!-- TAB: 備忘 -->
+    <div id="tab-notes" class="tab-panel">
     <div class="notes-grid">
       <div class="note-card">
         <div class="note-title">🎒 行前確認</div>
@@ -606,8 +679,22 @@
       </div>
     </div>
 
-  </div>
-</div>
+    </div>
+    </div><!-- /notes-grid /tab-notes -->
 
+  </div><!-- /content -->
+</div><!-- /main -->
+
+</div><!-- /layout wrapper -->
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+    document.querySelector('.content').scrollTop = 0;
+  }
+</script>
 </body>
 </html>
