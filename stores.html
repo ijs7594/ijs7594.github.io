@@ -139,7 +139,10 @@
     .vstatus-延遲 { background: #FDECEC; color: #C0392B; }
     .vendor-dates { font-size: 12px; color: var(--text-light); margin-bottom: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
     .vendor-dates b { color: var(--text-mid); }
-    .vendor-actions { display: flex; gap: 8px; }
+    .vendor-edit-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+    .vendor-edit-row label { font-size: 12px; color: var(--text-mid); display: flex; flex-direction: column; gap: 4px; }
+    .vendor-edit-row input { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .vendor-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .vendor-actions button { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
     .vendor-actions button:hover { background: var(--cream); }
 
@@ -399,6 +402,7 @@
   let currentTab = 'vendors';
   let currentChecklistCat = '五金驗收';
   let editingChecklistId = null;
+  let editingVendorId = null;
 
   loadAll();
 
@@ -595,7 +599,26 @@
     const el = document.getElementById('vendor-list');
     el.innerHTML = list.length === 0
       ? '<div class="empty"><div class="empty-icon">🔧</div><div>還沒有廠商排程，新增第一筆吧</div></div>'
-      : list.map(v => `<div class="vendor-item">
+      : list.map(v => {
+          if (v.id === editingVendorId) {
+            return `<div class="vendor-item">
+              <div class="vendor-top">
+                <span class="vendor-name">${esc(v.vendor_name)}</span>
+                <span class="vendor-scope">${esc(v.scope || '未分類')}</span>
+              </div>
+              <div class="vendor-edit-row">
+                <label>預計進場 <input type="date" id="edit-vplanned-in-${v.id}" value="${v.planned_in || ''}" /></label>
+                <label>預計出場 <input type="date" id="edit-vplanned-out-${v.id}" value="${v.planned_out || ''}" /></label>
+                <label>實際進場 <input type="date" id="edit-vactual-in-${v.id}" value="${v.actual_in || ''}" /></label>
+                <label>實際出場 <input type="date" id="edit-vactual-out-${v.id}" value="${v.actual_out || ''}" /></label>
+              </div>
+              <div class="vendor-actions">
+                <button onclick="saveVendorEdit('${v.id}')">💾 儲存</button>
+                <button onclick="cancelEditVendor()">取消</button>
+              </div>
+            </div>`;
+          }
+          return `<div class="vendor-item">
           <div class="vendor-top">
             <span class="vendor-name">${esc(v.vendor_name)}</span>
             <span class="vendor-scope">${esc(v.scope || '未分類')}</span>
@@ -609,10 +632,53 @@
           </div>
           <div class="vendor-actions">
             ${!v.actual_in ? `<button onclick="markVendor('${v.id}','in')">登記進場</button>` : ''}
-            ${v.actual_in && !v.actual_out ? `<button onclick="markVendor('${v.id}','out')">登記出場</button>` : ''}
+            ${v.actual_in && !v.actual_out ? `<button onclick="markVendor('${v.id}','out')">✅ 標記完工</button>` : ''}
             ${v.status !== '延遲' && !v.actual_out ? `<button onclick="setVendorDelayed('${v.id}')">標記延遲</button>` : ''}
+            <button onclick="startEditVendor('${v.id}')">✏️ 改時間</button>
+            <button onclick="deleteVendor('${v.id}')">🗑 刪除</button>
           </div>
-        </div>`).join('');
+        </div>`;
+        }).join('');
+  }
+
+  function startEditVendor(id) {
+    editingVendorId = id;
+    renderVendors();
+  }
+
+  function cancelEditVendor() {
+    editingVendorId = null;
+    renderVendors();
+  }
+
+  async function saveVendorEdit(id) {
+    const planned_in  = document.getElementById(`edit-vplanned-in-${id}`).value || null;
+    const planned_out = document.getElementById(`edit-vplanned-out-${id}`).value || null;
+    const actual_in    = document.getElementById(`edit-vactual-in-${id}`).value || null;
+    const actual_out   = document.getElementById(`edit-vactual-out-${id}`).value || null;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ planned_in, planned_out, actual_in, actual_out })
+      });
+      editingVendorId = null;
+      await loadAll();
+      switchTab('vendors');
+    } catch { alert('儲存失敗，請再試一次'); }
+  }
+
+  async function deleteVendor(id) {
+    const v = vendors.find(x => x.id === id);
+    if (!confirm(`確定要刪除「${v ? v.vendor_name : ''}」這筆工程排程嗎？`)) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAll();
+      switchTab('vendors');
+    } catch { alert('刪除失敗，請再試一次'); }
   }
 
   async function addVendor() {
@@ -648,6 +714,9 @@
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify(body)
       });
+      if (direction === 'out') {
+        await awardMilestone(`[vendor-done:${id}]`, `🔧 ${v.vendor_name}（${v.scope || '未分類'}）完工了！`, 10);
+      }
       await loadAll();
       switchTab('vendors');
       await checkMilestones();
