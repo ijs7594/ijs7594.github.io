@@ -6,7 +6,6 @@
   <title>宜蘭家族行 2026 · 漢柏</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
       --brown-dark:  #2C1A0E;
       --brown-mid:   #5C3317;
@@ -20,9 +19,8 @@
       --text-mid:    #6B4C35;
       --text-light:  #9E7B60;
       --border:      #EDE0D0;
-      --green:       #4CAF7D;
-      --blue:        #5B8FD4;
       --teal:        #3AAFA9;
+      --green:       #4CAF7D;
     }
 
     body {
@@ -52,8 +50,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; flex-shrink: 0;
     }
-    .brand-text { color: #fff; }
-    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-name { font-size: 14px; font-weight: 600; color: #fff; }
     .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
     .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
     .nav-item {
@@ -67,201 +64,206 @@
     .nav-text { font-weight: 500; font-size: 13px; }
     .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
 
-    /* ── Main ── */
-    .main {
-      flex: 1; display: flex; flex-direction: column; overflow: hidden;
-    }
+    /* ── Main shell ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Topbar ── */
     .topbar {
       background: var(--card-bg); border-bottom: 1px solid var(--border);
       padding: 14px 24px; display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
     }
     .topbar-icon { font-size: 22px; }
-    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
-    .topbar-sub { font-size: 13px; color: var(--text-light); }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
     .trip-badge {
       margin-left: auto; background: var(--teal); color: #fff;
-      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
     }
-
-    .content { flex: 1; overflow-y: auto; padding: 24px; }
-
-    /* ── Summary card ── */
-    .summary-row {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-      margin-bottom: 28px;
-    }
-    .stat-card {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px; text-align: center;
-    }
-    .stat-num { font-size: 28px; font-weight: 700; color: var(--brown-main); }
-    .stat-label { font-size: 11px; color: var(--text-light); margin-top: 4px; }
-
-    /* ── Day cards ── */
-    .day-section { margin-bottom: 28px; }
-    .day-header {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
-    }
-    .day-badge {
-      background: var(--brown-main); color: #fff;
-      font-size: 12px; font-weight: 700; padding: 4px 12px;
-      border-radius: 20px; white-space: nowrap;
-    }
-    .day-title { font-size: 16px; font-weight: 700; color: var(--text-dark); }
-    .day-theme { font-size: 12px; color: var(--text-light); margin-left: auto; }
-
-    .activity-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px;
-    }
-    .activity-card {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px; position: relative;
-      border-left: 4px solid var(--border);
-    }
-    .activity-card.morning  { border-left-color: #F59E0B; }
-    .activity-card.noon     { border-left-color: var(--caramel); }
-    .activity-card.afternoon{ border-left-color: var(--teal); }
-    .activity-card.evening  { border-left-color: #7C3AED; }
-    .activity-card.night    { border-left-color: #1E40AF; }
-
-    .act-time {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
-      text-transform: uppercase; color: var(--text-light); margin-bottom: 6px;
-    }
-    .act-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
-    .act-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
-    .act-star  {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: #FFF7E6; color: #D97706; font-size: 11px; font-weight: 600;
-      padding: 3px 8px; border-radius: 20px; margin-top: 8px;
-    }
-
-    /* ── Highlights ── */
-    .highlights-card {
-      background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown-mid) 100%);
-      border-radius: 16px; padding: 24px; margin-bottom: 28px; color: #fff;
-    }
-    .highlights-card h3 {
-      font-size: 15px; font-weight: 700; margin-bottom: 16px;
-      color: var(--sand);
-    }
-    .highlight-list { display: flex; flex-direction: column; gap: 12px; }
-    .highlight-item {
-      display: flex; align-items: flex-start; gap: 12px;
-    }
-    .hl-icon {
-      font-size: 20px; flex-shrink: 0; margin-top: 1px;
-    }
-    .hl-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.85); }
-    .hl-text strong { color: #fff; }
-
-    /* ── Flowchart ── */
-    .flowchart-wrap {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px 24px; margin-bottom: 28px;
-    }
-    .flowchart-title {
-      font-size: 13px; font-weight: 700; color: var(--text-dark);
-      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
-    }
-    .flow-row {
-      display: flex; align-items: center; gap: 0;
-      margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px;
-    }
-    .flow-row:last-child { margin-bottom: 0; }
-    .flow-day-tag {
-      flex-shrink: 0; font-size: 10px; font-weight: 700;
-      padding: 5px 10px; border-radius: 20px; margin-right: 10px;
-      color: #fff; white-space: nowrap;
-    }
-    .flow-day-tag.d1 { background: #8B5E3C; }
-    .flow-day-tag.d2 { background: #3AAFA9; }
-    .flow-day-tag.d3 { background: #5B8FD4; }
-    .flow-day-tag.d4 { background: #4CAF7D; }
-    .flow-stop {
-      flex-shrink: 0; font-size: 11px; font-weight: 600;
-      padding: 6px 11px; border-radius: 8px; white-space: nowrap;
-      background: var(--warm-white); border: 1.5px solid var(--border);
-      color: var(--text-dark);
-    }
-    .flow-stop.hotel {
-      border-color: #3AAFA9; background: rgba(58,175,169,0.08);
-      color: #1e7d79;
-    }
-    .flow-stop.star {
-      border-color: var(--caramel); background: rgba(193,123,78,0.08);
-      color: var(--brown-mid);
-    }
-    .flow-stop.home {
-      border-color: #4CAF7D; background: rgba(76,175,125,0.08);
-      color: #2e7d54;
-    }
-    .flow-arrow {
-      flex-shrink: 0; color: var(--border); font-size: 14px;
-      padding: 0 5px; line-height: 1;
-    }
-
-    /* ── Day banner photo ── */
-    .day-banner {
-      width: 100%; height: 180px; object-fit: cover;
-      border-radius: 12px; margin-bottom: 14px;
-      display: block; background: var(--border);
-    }
-    .place-photo {
-      width: 100%; height: 110px; object-fit: cover;
-      border-radius: 8px 8px 0 0; margin: -16px -16px 12px -16px;
-      width: calc(100% + 32px); display: block;
-    }
-    .acco-photo {
-      width: 100%; height: 140px; object-fit: cover;
-      border-radius: 8px; margin-bottom: 10px; display: block;
-    }
-
-    /* ── Notes ── */
-    .notes-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px; margin-bottom: 28px;
-    }
-    .note-card {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px;
-    }
-    .note-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
-    .note-body  { font-size: 12px; color: var(--text-mid); line-height: 1.7; }
 
     /* ── Tab bar ── */
     .tab-bar {
-      display: flex; background: var(--card-bg);
+      background: var(--card-bg);
       border-bottom: 1px solid var(--border);
-      padding: 0 16px; gap: 2px; overflow-x: auto;
+      padding: 10px 20px;
+      display: flex; gap: 6px;
+      overflow-x: auto; flex-shrink: 0;
       scrollbar-width: none;
     }
     .tab-bar::-webkit-scrollbar { display: none; }
     .tab-btn {
-      flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
-      gap: 2px; padding: 10px 14px; border: none; background: transparent;
-      cursor: pointer; border-bottom: 3px solid transparent;
-      font-family: inherit; transition: all 0.15s; color: var(--text-light);
-      font-size: 11px; font-weight: 600; white-space: nowrap;
+      flex-shrink: 0;
+      padding: 7px 18px;
+      border-radius: 20px;
+      border: 1.5px solid transparent;
+      background: var(--warm-white);
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-light);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
     }
-    .tab-btn .tab-icon { font-size: 16px; }
-    .tab-btn:hover { color: var(--brown-main); background: var(--warm-white); }
+    .tab-btn:hover { color: var(--brown-main); border-color: var(--border); }
     .tab-btn.active {
-      color: var(--brown-main);
-      border-bottom-color: var(--brown-main);
+      background: var(--brown-main);
+      color: #fff;
+      border-color: var(--brown-main);
     }
+
+    /* ── Content scroll area ── */
+    .content { flex: 1; overflow-y: auto; padding: 28px 28px 40px; }
 
     /* ── Tab panels ── */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
-    .content { flex: 1; overflow-y: auto; padding: 24px; }
 
-    /* mobile */
-    @media (max-width: 640px) {
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 16px; text-align: center;
+    }
+    .stat-num { font-size: 26px; font-weight: 800; color: var(--brown-main); }
+    .stat-label { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+    /* ── Flowchart ── */
+    .flowchart-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px 24px; margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .flow-row {
+      display: flex; align-items: center;
+      margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px;
+      scrollbar-width: none; gap: 0;
+    }
+    .flow-row:last-of-type { margin-bottom: 0; }
+    .flow-row::-webkit-scrollbar { display: none; }
+    .flow-day {
+      flex-shrink: 0; font-size: 10px; font-weight: 700;
+      width: 52px; text-align: center; padding: 4px 6px;
+      border-radius: 8px; margin-right: 8px; line-height: 1.4;
+      color: #fff;
+    }
+    .flow-day.d1 { background: var(--brown-main); }
+    .flow-day.d2 { background: var(--teal); }
+    .flow-day.d3 { background: #5B8FD4; }
+    .flow-day.d4 { background: var(--green); }
+    .flow-node {
+      flex-shrink: 0; font-size: 11px; font-weight: 600;
+      padding: 5px 12px; border-radius: 20px;
+      background: var(--warm-white); border: 1.5px solid var(--border);
+      color: var(--text-dark); white-space: nowrap;
+    }
+    .flow-node.hl { border-color: var(--caramel); color: var(--brown-mid); background: rgba(193,123,78,0.07); }
+    .flow-node.bed { border-color: var(--teal); color: #1e7d79; background: rgba(58,175,169,0.07); }
+    .flow-node.end { border-color: var(--green); color: #2e7d54; background: rgba(76,175,125,0.07); }
+    .flow-arr { flex-shrink: 0; color: var(--border); padding: 0 5px; font-size: 13px; }
+    .flow-legend {
+      display: flex; gap: 16px; margin-top: 14px;
+      padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-light); }
+    .leg-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+    /* ── Highlights card ── */
+    .hl-card {
+      background: linear-gradient(135deg, var(--brown-dark), var(--brown-mid));
+      border-radius: 14px; padding: 22px 24px; color: #fff;
+    }
+    .hl-card .section-title { color: var(--sand); margin-bottom: 14px; }
+    .hl-list { display: flex; flex-direction: column; gap: 12px; }
+    .hl-item { display: flex; gap: 12px; align-items: flex-start; }
+    .hl-ico { font-size: 20px; flex-shrink: 0; }
+    .hl-txt { font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.85); }
+    .hl-txt strong { color: #fff; }
+
+    /* ── Day panel header ── */
+    .day-hero {
+      border-radius: 14px; overflow: hidden; margin-bottom: 20px;
+      position: relative; height: 160px;
+    }
+    .day-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .day-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%);
+      display: flex; align-items: flex-end; padding: 16px 20px;
+    }
+    .day-hero-title { color: #fff; }
+    .day-hero-badge {
+      font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.2);
+      padding: 3px 10px; border-radius: 20px; display: inline-block;
+      margin-bottom: 4px; backdrop-filter: blur(4px);
+    }
+    .day-hero-text { font-size: 18px; font-weight: 800; }
+    .day-hero-sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+    /* ── Activity cards ── */
+    .act-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .act-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      border-left: 4px solid var(--border);
+    }
+    .act-card.morning  { border-left-color: #F59E0B; }
+    .act-card.noon     { border-left-color: var(--caramel); }
+    .act-card.afternoon{ border-left-color: var(--teal); }
+    .act-card.evening  { border-left-color: #7C3AED; }
+    .act-card.night    { border-left-color: #1E40AF; }
+    .act-card-img { width: 100%; height: 100px; object-fit: cover; display: block; }
+    .act-card-body { padding: 14px 16px; }
+    .act-time {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      color: var(--text-light); text-transform: uppercase; margin-bottom: 5px;
+    }
+    .act-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
+    .act-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+    .act-star  {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #FFF7E6; color: #D97706;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 20px; margin-top: 8px;
+    }
+
+    /* ── Hotel tab ── */
+    .hotel-section {
+      background: linear-gradient(135deg, #1a3a2a, #2d6a4f);
+      border-radius: 14px; padding: 22px 24px; color: #fff; margin-bottom: 16px;
+    }
+    .hotel-section .section-title { color: #95d5b2; }
+    .hotel-item { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+    .hotel-item:last-child { margin-bottom: 0; }
+    .hotel-ico { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+    .hotel-info strong { font-size: 14px; color: #fff; display: block; margin-bottom: 4px; }
+    .hotel-info span { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.7; display: block; }
+
+    /* ── Notes tab ── */
+    .notes-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .note-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+    }
+    .note-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; }
+    .note-body  { font-size: 12px; color: var(--text-mid); line-height: 1.85; }
+
+    @media (max-width: 680px) {
       .sidebar { display: none; }
-      .summary-row { grid-template-columns: repeat(2, 1fr); }
-      .activity-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .act-grid { grid-template-columns: 1fr; }
+      .notes-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -270,7 +272,7 @@
 <nav class="sidebar">
   <div class="sidebar-brand">
     <div class="avatar-sq">🌱</div>
-    <div class="brand-text">
+    <div>
       <div class="brand-name">漢柏分身</div>
       <div class="brand-sub">貴焿管理中樞</div>
     </div>
@@ -292,403 +294,395 @@
 </nav>
 
 <div class="main">
+
   <div class="topbar">
     <span class="topbar-icon">🌊</span>
     <div>
       <div class="topbar-title">宜蘭家族行 2026</div>
-      <div class="topbar-sub">7/20（一）→ 7/23（四）· 四天三夜</div>
+      <div class="topbar-sub">7/20（一）— 7/23（四）· 四天三夜 · 開車</div>
     </div>
     <div class="trip-badge">🏠 住宿已選定</div>
   </div>
 
-  <!-- Tab Bar -->
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('overview', this)">
-      <span class="tab-icon">🗺️</span>總覽
-    </button>
-    <button class="tab-btn" onclick="switchTab('d1', this)">
-      <span class="tab-icon">1️⃣</span>7/20
-    </button>
-    <button class="tab-btn" onclick="switchTab('d2', this)">
-      <span class="tab-icon">2️⃣</span>7/21
-    </button>
-    <button class="tab-btn" onclick="switchTab('d3', this)">
-      <span class="tab-icon">3️⃣</span>7/22
-    </button>
-    <button class="tab-btn" onclick="switchTab('d4', this)">
-      <span class="tab-icon">4️⃣</span>7/23
-    </button>
-    <button class="tab-btn" onclick="switchTab('hotel', this)">
-      <span class="tab-icon">🏠</span>住宿
-    </button>
-    <button class="tab-btn" onclick="switchTab('notes', this)">
-      <span class="tab-icon">📋</span>備忘
-    </button>
+    <button class="tab-btn active" onclick="go('overview',this)">總覽</button>
+    <button class="tab-btn" onclick="go('d1',this)">Day 1 · 員山</button>
+    <button class="tab-btn" onclick="go('d2',this)">Day 2 · 礁溪</button>
+    <button class="tab-btn" onclick="go('d3',this)">Day 3 · 玩水</button>
+    <button class="tab-btn" onclick="go('d4',this)">Day 4 · 回程</button>
+    <button class="tab-btn" onclick="go('hotel',this)">住宿</button>
+    <button class="tab-btn" onclick="go('notes',this)">備忘</button>
   </div>
 
   <div class="content">
 
-    <!-- TAB: 總覽 -->
+    <!-- ════ 總覽 ════ -->
     <div id="tab-overview" class="tab-panel active">
 
-    <!-- 數字總覽 -->
-    <div class="summary-row">
-      <div class="stat-card">
-        <div class="stat-num">4</div>
-        <div class="stat-label">天數</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num">4</div>
+          <div class="stat-label">天數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">3</div>
+          <div class="stat-label">晚住宿</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">12+</div>
+          <div class="stat-label">景點活動</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">6人</div>
+          <div class="stat-label">2大4小</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num">3</div>
-        <div class="stat-label">晚住宿</div>
+
+      <div class="flowchart-card">
+        <div class="section-title">🗺️ 行程流程</div>
+
+        <div class="flow-row">
+          <div class="flow-day d1">Day 1<br>7/20</div>
+          <div class="flow-node">🚗 高雄出發</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🏔️ 雪山隧道</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node hl">🐰 幾米公園</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node bed">🌿 好春好然</div>
+        </div>
+
+        <div class="flow-row">
+          <div class="flow-day d2">Day 2<br>7/21</div>
+          <div class="flow-node">🍳 員山退房</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node hl">🏛️ 蘭陽博物館</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node bed">♨️ 龍潭湖居</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node hl">🍢 羅東夜市</div>
+        </div>
+
+        <div class="flow-row">
+          <div class="flow-day d3">Day 3<br>7/22</div>
+          <div class="flow-node hl">💦 冬山河</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node hl">🎨 傳藝中心</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node bed">♨️ 龍潭湖居 泡湯</div>
+        </div>
+
+        <div class="flow-row">
+          <div class="flow-day d4">Day 4<br>7/23</div>
+          <div class="flow-node hl">🌅 礁溪早晨</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🎁 伴手禮</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🏖️ 頭城</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node end">🏠 回高雄</div>
+        </div>
+
+        <div class="flow-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--teal)"></div>住宿</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--caramel)"></div>預期亮點</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>回家</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num">12+</div>
-        <div class="stat-label">景點活動</div>
+
+      <div class="hl-card">
+        <div class="section-title">✨ 預期亮點</div>
+        <div class="hl-list">
+          <div class="hl-item"><div class="hl-ico">🐰</div><div class="hl-txt"><strong>幾米公園的相遇</strong>——《向左走向右走》場景，孩子在裡面跑，那張照片留一輩子。</div></div>
+          <div class="hl-item"><div class="hl-ico">🍽️</div><div class="hl-txt"><strong>好春好然無菜單料理</strong>——孩子第一次吃「不知道會上什麼」的飯，自種食材，當日現採。</div></div>
+          <div class="hl-item"><div class="hl-ico">💦</div><div class="hl-txt"><strong>冬山河玩水弄濕</strong>——全身濕透的笑臉，大人忘記工作的兩個小時。</div></div>
+          <div class="hl-item"><div class="hl-ico">🍢</div><div class="hl-txt"><strong>羅東夜市第一口</strong>——孩子自己拿食物吃，記錄那個表情。</div></div>
+          <div class="hl-item"><div class="hl-ico">🎨</div><div class="hl-txt"><strong>傳藝中心手工</strong>——孩子親手做的東西帶回家，比任何紀念品都值錢。</div></div>
+          <div class="hl-item"><div class="hl-ico">🌅</div><div class="hl-txt"><strong>礁溪最後一個早晨</strong>——安靜的溫泉街，八點出來走走，那種節奏。</div></div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num">龍潭湖居</div>
-        <div class="stat-label">住宿基地</div>
-      </div>
+
     </div>
 
-    <!-- 行程流程圖 -->
-    <div class="flowchart-wrap">
-      <div class="flowchart-title">🗺️ 行程流程圖</div>
-
-      <div class="flow-row">
-        <div class="flow-day-tag d1">Day 1<br>7/20</div>
-        <div class="flow-stop">🚗 高雄出發</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop">🏔️ 雪山隧道</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop star">🐰 幾米公園</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop hotel">🌿 好春好然 住宿</div>
-      </div>
-
-      <div class="flow-row">
-        <div class="flow-day-tag d2">Day 2<br>7/21</div>
-        <div class="flow-stop">🍳 好春早餐退房</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop star">🏛️ 蘭陽博物館</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop">⚓ 烏石港</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop hotel">♨️ 龍潭湖居 住宿</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop star">🍢 羅東夜市</div>
-      </div>
-
-      <div class="flow-row">
-        <div class="flow-day-tag d3">Day 3<br>7/22</div>
-        <div class="flow-stop star">💦 冬山河親水公園</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop">🍱 冬山午餐</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop star">🎨 傳藝中心</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop hotel">♨️ 龍潭湖居 泡湯</div>
-      </div>
-
-      <div class="flow-row">
-        <div class="flow-day-tag d4">Day 4<br>7/23</div>
-        <div class="flow-stop star">🌅 礁溪早晨散步</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop">🎁 伴手禮</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop">🏖️ 頭城</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-stop home">🏠 回高雄</div>
-      </div>
-
-      <div style="margin-top:14px; font-size:11px; color:var(--text-light); display:flex; gap:16px;">
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#3AAFA9;border-radius:3px;display:inline-block;"></span> 住宿</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:rgba(193,123,78,0.6);border-radius:3px;display:inline-block;"></span> 預期亮點</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#4CAF7D;border-radius:3px;display:inline-block;"></span> 回家</span>
-      </div>
-    </div>
-
-    <!-- 預期亮點 -->
-    <div class="highlights-card">
-      <h3>✨ 預期亮點</h3>
-      <div class="highlight-list">
-        <div class="highlight-item">
-          <div class="hl-icon">🦶</div>
-          <div class="hl-text"><strong>孩子第一次泡溫泉腳</strong>——湯圍溝公園，免費、安全、老少咸宜，傍晚人氣滿滿的景象。</div>
-        </div>
-        <div class="highlight-item">
-          <div class="hl-icon">🐰</div>
-          <div class="hl-text"><strong>幾米公園的相遇</strong>——《向左走向右走》的兔子雕像，帶孩子在裡面跑一圈，那張照片留一輩子。</div>
-        </div>
-        <div class="highlight-item">
-          <div class="hl-icon">💦</div>
-          <div class="hl-text"><strong>冬山河玩水弄濕</strong>——夏天最值得的事，孩子全身濕透的笑臉，大人忘記工作的兩個小時。</div>
-        </div>
-        <div class="highlight-item">
-          <div class="hl-icon">🍢</div>
-          <div class="hl-text"><strong>羅東夜市第一口</strong>——孩子自己拿食物吃的表情，記錄下來。鴨舌、碳烤玉米、三星蔥油餅。</div>
-        </div>
-        <div class="highlight-item">
-          <div class="hl-icon">🎨</div>
-          <div class="hl-text"><strong>傳藝中心做手工</strong>——孩子親手做的東西，帶回家，那個比任何紀念品都更值錢。</div>
-        </div>
-        <div class="highlight-item">
-          <div class="hl-icon">🌅</div>
-          <div class="hl-text"><strong>早晨的礁溪</strong>——安靜的溫泉街，早上八點出來走走，那種節奏才是這趟旅行最想帶給家人的。</div>
-        </div>
-      </div>
-    </div>
-
-    </div><!-- /tab-overview -->
-
-    <!-- TAB: Day 1 -->
+    <!-- ════ Day 1 ════ -->
     <div id="tab-d1" class="tab-panel">
-    <div class="day-section">
-      <div class="day-header">
-        <div class="day-badge">Day 1 · 7/20（一）</div>
-        <div class="day-title">開車北上，落腳員山</div>
-        <div class="day-theme">高雄 → 員山 好春好然</div>
+      <div class="day-hero">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/0e/View_of_Yilan_from_train_01.jpg" alt="宜蘭田野" />
+        <div class="day-hero-overlay">
+          <div class="day-hero-title">
+            <div class="day-hero-badge">Day 1 · 7/20（一）</div>
+            <div class="day-hero-text">開車北上，落腳員山</div>
+            <div class="day-hero-sub">高雄 → 員山 好春好然</div>
+          </div>
+        </div>
       </div>
-      <img class="day-banner" src="https://upload.wikimedia.org/wikipedia/commons/0/0e/View_of_Yilan_from_train_01.jpg" alt="台灣山路風景" loading="lazy" />
-      <div class="activity-grid">
-        <div class="activity-card morning">
-          <div class="act-time">早上</div>
-          <div class="act-title">出發——開車走國5</div>
-          <div class="act-desc">高雄出發，國道1或3接國道5，過雪山隧道進宜蘭。全程約3.5–4小時。高速公路上讓孩子睡，或準備車上遊戲。</div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">出發——開車走國5</div>
+            <div class="act-desc">高雄出發，國道1或3接國道5，過雪山隧道進宜蘭。全程約3.5–4小時。高速公路上讓孩子睡，或準備車上遊戲。</div>
+          </div>
         </div>
-        <div class="activity-card noon">
-          <div class="act-time">中午</div>
-          <div class="act-title">宜蘭市區午餐</div>
-          <div class="act-desc">進宜蘭後先在市區找一間吃飯，不用特地找名店。讓孩子下車動一動、上廁所，再慢慢往員山移動。</div>
+        <div class="act-card noon">
+          <div class="act-card-body">
+            <div class="act-time">中午</div>
+            <div class="act-title">宜蘭市區午餐</div>
+            <div class="act-desc">進宜蘭後先在市區找一間吃飯，不用特地找名店。讓孩子下車動一動、上廁所，再慢慢往員山移動。</div>
+          </div>
         </div>
-        <div class="activity-card afternoon">
-          <div class="act-time">下午</div>
-          <div class="act-title">幾米公園</div>
-          <div class="act-desc">宜蘭火車站旁，車停附近就能走進去。《向左走向右走》場景還原，月亮、兔子、星空。孩子可以跑，下午光線好拍照。</div>
-          <div class="act-star">⭐ 預期亮點</div>
+        <div class="act-card afternoon">
+          <div class="act-card-body">
+            <div class="act-time">下午</div>
+            <div class="act-title">幾米公園</div>
+            <div class="act-desc">宜蘭火車站旁，車停附近就能走進去。《向左走向右走》場景還原，月亮、兔子、星空。孩子可以跑，下午光線好拍照。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
         </div>
-        <div class="activity-card evening">
-          <div class="act-time">傍晚</div>
-          <div class="act-title">check in · 好春好然</div>
-          <div class="act-desc">員山鄉深洲二路22號。開車約15分鐘從市區過去。放行李，讓孩子在田園環境跑一跑，感受跟城市完全不一樣的空氣。</div>
+        <div class="act-card evening">
+          <div class="act-card-body">
+            <div class="act-time">傍晚</div>
+            <div class="act-title">check in · 好春好然</div>
+            <div class="act-desc">員山鄉深洲二路22號。開車約15分鐘從市區過去。放行李，讓孩子在田園環境跑一跑，感受完全不一樣的空氣。</div>
+          </div>
         </div>
-        <div class="activity-card night">
-          <div class="act-time">晚上</div>
-          <div class="act-title">好春好然餐廳 · 無菜單料理</div>
-          <div class="act-desc">自種食材、無菜單、功夫手路菜。食材當日現採，每次不一樣。平日入住招待一道菜。孩子第一次吃這種「不知道會上什麼」的飯。早睡，明天開始行程。</div>
-          <div class="act-star">⭐ 預期亮點</div>
+        <div class="act-card night">
+          <div class="act-card-body">
+            <div class="act-time">晚上</div>
+            <div class="act-title">好春好然 · 無菜單料理</div>
+            <div class="act-desc">自種食材、無菜單、功夫手路菜。食材當日現採，每次不一樣。平日入住招待一道菜。早睡，明天正式開始。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
         </div>
       </div>
     </div>
 
-    </div></div><!-- /day-section /tab-d1 -->
-
-    <!-- TAB: Day 2 -->
+    <!-- ════ Day 2 ════ -->
     <div id="tab-d2" class="tab-panel">
-    <div class="day-section">
-      <div class="day-header">
-        <div class="day-badge">Day 2 · 7/21（二）</div>
-        <div class="day-title">移駐礁溪，文化 + 夜市</div>
-        <div class="day-theme">員山 → 礁溪 龍潭湖居</div>
+      <div class="day-hero">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/2014-01-29_Luodong_Night_Market.jpg" alt="羅東夜市" />
+        <div class="day-hero-overlay">
+          <div class="day-hero-title">
+            <div class="day-hero-badge">Day 2 · 7/21（二）</div>
+            <div class="day-hero-text">移駐礁溪，文化 + 夜市</div>
+            <div class="day-hero-sub">員山 → 礁溪 龍潭湖居</div>
+          </div>
+        </div>
       </div>
-      <img class="day-banner" src="https://upload.wikimedia.org/wikipedia/commons/e/e4/2014-01-29_Luodong_Night_Market.jpg" alt="夜市燈火" loading="lazy" />
-      <div class="activity-grid">
-        <div class="activity-card morning">
-          <div class="act-time">早上</div>
-          <div class="act-title">好春好然早餐 · 退房</div>
-          <div class="act-desc">在員山吃完早餐，感受最後一個田園早晨。退房後行李直接放車上，開車20分鐘往礁溪方向移動。</div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">好春好然早餐 · 退房</div>
+            <div class="act-desc">在員山吃完早餐，感受最後一個田園早晨。退房後行李直接放車上，開車20分鐘往礁溪方向移動。</div>
+          </div>
         </div>
-        <div class="activity-card morning">
-          <img class="place-photo" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Lanyang_Museum_20121110.jpg" alt="蘭陽博物館" loading="lazy" />
-          <div class="act-time">早上</div>
-          <div class="act-title">蘭陽博物館</div>
-          <div class="act-desc">烏石港旁，建築本身就值得拍。宜蘭歷史與自然互動展覽，孩子喜歡有操作感的展品。建議停留1.5小時。</div>
+        <div class="act-card morning">
+          <img class="act-card-img" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Lanyang_Museum_20121110.jpg" alt="蘭陽博物館" loading="lazy" />
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">蘭陽博物館</div>
+            <div class="act-desc">烏石港旁，建築本身就值得拍。宜蘭歷史與自然互動展覽，孩子喜歡有操作感的展品。建議停留1.5小時。</div>
+          </div>
         </div>
-        <div class="activity-card afternoon">
-          <div class="act-time">下午</div>
-          <div class="act-title">烏石港看漁船 · check in 龍潭湖居</div>
-          <div class="act-desc">博物館旁的漁港看完後，開車前往龍潭湖居 check in。放行李，讓孩子先在遊戲室或戲水池跑一圈。</div>
+        <div class="act-card afternoon">
+          <div class="act-card-body">
+            <div class="act-time">下午</div>
+            <div class="act-title">烏石港 · check in 龍潭湖居</div>
+            <div class="act-desc">博物館旁的漁港走走，看漁船、海風。然後開車前往龍潭湖居 check in，讓孩子先在遊戲室或戲水池跑一圈。</div>
+          </div>
         </div>
-        <div class="activity-card night">
-          <img class="place-photo" src="https://upload.wikimedia.org/wikipedia/commons/e/e4/2014-01-29_Luodong_Night_Market.jpg" alt="羅東夜市" loading="lazy" />
-          <div class="act-time">晚上</div>
-          <div class="act-title">羅東夜市</div>
-          <div class="act-desc">宜蘭最大夜市。必吃：包心粉圓、米粉湯、鴨舌、三星蔥油餅、奇味豆腐。孩子自己選自己吃，記錄第一口的表情。</div>
-          <div class="act-star">⭐ 預期亮點</div>
+        <div class="act-card night">
+          <img class="act-card-img" src="https://upload.wikimedia.org/wikipedia/commons/e/e4/2014-01-29_Luodong_Night_Market.jpg" alt="羅東夜市" loading="lazy" />
+          <div class="act-card-body">
+            <div class="act-time">晚上</div>
+            <div class="act-title">羅東夜市</div>
+            <div class="act-desc">必吃：包心粉圓、米粉湯、鴨舌、三星蔥油餅、奇味豆腐。孩子自己選自己吃，記錄第一口的表情。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
         </div>
       </div>
     </div>
 
-    </div></div><!-- /day-section /tab-d2 -->
-
-    <!-- TAB: Day 3 -->
+    <!-- ════ Day 3 ════ -->
     <div id="tab-d3" class="tab-panel">
-    <div class="day-section">
-      <div class="day-header">
-        <div class="day-badge">Day 3 · 7/22（三）</div>
-        <div class="day-title">玩水 + 傳藝</div>
-        <div class="day-theme">冬山河 → 傳藝中心</div>
+      <div class="day-hero">
+        <img src="https://travel.yilan.gov.tw/_api/Image/23581/?r=1504668833824" alt="冬山河親水公園" />
+        <div class="day-hero-overlay">
+          <div class="day-hero-title">
+            <div class="day-hero-badge">Day 3 · 7/22（三）</div>
+            <div class="day-hero-text">玩水 + 傳藝</div>
+            <div class="day-hero-sub">冬山河 → 傳藝中心</div>
+          </div>
+        </div>
       </div>
-      <img class="day-banner" src="https://travel.yilan.gov.tw/_api/Image/23581/?r=1504668833824" alt="孩子玩水" loading="lazy" />
-      <div class="activity-grid">
-        <div class="activity-card morning">
-          <img class="place-photo" src="https://travel.yilan.gov.tw/_api/Image/23581/?r=1504668833824" alt="冬山河親水公園" loading="lazy" />
-          <div class="act-time">早上</div>
-          <div class="act-title">冬山河親水公園</div>
-          <div class="act-desc">夏天宜蘭最值得的地方。有水道、噴水、草地。孩子下去就不想出來。準備好換洗衣物，全身濕就是今天的目標。</div>
-          <div class="act-star">⭐ 預期亮點</div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <img class="act-card-img" src="https://travel.yilan.gov.tw/_api/Image/23581/?r=1504668833824" alt="冬山河" loading="lazy" />
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">冬山河親水公園</div>
+            <div class="act-desc">夏天宜蘭最值得的地方。有水道、噴水、草地。孩子下去就不想出來。準備好換洗衣物，全身濕就是今天的目標。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
         </div>
-        <div class="activity-card noon">
-          <div class="act-time">中午</div>
-          <div class="act-title">冬山河附近午餐</div>
-          <div class="act-desc">換好衣服後就地吃飯。冬山市場附近小吃，或事先查好的店。不用特地跑遠，孩子玩水累了就休息。</div>
+        <div class="act-card noon">
+          <div class="act-card-body">
+            <div class="act-time">中午</div>
+            <div class="act-title">冬山河附近午餐</div>
+            <div class="act-desc">換好衣服後就地吃飯。冬山市場附近小吃，不用特地跑遠，孩子玩水累了就休息。</div>
+          </div>
         </div>
-        <div class="activity-card afternoon">
-          <img class="place-photo" src="https://upload.wikimedia.org/wikipedia/commons/4/44/Entrance_to_National_Center_for_Traditional_Arts.jpg" alt="傳藝中心" loading="lazy" />
-          <div class="act-time">下午</div>
-          <div class="act-title">國立傳統藝術中心</div>
-          <div class="act-desc">傳藝老街、廟宇、工藝體驗。孩子可以做糖葫蘆、捏陶、刻印章。讓孩子選一件手工藝做，帶回去，那就是這趟旅行最好的紀念品。</div>
-          <div class="act-star">⭐ 預期亮點</div>
+        <div class="act-card afternoon">
+          <img class="act-card-img" src="https://upload.wikimedia.org/wikipedia/commons/4/44/Entrance_to_National_Center_for_Traditional_Arts.jpg" alt="傳藝中心" loading="lazy" />
+          <div class="act-card-body">
+            <div class="act-time">下午</div>
+            <div class="act-title">國立傳統藝術中心</div>
+            <div class="act-desc">傳藝老街、廟宇、工藝體驗。孩子可以做糖葫蘆、捏陶、刻印章。讓孩子選一件手工藝做帶回去——那是這趟旅行最好的紀念品。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
         </div>
-        <div class="activity-card evening">
-          <div class="act-time">傍晚</div>
-          <div class="act-title">礁溪溫泉 泡湯</div>
-          <div class="act-desc">回礁溪，飯店泡湯或找公共浴場。玩了一整天，晚上這個最重要。大人放鬆，孩子也需要這個收尾。</div>
+        <div class="act-card evening">
+          <div class="act-card-body">
+            <div class="act-time">傍晚</div>
+            <div class="act-title">龍潭湖居 · 泡湯</div>
+            <div class="act-desc">回民宿，房內溫泉泡湯。玩了一整天，晚上這個最重要。大人放鬆，孩子也需要這個收尾。</div>
+          </div>
         </div>
-        <div class="activity-card night">
-          <div class="act-time">晚上</div>
-          <div class="act-title">礁溪溫泉街晚餐</div>
-          <div class="act-desc">輕鬆吃，不趕行程。早一點回房，幫孩子整理一下這三天拍的照片，問他們今天最喜歡什麼。</div>
+        <div class="act-card night">
+          <div class="act-card-body">
+            <div class="act-time">晚上</div>
+            <div class="act-title">礁溪溫泉街晚餐</div>
+            <div class="act-desc">輕鬆吃，不趕行程。早一點回房，問孩子今天最喜歡什麼。</div>
+          </div>
         </div>
       </div>
     </div>
 
-    </div></div><!-- /day-section /tab-d3 -->
-
-    <!-- TAB: Day 4 -->
+    <!-- ════ Day 4 ════ -->
     <div id="tab-d4" class="tab-panel">
-    <div class="day-section">
-      <div class="day-header">
-        <div class="day-badge">Day 4 · 7/23（四）</div>
-        <div class="day-title">慢慢收尾，帶著滿足回家</div>
-        <div class="day-theme">礁溪 → 頭城 → 高雄</div>
+      <div class="day-hero">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/2023_Longtan_Lake_%28Yilan%29_m1.jpg" alt="龍潭湖" />
+        <div class="day-hero-overlay">
+          <div class="day-hero-title">
+            <div class="day-hero-badge">Day 4 · 7/23（四）</div>
+            <div class="day-hero-text">慢慢收尾，帶著滿足回家</div>
+            <div class="day-hero-sub">礁溪 → 頭城 → 高雄</div>
+          </div>
+        </div>
       </div>
-      <img class="day-banner" src="https://upload.wikimedia.org/wikipedia/commons/9/91/2023_Longtan_Lake_%28Yilan%29_m1.jpg" alt="清晨光線" loading="lazy" />
-      <div class="activity-grid">
-        <div class="activity-card morning">
-          <div class="act-time">早上</div>
-          <div class="act-title">礁溪早晨散步</div>
-          <div class="act-desc">最後一個早晨，不急。八點出來走，溫泉路靜靜的，光線最好。讓家人在這個節奏裡停久一點。</div>
-          <div class="act-star">⭐ 預期亮點</div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">礁溪早晨散步</div>
+            <div class="act-desc">最後一個早晨，不急。八點出來走，溫泉路靜靜的，光線最好。讓家人在這個節奏裡停久一點。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
         </div>
-        <div class="activity-card morning">
-          <div class="act-time">早上</div>
-          <div class="act-title">退房 + 買伴手禮</div>
-          <div class="act-desc">宜蘭餅、牛舌餅、金棗糕。買給店員、送給家人。不用買太多，選幾樣真的好吃的就好。</div>
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">退房 + 買伴手禮</div>
+            <div class="act-desc">宜蘭餅、牛舌餅、金棗糕。選幾樣真的好吃的就好，不用買太多。</div>
+          </div>
         </div>
-        <div class="activity-card noon">
-          <div class="act-time">中午</div>
-          <div class="act-title">頭城老街 or 蘇澳冷泉</div>
-          <div class="act-desc">二選一。頭城老街：古厝、老宅，午餐就在這裡解決。蘇澳冷泉：碳酸泉，泡起來涼的，孩子覺得有趣。看孩子的精力決定。</div>
+        <div class="act-card noon">
+          <div class="act-card-body">
+            <div class="act-time">中午</div>
+            <div class="act-title">頭城老街 or 蘇澳冷泉</div>
+            <div class="act-desc">二選一。頭城老街：古厝、老宅，午餐就在這裡解決。蘇澳冷泉：碳酸泉，泡起來涼，孩子覺得有趣。看精力決定。</div>
+          </div>
         </div>
-        <div class="activity-card afternoon">
-          <div class="act-time">下午</div>
-          <div class="act-title">搭車回高雄</div>
-          <div class="act-desc">火車南下，在車上整理照片。讓孩子說說這幾天最喜歡什麼——那些答案，記錄起來。</div>
+        <div class="act-card afternoon">
+          <div class="act-card-body">
+            <div class="act-time">下午</div>
+            <div class="act-title">開車回高雄</div>
+            <div class="act-desc">在車上整理照片。讓孩子說說這幾天最喜歡什麼——那些答案，記錄起來。</div>
+          </div>
         </div>
       </div>
     </div>
 
-    </div></div><!-- /day-section /tab-d4 -->
-
-    <!-- TAB: 住宿 -->
+    <!-- ════ 住宿 ════ -->
     <div id="tab-hotel" class="tab-panel">
-    <div class="highlights-card" style="background: linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%); margin-bottom: 16px;">
-      <h3 style="color: #95d5b2;">🏠 住宿安排（3晚）</h3>
-      <div class="highlight-list">
-        <div class="highlight-item">
-          <div class="hl-icon">🌿</div>
-          <div class="hl-text">
-            <strong>Night 1（7/20）· 好春好然 House &amp; Kitchen</strong><br>
-            <span style="color:rgba(255,255,255,0.7); font-size:12px;">
-              宜蘭縣員山鄉深洲二路22號｜(03) 922-7723<br>
-              田園民宿 + 無菜單料理，自種食材，家庭房可住4–6人
-            </span>
+      <div class="hotel-section">
+        <div class="section-title">🏠 住宿安排（3晚）</div>
+        <div class="hotel-item">
+          <div class="hotel-ico">🌿</div>
+          <div class="hotel-info">
+            <strong>Night 1（7/20）· 好春好然 House &amp; Kitchen</strong>
+            <span>宜蘭縣員山鄉深洲二路22號</span>
+            <span>📞 (03) 922-7723</span>
+            <span>田園民宿 + 無菜單料理，自種食材，家庭房可住4–6人</span>
           </div>
         </div>
-        <div class="highlight-item">
-          <div class="hl-icon">♨️</div>
-          <div class="hl-text">
-            <strong>Night 2–3（7/21–7/22）· 龍潭湖居（包棟）</strong><br>
-            <span style="color:rgba(255,255,255,0.7); font-size:12px;">
-              宜蘭縣礁溪鄉漳福路53巷50弄98號｜0937-790039<br>
-              整棟包棟，3間房各附溫泉浴池，兒童遊戲室 + 戲水池 + KTV<br>
-              NT$9,999/晚，兩晚九折 ≈ <strong>NT$17,998</strong>
-            </span>
+        <div class="hotel-item">
+          <div class="hotel-ico">♨️</div>
+          <div class="hotel-info">
+            <strong>Night 2–3（7/21–22）· 龍潭湖居（包棟）</strong>
+            <span>宜蘭縣礁溪鄉漳福路53巷50弄98號</span>
+            <span>📞 0937-790039</span>
+            <span>整棟包棟，3間房各附溫泉浴池，兒童遊戲室 + 戲水池 + KTV</span>
+            <span>NT$9,999/晚，兩晚九折 ≈ <strong style="color:#fff">NT$17,998</strong></span>
           </div>
         </div>
       </div>
     </div>
 
-    </div><!-- /tab-hotel -->
-
-    <!-- TAB: 備忘 -->
+    <!-- ════ 備忘 ════ -->
     <div id="tab-notes" class="tab-panel">
-    <div class="notes-grid">
-      <div class="note-card">
-        <div class="note-title">🎒 行前確認</div>
-        <div class="note-body">
-          · Night 1：好春好然 (03)922-7723<br>
-          · Night 2–3：龍潭湖居 0937-790039<br>
-          · 致電兩間確認訂金<br>
-          · 備好換洗衣物 ×2（冬山河玩水用）<br>
-          · 防曬乳、帽子<br>
-          · 孩子備用藥品<br>
-          · 充電寶、相機記憶卡清空
+      <div class="notes-grid">
+        <div class="note-card">
+          <div class="note-title">🎒 行前確認</div>
+          <div class="note-body">
+            · Night 1：好春好然 (03)922-7723<br>
+            · Night 2–3：龍潭湖居 0937-790039<br>
+            · 致電兩間確認訂金<br>
+            · 備好換洗衣物 ×2（冬山河用）<br>
+            · 防曬乳、帽子<br>
+            · 孩子備用藥品<br>
+            · 充電寶、相機記憶卡清空
+          </div>
         </div>
-      </div>
-      <div class="note-card">
-        <div class="note-title">💡 節奏提醒</div>
-        <div class="note-body">
-          · 每天不超過3個景點<br>
-          · 午後留給孩子自由時間<br>
-          · 不趕行程——走累了就坐<br>
-          · 夜市讓孩子自己點食物<br>
-          · 每晚問孩子今天最喜歡什麼
+        <div class="note-card">
+          <div class="note-title">💡 節奏提醒</div>
+          <div class="note-body">
+            · 每天不超過3個景點<br>
+            · 午後留給孩子自由時間<br>
+            · 不趕行程——走累了就坐<br>
+            · 夜市讓孩子自己點食物<br>
+            · 每晚問孩子今天最喜歡什麼
+          </div>
         </div>
-      </div>
-      <div class="note-card">
-        <div class="note-title">📸 想留下的畫面</div>
-        <div class="note-body">
-          · 湯圍溝泡腳的驚叫表情<br>
-          · 幾米公園兔子旁的全家合照<br>
-          · 冬山河全身濕的笑臉<br>
-          · 羅東夜市第一口食物<br>
-          · 孩子手做的傳藝作品<br>
-          · 最後一個早晨的礁溪街道
+        <div class="note-card">
+          <div class="note-title">📸 想留下的畫面</div>
+          <div class="note-body">
+            · 幾米公園兔子旁的全家合照<br>
+            · 好春好然無菜單第一道菜<br>
+            · 冬山河全身濕的笑臉<br>
+            · 羅東夜市第一口食物<br>
+            · 孩子手做的傳藝作品<br>
+            · 最後一個早晨的礁溪街道
+          </div>
         </div>
-      </div>
-      <div class="note-card">
-        <div class="note-title">🙏 這趟旅行的核心</div>
-        <div class="note-body">
-          不是景點清單。<br><br>
-          是讓孩子記得：<br>
-          爸爸那幾天一直在。<br><br>
-          「使人和睦的人有福了。」
+        <div class="note-card">
+          <div class="note-title">🙏 這趟旅行的核心</div>
+          <div class="note-body">
+            不是景點清單。<br><br>
+            是讓孩子記得：<br>
+            爸爸那幾天一直在。<br><br>
+            「使人和睦的人有福了。」
+          </div>
         </div>
       </div>
     </div>
-
-    </div>
-    </div><!-- /notes-grid /tab-notes -->
 
   </div><!-- /content -->
 </div><!-- /main -->
 
-</div><!-- /layout wrapper -->
-
 <script>
-  function switchTab(id, btn) {
+  function go(id, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + id).classList.add('active');
