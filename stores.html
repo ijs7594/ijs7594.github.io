@@ -496,6 +496,43 @@
     document.getElementById('add-store-btn').style.display = 'none';
     switchTab('logs');
     renderDetail();
+    checkMilestones();
+  }
+
+  // ── 里程碑經驗值（驗收/工程全部完成時，一次性大量加分）──
+  async function awardMilestone(marker, message, exp) {
+    const already = logs.some(l => l.store_id === currentStoreId && l.content && l.content.includes(marker));
+    if (already) return false;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_logs`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, category: '里程碑', content: message, exp })
+      });
+      return true;
+    } catch { return false; }
+  }
+
+  async function checkMilestones() {
+    if (!currentStoreId) return;
+    const hw = checklist.filter(c => c.store_id === currentStoreId && c.category === '五金驗收');
+    const general = checklist.filter(c => c.store_id === currentStoreId && c.category === '一般驗收');
+    const storeVendors = vendors.filter(v => v.store_id === currentStoreId);
+
+    let awarded = false;
+    if (hw.length > 0 && hw.every(c => c.status === '合格')) {
+      if (await awardMilestone('[五金驗收全部完成]', '🎉 [五金驗收全部完成] 所有五金品項都驗收合格了！', 40)) awarded = true;
+    }
+    if (general.length > 0 && general.every(c => c.status === '合格')) {
+      if (await awardMilestone('[一般驗收全部完成]', '🎉 [一般驗收全部完成] 所有一般驗收項目都合格了！', 40)) awarded = true;
+    }
+    if (storeVendors.length > 0 && storeVendors.every(v => v.actual_out)) {
+      if (await awardMilestone('[工程進度全部完工]', '🎉 [工程進度全部完工] 所有廠商都完工出場了！', 50)) awarded = true;
+    }
+    if (awarded) {
+      await loadAll();
+      if (currentStoreId) renderDetail();
+    }
   }
 
   function switchTab(tab) {
@@ -613,6 +650,7 @@
       });
       await loadAll();
       switchTab('vendors');
+      await checkMilestones();
     } catch { alert('更新失敗，請再試一次'); }
   }
 
@@ -709,6 +747,7 @@
       });
       await loadAll();
       switchChecklistCat(currentChecklistCat);
+      await checkMilestones();
     } catch { alert('更新失敗，請再試一次'); }
   }
 
