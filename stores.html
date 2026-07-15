@@ -261,14 +261,11 @@
               <option>物流</option><option>行銷</option><option>口味</option>
               <option>客訴</option><option>其他</option>
             </select>
-            <select id="log-exp">
-              <option value="15">🌱 小心得 +15</option>
-              <option value="30" selected>🌿 中收穫 +30</option>
-              <option value="60">🌳 大突破 +60</option>
-            </select>
           </div>
           <textarea id="log-content" placeholder="這次學到什麼、遇到什麼、下次會怎麼做不一樣……"></textarea>
-          <button class="log-submit-btn" onclick="addLog()">送出</button>
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">🤖 分數由 AI 自動判斷，送出後會給你一句回應</div>
+          <button class="log-submit-btn" id="log-submit-btn" onclick="addLog()">送出</button>
+          <div id="log-ai-reply" style="display:none;margin-top:12px;padding:12px 14px;background:var(--cream);border-radius:10px;font-size:13px;color:var(--text-mid);"></div>
         </div>
 
         <div class="timeline" id="timeline"></div>
@@ -344,7 +341,8 @@
 <script>
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
-  const PASSWORD = '1688';
+  const BOT_URL = 'https://guijong-linebot-production.up.railway.app';
+  const BOT_SECRET = '1JslYVY1N9-HE7xvoOMf1SU8rTDMNMLu';
 
   const LEVELS = [
     { min: 0,    name: '新手店', icon: '🌱' },
@@ -365,21 +363,7 @@
   let currentChecklistCat = '一般驗收';
   let editingChecklistId = null;
 
-  // ── Auth ──
-  function checkPw() {
-    const val = document.getElementById('pw-input').value;
-    if (val === PASSWORD) {
-      sessionStorage.setItem('stores_auth', '1');
-      document.getElementById('gate').style.display = 'none';
-      loadAll();
-    } else {
-      document.getElementById('pw-error').textContent = '密碼錯誤';
-    }
-  }
-  if (sessionStorage.getItem('stores_auth') === '1') {
-    document.getElementById('gate').style.display = 'none';
-    loadAll();
-  }
+  loadAll();
 
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -839,7 +823,25 @@
     const content = document.getElementById('log-content').value.trim();
     if (!content) return;
     const category = document.getElementById('log-category').value;
-    const exp = Number(document.getElementById('log-exp').value);
+    const btn = document.getElementById('log-submit-btn');
+    const replyBox = document.getElementById('log-ai-reply');
+    btn.disabled = true;
+    btn.textContent = '🤖 AI 評分中…';
+    replyBox.style.display = 'none';
+
+    let exp = 30;
+    let reply = '';
+    try {
+      const res = await fetch(`${BOT_URL}/api/classify-log`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: BOT_SECRET, content, category })
+      });
+      const data = await res.json();
+      exp = data.exp || 30;
+      reply = data.reply || '';
+    } catch {}
+
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/store_logs`, {
         method: 'POST',
@@ -847,9 +849,18 @@
         body: JSON.stringify({ store_id: currentStoreId, category, content, exp })
       });
       document.getElementById('log-content').value = '';
+      if (reply) {
+        replyBox.textContent = `🤖 ${reply}（+${exp} EXP）`;
+        replyBox.style.display = 'block';
+      }
       await loadAll();
       openStore(currentStoreId);
-    } catch { alert('新增失敗，請再試一次'); }
+    } catch {
+      alert('新增失敗，請再試一次');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '送出';
+    }
   }
 
   // ── Add store ──
