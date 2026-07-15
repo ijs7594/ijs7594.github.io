@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小琉球員工旅遊 2026 · 貴焿</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --ocean:      #0077B6;
+      --ocean-mid:  #0096C7;
+      --ocean-lt:   #48CAE4;
+      --sand:       #F4A261;
+      --sand-lt:    #FFDDB7;
+      --coral:      #E76F51;
+      --green:      #52B788;
+      --warm-white: #FAF9F6;
+      --card-bg:    #FFFFFF;
+      --text-dark:  #1A1A2E;
+      --text-mid:   #4A5568;
+      --text-light: #718096;
+      --border:     #E8EDF2;
+      --brown-dark: #2C1A0E;
+    }
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: #0A2540;
+      display: flex; flex-direction: column; padding: 20px 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--ocean-mid), var(--ocean-lt));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .brand-name { font-size: 14px; font-weight: 600; color: #fff; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; text-decoration: none;
+      color: rgba(255,255,255,0.5); font-size: 13px; transition: background 0.15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 14px 24px; display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+    .trip-badge {
+      margin-left: auto; background: var(--ocean); color: #fff;
+      font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+    }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 10px 20px; display: flex; gap: 6px;
+      overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex-shrink: 0; padding: 7px 18px; border-radius: 20px;
+      border: 1.5px solid transparent; background: var(--warm-white);
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      color: var(--text-light); cursor: pointer; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--ocean); border-color: var(--border); }
+    .tab-btn.active { background: var(--ocean); color: #fff; border-color: var(--ocean); }
+
+    /* ── Content ── */
+    .content { flex: 1; overflow-y: auto; padding: 28px 28px 40px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 16px; text-align: center;
+    }
+    .stat-num { font-size: 26px; font-weight: 800; color: var(--ocean); }
+    .stat-label { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Flow card ── */
+    .flowchart-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px 24px; margin-bottom: 24px;
+    }
+    .flow-row {
+      display: flex; align-items: center; margin-bottom: 12px;
+      overflow-x: auto; scrollbar-width: none; gap: 0;
+    }
+    .flow-row:last-of-type { margin-bottom: 0; }
+    .flow-row::-webkit-scrollbar { display: none; }
+    .flow-day {
+      flex-shrink: 0; font-size: 10px; font-weight: 700;
+      width: 52px; text-align: center; padding: 4px 6px;
+      border-radius: 8px; margin-right: 8px; line-height: 1.4; color: #fff;
+    }
+    .flow-day.d1 { background: var(--ocean); }
+    .flow-day.d2 { background: var(--coral); }
+    .flow-day.d3 { background: var(--green); }
+    .flow-node {
+      flex-shrink: 0; font-size: 11px; font-weight: 600;
+      padding: 5px 12px; border-radius: 20px;
+      background: var(--warm-white); border: 1.5px solid var(--border);
+      color: var(--text-dark); white-space: nowrap;
+    }
+    .flow-node.hl { border-color: var(--sand); color: #b45309; background: rgba(244,162,97,0.1); }
+    .flow-node.bed { border-color: var(--ocean-lt); color: var(--ocean); background: rgba(72,202,228,0.1); }
+    .flow-node.free { border-color: var(--green); color: #276749; background: rgba(82,183,136,0.1); }
+    .flow-node.end  { border-color: #9CA3AF; color: #6B7280; background: #F9FAFB; }
+    .flow-arr { flex-shrink: 0; color: var(--border); padding: 0 5px; font-size: 13px; }
+    .flow-legend {
+      display: flex; gap: 16px; margin-top: 14px;
+      padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-light); }
+    .leg-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+    /* ── Highlights card ── */
+    .hl-card {
+      background: linear-gradient(135deg, #0A2540, #0077B6);
+      border-radius: 14px; padding: 22px 24px; color: #fff;
+    }
+    .hl-card .section-title { color: var(--sand-lt); }
+    .hl-list { display: flex; flex-direction: column; gap: 12px; }
+    .hl-item { display: flex; gap: 12px; align-items: flex-start; }
+    .hl-ico { font-size: 20px; flex-shrink: 0; }
+    .hl-txt { font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.85); }
+    .hl-txt strong { color: #fff; }
+
+    /* ── Day hero ── */
+    .day-hero {
+      border-radius: 14px; overflow: hidden; margin-bottom: 20px;
+      position: relative; height: 160px;
+    }
+    .day-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .day-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
+      display: flex; align-items: flex-end; padding: 16px 20px;
+    }
+    .day-hero-badge {
+      font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.2);
+      padding: 3px 10px; border-radius: 20px; display: inline-block;
+      margin-bottom: 4px; backdrop-filter: blur(4px); color: #fff;
+    }
+    .day-hero-text { font-size: 18px; font-weight: 800; color: #fff; }
+    .day-hero-sub  { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+    /* ── Activity cards ── */
+    .act-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;
+    }
+    .act-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; border-left: 4px solid var(--border);
+    }
+    .act-card.morning   { border-left-color: #F59E0B; }
+    .act-card.noon      { border-left-color: var(--sand); }
+    .act-card.afternoon { border-left-color: var(--ocean-mid); }
+    .act-card.evening   { border-left-color: var(--coral); }
+    .act-card.night     { border-left-color: #7C3AED; }
+    .act-card-img { width: 100%; height: 100px; object-fit: cover; display: block; }
+    .act-card-body { padding: 14px 16px; }
+    .act-time {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      color: var(--text-light); text-transform: uppercase; margin-bottom: 5px;
+    }
+    .act-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .act-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+    .act-star  {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #FFF7E6; color: #D97706;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 20px; margin-top: 8px;
+    }
+
+    /* ── Transport note ── */
+    .transport-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 24px; margin-bottom: 16px;
+    }
+    .transport-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .transport-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .transport-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+    .transport-label { font-weight: 600; width: 100px; flex-shrink: 0; }
+    .transport-val { color: var(--text-mid); flex: 1; }
+    .transport-note { font-size: 11px; color: var(--text-light); background: var(--warm-white); padding: 2px 8px; border-radius: 10px; }
+
+    /* ── Hotel section ── */
+    .hotel-card {
+      background: linear-gradient(135deg, #0A2540, #1a4a6a);
+      border-radius: 14px; padding: 22px 24px; color: #fff; margin-bottom: 16px;
+    }
+    .hotel-card .section-title { color: var(--sand-lt); }
+    .hotel-item { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+    .hotel-item:last-child { margin-bottom: 0; }
+    .hotel-ico { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+    .hotel-info strong { font-size: 14px; display: block; margin-bottom: 4px; }
+    .hotel-info span { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.75; display: block; }
+    .hotel-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 10px;
+      margin-bottom: 4px;
+    }
+    .self-note {
+      background: rgba(255,255,255,0.08); border-radius: 10px;
+      padding: 14px 16px; margin-top: 14px; font-size: 12px;
+      color: rgba(255,255,255,0.75); line-height: 1.75;
+    }
+
+    /* ── Voting section ── */
+    .vote-intro {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 24px; margin-bottom: 20px;
+    }
+    .vote-intro p { font-size: 13px; color: var(--text-mid); line-height: 1.75; }
+    .voter-id-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    }
+    .voter-id-label { font-size: 11px; color: var(--text-light); }
+    .voter-id-val { font-size: 11px; font-family: monospace; color: var(--ocean); font-weight: 600; }
+    .vote-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .vote-card {
+      background: var(--card-bg); border: 2px solid var(--border);
+      border-radius: 14px; padding: 20px; cursor: pointer;
+      transition: all 0.18s; position: relative;
+    }
+    .vote-card:hover { border-color: var(--ocean-lt); box-shadow: 0 4px 16px rgba(0,119,182,0.1); }
+    .vote-card.voted { border-color: var(--ocean); background: rgba(0,119,182,0.04); }
+    .vote-card-icon { font-size: 28px; margin-bottom: 10px; }
+    .vote-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .vote-card-desc { font-size: 12px; color: var(--text-mid); line-height: 1.6; margin-bottom: 12px; }
+    .vote-card-footer {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .vote-count {
+      font-size: 13px; font-weight: 700; color: var(--ocean);
+    }
+    .vote-count span { font-size: 11px; font-weight: 400; color: var(--text-light); }
+    .vote-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--warm-white); font-size: 12px; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .vote-card.voted .vote-btn {
+      background: var(--ocean); color: #fff; border-color: var(--ocean);
+    }
+    .vote-check {
+      position: absolute; top: 12px; right: 12px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--ocean); color: #fff;
+      font-size: 12px; display: none; align-items: center; justify-content: center;
+    }
+    .vote-card.voted .vote-check { display: flex; }
+    .vote-result-bar { height: 6px; background: var(--border); border-radius: 6px; margin-top: 10px; overflow: hidden; }
+    .vote-result-fill { height: 100%; background: var(--ocean); border-radius: 6px; transition: width 0.4s; }
+    .vote-summary {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 24px;
+    }
+    .vote-rank-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .vote-rank-row:last-child { border-bottom: none; }
+    .rank-num { width: 24px; height: 24px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .rank-1 { background: #FFD700; color: #7A5900; }
+    .rank-2 { background: #C0C0C0; color: #555; }
+    .rank-3 { background: #CD7F32; color: #5A3300; }
+    .rank-name { flex: 1; font-weight: 600; }
+    .rank-bar-wrap { width: 120px; }
+    .rank-count { font-weight: 700; color: var(--ocean); min-width: 40px; text-align: right; }
+    .setup-note {
+      background: #FFF7E6; border: 1px solid #FCD34D;
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
+    }
+    .setup-note p { font-size: 12px; color: #78350F; line-height: 1.75; }
+    .setup-note code {
+      display: block; background: #1E1E2E; color: #A6E3A1;
+      font-family: monospace; font-size: 11px; padding: 12px 14px;
+      border-radius: 8px; margin-top: 10px; white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ── Cost tab ── */
+    .cost-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 16px; overflow: hidden;
+    }
+    .cost-card-header {
+      padding: 16px 20px; background: var(--ocean); color: #fff;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+    }
+    .cost-table { width: 100%; border-collapse: collapse; }
+    .cost-table th {
+      background: #F0F7FF; padding: 10px 16px;
+      font-size: 11px; font-weight: 700; color: var(--text-light);
+      text-align: left; border-bottom: 1px solid var(--border);
+    }
+    .cost-table td {
+      padding: 12px 16px; font-size: 13px; color: var(--text-dark);
+      border-bottom: 1px solid var(--border);
+    }
+    .cost-table tr:last-child td { border-bottom: none; }
+    .cost-table .total { background: #F0F7FF; font-weight: 700; }
+    .cost-table .total td { color: var(--ocean); }
+    .cost-num { font-weight: 700; font-family: monospace; }
+    .cost-note { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .budget-summary {
+      background: linear-gradient(135deg, #0A2540, var(--ocean));
+      border-radius: 14px; padding: 22px 24px; color: #fff;
+    }
+    .budget-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 13px;
+    }
+    .budget-row:last-child { border-bottom: none; }
+    .budget-label { color: rgba(255,255,255,0.75); }
+    .budget-val { font-weight: 700; font-size: 15px; }
+
+    /* ── Notes ── */
+    .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .note-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .note-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .note-body { font-size: 12px; color: var(--text-mid); line-height: 1.85; }
+
+    @media (max-width: 680px) {
+      .sidebar { display: none; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌊</div>
+    <div>
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿管理中樞</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="yilan2026.html">
+      <span class="nav-icon">🏔️</span>
+      <div><div class="nav-text">宜蘭行</div><div class="nav-sub">家族旅行</div></div>
+    </a>
+    <a class="nav-item active" href="liuqiu2026.html">
+      <span class="nav-icon">🐢</span>
+      <div><div class="nav-text">小琉球</div><div class="nav-sub">員工旅遊</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">🐢</span>
+    <div>
+      <div class="topbar-title">小琉球員工旅遊 2026</div>
+      <div class="topbar-sub">3天2夜 · 45人 · 東港登船 · 機車探島</div>
+    </div>
+    <div class="trip-badge">🗳️ 投票進行中</div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="go('overview',this)">總覽</button>
+    <button class="tab-btn" onclick="go('d1',this)">Day 1 · 抵達</button>
+    <button class="tab-btn" onclick="go('d2',this)">Day 2 · 探島</button>
+    <button class="tab-btn" onclick="go('d3',this)">Day 3 · 回程</button>
+    <button class="tab-btn" onclick="go('transport',this)">交通</button>
+    <button class="tab-btn" onclick="go('hotel',this)">住宿</button>
+    <button class="tab-btn" onclick="go('vote',this)">🗳️ 投票</button>
+    <button class="tab-btn" onclick="go('cost',this)">💰 費用</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ════ 總覽 ════ -->
+    <div id="tab-overview" class="tab-panel active">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">天數</div></div>
+        <div class="stat-card"><div class="stat-num">45</div><div class="stat-label">人數</div></div>
+        <div class="stat-card"><div class="stat-num">2</div><div class="stat-label">晚住宿</div></div>
+        <div class="stat-card"><div class="stat-num">~22</div><div class="stat-label">機車輛數</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:18px">~22萬</div><div class="stat-label">公司出預算</div></div>
+      </div>
+
+      <div class="flowchart-card">
+        <div class="section-title">🗺️ 三天流程</div>
+        <div class="flow-row">
+          <div class="flow-day d1">Day 1</div>
+          <div class="flow-node">🚌 集合左營</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🛳️ 東港登船</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🏍️ 租機車</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node hl">🏖️ 探島</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node bed">🍖 名宿烤肉</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-day d2">Day 2</div>
+          <div class="flow-node hl">🐢 水上活動</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node hl">🏄 自由探索</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node free">🍽️ 自理晚餐</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node bed">🌙 自理住宿</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-day d3">Day 3</div>
+          <div class="flow-node hl">🌅 晨景散步</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🛍️ 伴手禮</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node">🛳️ 回東港</div>
+          <div class="flow-arr">→</div>
+          <div class="flow-node end">🏠 各自回家</div>
+        </div>
+        <div class="flow-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--ocean-lt)"></div>住宿</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--sand)"></div>亮點活動</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>自理</div>
+        </div>
+      </div>
+
+      <div class="hl-card">
+        <div class="section-title">✨ 這趟旅遊的目的</div>
+        <div class="hl-list">
+          <div class="hl-item"><div class="hl-ico">🐢</div><div class="hl-txt"><strong>海龜就在眼前</strong>——浮潛的時候，人跟海龜在同一個水裡。那個畫面，讓大家帶走一個共同記憶。</div></div>
+          <div class="hl-item"><div class="hl-ico">🏍️</div><div class="hl-txt"><strong>機車自由行</strong>——不跟團、不排程。每個人的小琉球，長什麼樣子，由自己決定。</div></div>
+          <div class="hl-item"><div class="hl-ico">🍖</div><div class="hl-txt"><strong>第一晚的烤肉凝聚</strong>——45人在同一個地方，說話、烤肉、笑。這是公司的味道，不在辦公室。</div></div>
+          <div class="hl-item"><div class="hl-ico">🌊</div><div class="hl-txt"><strong>第二天的自由</strong>——沒有行程表。有人想找特色咖啡廳，有人想繼續浮潛，有人想在沙灘坐著什麼都不做。都可以。</div></div>
+          <div class="hl-item"><div class="hl-ico">🤝</div><div class="hl-txt"><strong>共好的延伸</strong>——一起玩過的人，回去工作的方式不一樣。這是投資，不是開銷。</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ Day 1 ════ -->
+    <div id="tab-d1" class="tab-panel">
+      <div class="day-hero">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Little_Liuqiu_Island_Aerial_01.jpg/1280px-Little_Liuqiu_Island_Aerial_01.jpg"
+          onerror="this.style.background='linear-gradient(135deg,#0077B6,#48CAE4)';this.removeAttribute('src')" alt="小琉球" />
+        <div class="day-hero-overlay">
+          <div>
+            <div class="day-hero-badge">Day 1</div>
+            <div class="day-hero-text">抵達小琉球，機車接管全島</div>
+            <div class="day-hero-sub">東港 → 小琉球 → 名宿烤肉夜</div>
+          </div>
+        </div>
+      </div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上 07:30</div>
+            <div class="act-title">集合出發——左營總店</div>
+            <div class="act-desc">集合點：左營總店。統一搭乘遊覽車前往東港。車程約50–60分鐘，路上早餐自理。</div>
+          </div>
+        </div>
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上 09:00</div>
+            <div class="act-title">東港登船</div>
+            <div class="act-desc">東琉線渡輪，船程約30分鐘。建議分批購票或提前預約團體票。海上那段，就是這趟旅遊的開場白。</div>
+          </div>
+        </div>
+        <div class="act-card noon">
+          <div class="act-card-body">
+            <div class="act-time">早上 09:45</div>
+            <div class="act-title">抵達 · 租機車</div>
+            <div class="act-desc">下船後分組租機車。45人需約22台（兩人一車）。建議提前聯繫在地租車行預訂，旺季一定要先訂。安全說明完畢，發車。</div>
+            <div class="act-star">⚠️ 需提前預訂機車</div>
+          </div>
+        </div>
+        <div class="act-card afternoon">
+          <div class="act-card-body">
+            <div class="act-time">上午–下午</div>
+            <div class="act-title">自由探島</div>
+            <div class="act-desc">環島一圈約12公里，30分鐘繞完。景點：美人洞、烏鬼洞、厚石群礁、蛤板灣。各組自由安排，不集體行動。</div>
+            <div class="act-star">⭐ 亮點體驗</div>
+          </div>
+        </div>
+        <div class="act-card evening">
+          <div class="act-card-body">
+            <div class="act-time">傍晚 17:30</div>
+            <div class="act-title">check in · 名宿集合</div>
+            <div class="act-desc">全員回到預訂住宿集合。放行李、換衣服、準備烤肉。</div>
+          </div>
+        </div>
+        <div class="act-card night">
+          <div class="act-card-body">
+            <div class="act-time">晚上 18:30</div>
+            <div class="act-title">45人烤肉夜</div>
+            <div class="act-desc">公司包辦食材。烤肉、喝飲料、說說笑笑。不用排場，但要有氣氛。這是Day 1最重要的事——讓大家記得今晚。</div>
+            <div class="act-star">⭐ 核心亮點</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ Day 2 ════ -->
+    <div id="tab-d2" class="tab-panel">
+      <div class="day-hero">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Green_sea_turtle_Chelonia_mydas.jpg/1280px-Green_sea_turtle_Chelonia_mydas.jpg"
+          onerror="this.style.background='linear-gradient(135deg,#48CAE4,#0096C7)';this.removeAttribute('src')" alt="海龜" />
+        <div class="day-hero-overlay">
+          <div>
+            <div class="day-hero-badge">Day 2</div>
+            <div class="day-hero-text">水上活動 + 完全自由</div>
+            <div class="day-hero-sub">水活動（公司安排）→ 下午自由 → 晚餐自理</div>
+          </div>
+        </div>
+      </div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上 08:30</div>
+            <div class="act-title">早餐 · 民宿or自理</div>
+            <div class="act-desc">視住宿是否含早。若自理，小琉球早餐選擇不多，建議提早出去走走。</div>
+          </div>
+        </div>
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上 09:30</div>
+            <div class="act-title">🗳️ 投票水上活動（全員）</div>
+            <div class="act-desc">依投票結果，全員參加主活動。45人分組（每組10–15人），依序進行。活動完畢後自由行動。詳見「投票」頁籤。</div>
+            <div class="act-star">⭐ 公司統一安排</div>
+          </div>
+        </div>
+        <div class="act-card noon">
+          <div class="act-card-body">
+            <div class="act-time">中午 12:30</div>
+            <div class="act-title">午餐自理</div>
+            <div class="act-desc">推薦：漁埕頂海鮮、碳烤玉米、海產粥。各自用餐，不集合。</div>
+          </div>
+        </div>
+        <div class="act-card afternoon">
+          <div class="act-card-body">
+            <div class="act-time">下午</div>
+            <div class="act-title">完全自由時間</div>
+            <div class="act-desc">沒有行程。有人繼續浮潛、有人找珊瑚礁、有人在沙灘躺著、有人找特色小店。島不大，怎麼玩都對。</div>
+            <div class="act-star">⭐ 完全自由</div>
+          </div>
+        </div>
+        <div class="act-card evening">
+          <div class="act-card-body">
+            <div class="act-time">傍晚–晚上</div>
+            <div class="act-title">晚餐自理 · 住宿自理</div>
+            <div class="act-desc">第二晚員工自行安排住宿與晚餐，公司不統一。可以繼續待同一間，或換地方住。島上可選項目見住宿頁籤。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ Day 3 ════ -->
+    <div id="tab-d3" class="tab-panel">
+      <div class="day-hero">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Xiaoliuqiu_Vase_Rock.jpg/1280px-Xiaoliuqiu_Vase_Rock.jpg"
+          onerror="this.style.background='linear-gradient(135deg,#52B788,#95D5B2)';this.removeAttribute('src')" alt="花瓶岩" />
+        <div class="day-hero-overlay">
+          <div>
+            <div class="day-hero-badge">Day 3</div>
+            <div class="day-hero-text">慢慢收尾，帶著回憶上船</div>
+            <div class="day-hero-sub">早晨散步 → 伴手禮 → 回東港</div>
+          </div>
+        </div>
+      </div>
+      <div class="act-grid">
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上</div>
+            <div class="act-title">最後的早晨</div>
+            <div class="act-desc">起床不要急。花瓶岩日出、沙灘早晨散步、再看一次海。這是最後幾個小時，慢一點。</div>
+            <div class="act-star">⭐ 預期亮點</div>
+          </div>
+        </div>
+        <div class="act-card morning">
+          <div class="act-card-body">
+            <div class="act-time">早上 09:30</div>
+            <div class="act-title">還機車 · 買伴手禮</div>
+            <div class="act-desc">小琉球伴手禮：飛魚乾、珊瑚造型紀念品、海龜玩具（孩子喜歡）。選幾樣，不用多。</div>
+          </div>
+        </div>
+        <div class="act-card noon">
+          <div class="act-card-body">
+            <div class="act-time">中午 11:00</div>
+            <div class="act-title">集合登船 · 回東港</div>
+            <div class="act-desc">搭渡輪回東港，30分鐘。在船上可以補睡，或是對著海說謝謝。</div>
+          </div>
+        </div>
+        <div class="act-card afternoon">
+          <div class="act-card-body">
+            <div class="act-time">下午 13:00</div>
+            <div class="act-title">遊覽車回左營 · 解散</div>
+            <div class="act-desc">回到左營總店解散，或在高雄市區下車。各自回家，帶一個好的感覺繼續工作。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ 交通 ════ -->
+    <div id="tab-transport" class="tab-panel">
+      <div class="transport-card">
+        <div class="section-title">🚌 交通安排</div>
+        <div class="transport-row">
+          <div class="transport-icon">🚌</div>
+          <div class="transport-label">遊覽車</div>
+          <div class="transport-val">左營總店 → 東港（去回）<br><span style="font-size:11px;color:var(--text-light)">車程約50–60分鐘。45人包1台大型遊覽車（47座）。</span></div>
+          <div class="transport-note">出發 07:30 / 回程 12:30</div>
+        </div>
+        <div class="transport-row">
+          <div class="transport-icon">🛳️</div>
+          <div class="transport-label">渡輪</div>
+          <div class="transport-val">東港 ↔ 小琉球（東琉線）<br><span style="font-size:11px;color:var(--text-light)">船程30分鐘。每日多班次。45人建議提前訂團體票。</span></div>
+          <div class="transport-note">單程 ~NT$250</div>
+        </div>
+        <div class="transport-row">
+          <div class="transport-icon">🏍️</div>
+          <div class="transport-label">機車</div>
+          <div class="transport-val">島上租車（125cc）<br><span style="font-size:11px;color:var(--text-light)">需約22台。必須提前2–3週預訂，旺季供不應求。需有駕照。</span></div>
+          <div class="transport-note">~NT$350–500/台/天</div>
+        </div>
+      </div>
+      <div style="background:#F0F7FF;border:1px solid #BEE3F8;border-radius:12px;padding:16px 20px;font-size:12px;color:#1a365d;line-height:1.85;">
+        <strong>⚠️ 行前待確認事項</strong><br>
+        1. 遊覽車：聯繫車行報價，確認去回費用<br>
+        2. 渡輪：致電東琉線（大福輪）確認團體訂票方式<br>
+        3. 機車：小琉球當地租車行電話預訂，說明45人（22台），2天<br>
+        4. 確認全員駕照（機車牌照）狀況
+      </div>
+    </div>
+
+    <!-- ════ 住宿 ════ -->
+    <div id="tab-hotel" class="tab-panel">
+      <div class="hotel-card">
+        <div class="section-title">🏠 住宿策略</div>
+        <div class="hotel-item">
+          <div class="hotel-ico">🍖</div>
+          <div class="hotel-info">
+            <div class="hotel-badge">Night 1 · 公司安排</div>
+            <strong>名宿 + 烤肉場地</strong>
+            <span>需找能容納45人烤肉的包棟或大型民宿。小琉球單一民宿容量有限（多為10–20人），建議聯繫當地旅行社規劃套裝，協助訂2–3棟相鄰民宿 + 烤肉場地。</span>
+            <span>預算：NT$1,200–1,800/人（含場地）</span>
+          </div>
+        </div>
+        <div class="hotel-item">
+          <div class="hotel-ico">🔍</div>
+          <div class="hotel-info">
+            <div class="hotel-badge">推薦聯繫管道</div>
+            <strong>小琉球在地旅行社或民宿聯合訂房</strong>
+            <span>· 琉球旅遊服務中心：專門處理大型團體</span>
+            <span>· 屏東縣琉球鄉公所觀光課：可提供當地資訊</span>
+            <span>· 告知：45人、需烤肉場地、Night 1集體、Night 2自理</span>
+          </div>
+        </div>
+        <div class="self-note">
+          <strong>Night 2（員工自理）</strong><br>
+          各自訂房或決定是否住同處。島上民宿種類多，價位 NT$800–2,000/人不等。提早告知員工自行訂房，旺季需在出發前3–4週確認。
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ 投票 ════ -->
+    <div id="tab-vote" class="tab-panel">
+      <div class="vote-intro">
+        <div class="section-title">🗳️ 水上活動投票</div>
+        <p>
+          Day 2 早上的水上活動，由全員決定。<br>
+          你可以選多個你想玩的活動，票數最高的前1–2項公司統一安排。<br>
+          每台裝置只能投票一次，把連結傳給同事讓大家一起選。
+        </p>
+        <div class="voter-id-row">
+          <span class="voter-id-label">你的投票ID：</span>
+          <span class="voter-id-val" id="voter-id-display">載入中…</span>
+        </div>
+      </div>
+
+      <div id="setup-warning" class="setup-note" style="display:none">
+        <p>
+          <strong>⚠️ 投票功能需要先建立資料表</strong><br>
+          請漢柏到 Supabase Dashboard → SQL Editor，執行以下指令後重新整理頁面：
+        </p>
+        <code>CREATE TABLE activity_votes (
+  id bigserial PRIMARY KEY,
+  activity_id text NOT NULL,
+  voter_id text NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (voter_id, activity_id)
+);
+ALTER TABLE activity_votes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "select_all" ON activity_votes FOR SELECT TO anon USING (true);
+CREATE POLICY "insert_all" ON activity_votes FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "delete_own" ON activity_votes FOR DELETE TO anon USING (true);</code>
+      </div>
+
+      <div class="vote-grid" id="vote-grid">
+        <!-- 動態填入 -->
+      </div>
+
+      <div class="vote-summary">
+        <div class="section-title">📊 即時票數排行</div>
+        <div id="vote-rank-list">
+          <div style="font-size:12px;color:var(--text-light);text-align:center;padding:20px">載入中…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ 費用 ════ -->
+    <div id="tab-cost" class="tab-panel">
+      <div class="cost-card">
+        <div class="cost-card-header">💼 公司出（每人估算）</div>
+        <table class="cost-table">
+          <thead>
+            <tr>
+              <th>項目</th><th>說明</th><th>單價（/人）</th><th>小計（45人）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>遊覽車</strong><br><div class="cost-note">左營↔東港來回包車</div></td>
+              <td>1台大巴，47座</td>
+              <td class="cost-num">NT$350</td>
+              <td class="cost-num">~NT$16,000</td>
+            </tr>
+            <tr>
+              <td><strong>渡輪票</strong><br><div class="cost-note">去回各1次</div></td>
+              <td>東琉線，單程~250</td>
+              <td class="cost-num">NT$500</td>
+              <td class="cost-num">NT$22,500</td>
+            </tr>
+            <tr>
+              <td><strong>Night 1 住宿</strong><br><div class="cost-note">含烤肉場地</div></td>
+              <td>名宿包棟，45人</td>
+              <td class="cost-num">NT$1,500</td>
+              <td class="cost-num">NT$67,500</td>
+            </tr>
+            <tr>
+              <td><strong>Night 1 烤肉食材</strong><br><div class="cost-note">含飲料備品</div></td>
+              <td>每人食材費</td>
+              <td class="cost-num">NT$700</td>
+              <td class="cost-num">NT$31,500</td>
+            </tr>
+            <tr>
+              <td><strong>機車租金</strong><br><div class="cost-note">2天，22台</div></td>
+              <td>400×2天=800/台，2人分攤</td>
+              <td class="cost-num">NT$400</td>
+              <td class="cost-num">NT$18,000</td>
+            </tr>
+            <tr>
+              <td><strong>水上活動</strong><br><div class="cost-note">Day 2 主活動</div></td>
+              <td>依投票結果定項目</td>
+              <td class="cost-num">NT$1,000</td>
+              <td class="cost-num">NT$45,000</td>
+            </tr>
+            <tr>
+              <td><strong>雜費備用金</strong><br><div class="cost-note">保險、急用</div></td>
+              <td>緊急支出、入場費等</td>
+              <td class="cost-num">NT$200</td>
+              <td class="cost-num">NT$9,000</td>
+            </tr>
+            <tr class="total">
+              <td colspan="2"><strong>公司合計</strong></td>
+              <td class="cost-num"><strong>NT$4,650</strong></td>
+              <td class="cost-num"><strong>~NT$209,500</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cost-card">
+        <div class="cost-card-header" style="background:var(--green)">🙋 員工自理（Day 2 起）</div>
+        <table class="cost-table">
+          <thead>
+            <tr><th>項目</th><th>估算範圍</th><th>說明</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Night 2 住宿</strong></td>
+              <td class="cost-num">NT$800–1,500</td>
+              <td>各自訂，需提早安排</td>
+            </tr>
+            <tr>
+              <td><strong>Day 2 午晚餐</strong></td>
+              <td class="cost-num">NT$300–600</td>
+              <td>島上餐廳、海鮮、小吃</td>
+            </tr>
+            <tr>
+              <td><strong>伴手禮/個人消費</strong></td>
+              <td class="cost-num">NT$200–500</td>
+              <td>視個人意願</td>
+            </tr>
+            <tr class="total">
+              <td><strong>員工自理小計</strong></td>
+              <td class="cost-num"><strong>NT$1,300–2,600</strong></td>
+              <td>建議各自備妥</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="budget-summary">
+        <div class="section-title" style="color:var(--sand-lt)">💰 預算總覽</div>
+        <div class="budget-row">
+          <span class="budget-label">公司預算（45人）</span>
+          <span class="budget-val">約 NT$210,000</span>
+        </div>
+        <div class="budget-row">
+          <span class="budget-label">每人公司出</span>
+          <span class="budget-val">約 NT$4,650</span>
+        </div>
+        <div class="budget-row">
+          <span class="budget-label">員工個人預備（Day 2）</span>
+          <span class="budget-val">NT$1,300–2,600</span>
+        </div>
+        <div class="budget-row">
+          <span class="budget-label" style="font-size:11px">* 以上為估算值，住宿與遊覽車費用依實際報價調整</span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Supabase 設定 ──
+  const SB_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  const ACTIVITIES = [
+    { id: 'sea_turtle', icon: '🐢', title: '海龜浮潛', desc: '小琉球最著名體驗。在海裡跟綠蠵龜面對面，近到可以看清楚牠的眼睛。浮潛裝備現場提供，不用會游泳也能參與。', price: '約 NT$800–1,000' },
+    { id: 'sup',        icon: '🏄', title: 'SUP 立槳',  desc: '站在板子上，用槳在海面慢慢前進。很適合拍照，穿著也不會全濕。適合各年齡層，教練在旁指導。', price: '約 NT$700–900' },
+    { id: 'kayak',      icon: '🚣', title: '獨木舟',    desc: '划進小琉球的珊瑚礁海域，有些路線可以進入海蝕洞穴。小組進行，感受比較私密，適合喜歡安靜探索的人。', price: '約 NT$700–900' },
+    { id: 'snorkel_guide', icon: '🤿', title: '水下導覽浮潛', desc: '有教練帶領，進入珊瑚礁群看魚、看珊瑚。比自助浮潛更深入，教練會指出各種海中生物，適合第一次浮潛的人。', price: '約 NT$900–1,200' },
+    { id: 'glass_boat', icon: '🚤', title: '玻璃底船', desc: '船底透明，坐在船上就能看到海底珊瑚與魚群。不用下水，適合不敢下海或帶小孩的人。老少皆宜。', price: '約 NT$400–600' },
+  ];
+
+  // ── Voter ID ──
+  function getVoterId() {
+    let id = localStorage.getItem('liuqiu_voter_id');
+    if (!id) {
+      id = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem('liuqiu_voter_id', id);
+    }
+    return id;
+  }
+
+  const VOTER_ID = getVoterId();
+  document.getElementById('voter-id-display').textContent = VOTER_ID;
+
+  // ── Supabase helpers ──
+  async function sbFetch(path, opts = {}) {
+    const res = await fetch(SB_URL + '/rest/v1/' + path, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || 'return=representation',
+        ...opts.headers
+      },
+      ...opts
+    });
+    return res;
+  }
+
+  // ── State ──
+  let myVotes = new Set();
+  let counts = {};
+  let totalVoters = 0;
+  let ready = false;
+
+  // ── Init ──
+  async function initVoting() {
+    try {
+      // Load all votes
+      const res = await sbFetch('activity_votes?select=activity_id,voter_id');
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 400) {
+          document.getElementById('setup-warning').style.display = 'block';
+        }
+        renderOffline();
+        return;
+      }
+      const data = await res.json();
+      // Count
+      const voterSet = new Set();
+      data.forEach(row => {
+        counts[row.activity_id] = (counts[row.activity_id] || 0) + 1;
+        voterSet.add(row.voter_id);
+        if (row.voter_id === VOTER_ID) myVotes.add(row.activity_id);
+      });
+      totalVoters = voterSet.size;
+      ready = true;
+      renderGrid();
+      renderRank();
+    } catch (e) {
+      renderOffline();
+    }
+  }
+
+  function renderOffline() {
+    ACTIVITIES.forEach(a => counts[a.id] = counts[a.id] || 0);
+    ready = false;
+    renderGrid();
+    renderRank();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('vote-grid');
+    grid.innerHTML = '';
+    const maxCount = Math.max(...Object.values(counts), 1);
+    ACTIVITIES.forEach(act => {
+      const voted = myVotes.has(act.id);
+      const c = counts[act.id] || 0;
+      const pct = Math.round((c / maxCount) * 100);
+      const card = document.createElement('div');
+      card.className = 'vote-card' + (voted ? ' voted' : '');
+      card.id = 'card-' + act.id;
+      card.innerHTML = `
+        <div class="vote-check">✓</div>
+        <div class="vote-card-icon">${act.icon}</div>
+        <div class="vote-card-title">${act.title}</div>
+        <div class="vote-card-desc">${act.desc}</div>
+        <div style="font-size:11px;color:var(--text-light);margin-bottom:12px">${act.price}</div>
+        <div class="vote-result-bar"><div class="vote-result-fill" style="width:${pct}%"></div></div>
+        <div class="vote-card-footer" style="margin-top:10px">
+          <div class="vote-count" id="count-${act.id}">${c} <span>票</span></div>
+          <button class="vote-btn" onclick="toggleVote('${act.id}')">
+            ${voted ? '✓ 已選' : '+ 投票'}
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function renderRank() {
+    const sorted = [...ACTIVITIES].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    const maxC = Math.max(...sorted.map(a => counts[a.id] || 0), 1);
+    const el = document.getElementById('vote-rank-list');
+    if (!el) return;
+    el.innerHTML = sorted.map((act, i) => {
+      const c = counts[act.id] || 0;
+      const pct = Math.round((c / maxC) * 100);
+      return `
+        <div class="vote-rank-row">
+          <div class="rank-num ${i < 3 ? 'rank-' + (i+1) : ''}">${i+1}</div>
+          <div>${act.icon}</div>
+          <div class="rank-name">${act.title}</div>
+          <div class="rank-bar-wrap">
+            <div class="vote-result-bar"><div class="vote-result-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="rank-count">${c}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function toggleVote(activityId) {
+    if (!ready) { alert('請先到 Supabase 建立資料表，詳見頁面上方說明。'); return; }
+    const wasVoted = myVotes.has(activityId);
+    // Optimistic update
+    if (wasVoted) {
+      myVotes.delete(activityId);
+      counts[activityId] = Math.max((counts[activityId] || 1) - 1, 0);
+    } else {
+      myVotes.add(activityId);
+      counts[activityId] = (counts[activityId] || 0) + 1;
+    }
+    updateCard(activityId);
+    renderRank();
+    // Sync to Supabase
+    if (wasVoted) {
+      await sbFetch(`activity_votes?activity_id=eq.${activityId}&voter_id=eq.${VOTER_ID}`, { method: 'DELETE', prefer: '' });
+    } else {
+      await sbFetch('activity_votes', {
+        method: 'POST',
+        body: JSON.stringify({ activity_id: activityId, voter_id: VOTER_ID })
+      });
+    }
+  }
+
+  function updateCard(activityId) {
+    const card = document.getElementById('card-' + activityId);
+    if (!card) return;
+    const voted = myVotes.has(activityId);
+    card.className = 'vote-card' + (voted ? ' voted' : '');
+    const countEl = document.getElementById('count-' + activityId);
+    if (countEl) countEl.innerHTML = (counts[activityId] || 0) + ' <span>票</span>';
+    const btn = card.querySelector('.vote-btn');
+    if (btn) btn.textContent = voted ? '✓ 已選' : '+ 投票';
+    const maxCount = Math.max(...Object.values(counts), 1);
+    const fill = card.querySelector('.vote-result-fill');
+    if (fill) fill.style.width = Math.round(((counts[activityId] || 0) / maxCount) * 100) + '%';
+  }
+
+  // ── Tab switching ──
+  function go(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+    document.querySelector('.content').scrollTop = 0;
+    if (id === 'vote') initVoting();
+  }
+
+  // Auto-init if on vote tab
+  if (document.getElementById('tab-vote').classList.contains('active')) initVoting();
+</script>
+</body>
+</html>
