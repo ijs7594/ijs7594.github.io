@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>督導管理 · 漢柏分身</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --red:         #C0392B;
+      --blue:        #5B8FD4;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .loading { text-align: center; padding: 40px; color: var(--text-light); }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-mid); font-size: 13px; cursor: pointer; margin-bottom: 16px; }
+
+    /* ── TYP 範本設定（全店共用） ── */
+    .typ-box { background: var(--cream); border: 1px solid var(--sand); border-radius: 14px; padding: 4px 20px; margin-bottom: 20px; }
+    .typ-box summary { padding: 14px 0; font-size: 14px; font-weight: 700; color: var(--brown-mid); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+    .typ-box summary::-webkit-details-marker { display: none; }
+    .typ-box summary::before { content: "▸"; color: var(--caramel); transition: transform 0.15s; }
+    .typ-box[open] summary::before { transform: rotate(90deg); }
+    .typ-body { padding-bottom: 18px; }
+    .typ-form { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .typ-form input, .typ-form select {
+      border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: #fff;
+    }
+    .typ-form .t-cat  { width: 140px; }
+    .typ-form .t-name { flex: 1; min-width: 180px; }
+    .typ-form button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .typ-cat-group { margin-bottom: 14px; }
+    .typ-cat-title { font-size: 12px; font-weight: 700; color: var(--brown-main); margin-bottom: 6px; }
+    .typ-item-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+    .typ-item-name { flex: 1; font-size: 13px; color: var(--text-dark); }
+    .typ-item-row button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+    .typ-item-edit-name { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: inherit; outline: none; }
+    .typ-item-edit-cat { width: 120px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit; outline: none; }
+
+    /* ── Store grid ── */
+    .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .store-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; cursor: pointer; transition: box-shadow 0.15s; }
+    .store-card:hover { box-shadow: 0 6px 20px rgba(44,26,14,0.08); }
+    .store-name { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+    .store-addr { font-size: 12px; color: var(--text-light); margin-bottom: 14px; }
+    .last-sup { font-size: 12px; color: var(--text-mid); display: flex; align-items: center; gap: 8px; }
+    .score-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .score-high { background: rgba(76,175,125,0.12); color: var(--green); }
+    .score-mid  { background: #FFF7E6; color: #D97706; }
+    .score-low  { background: #FDECEC; color: var(--red); }
+    .score-none { background: #F1F1F1; color: #888; }
+
+    /* ── Detail ── */
+    .detail-header { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    .detail-title { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+    .detail-addr { font-size: 13px; color: var(--text-light); }
+
+    .detail-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .detail-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
+    .detail-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
+
+    /* ── 執行督導 ── */
+    .insp-meta { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .insp-meta input { border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .insp-meta .m-inspector { width: 160px; }
+    .insp-cat-group { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+    .insp-cat-title { font-size: 13px; font-weight: 700; color: var(--brown-main); margin-bottom: 10px; }
+    .insp-item-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .insp-item-row:first-of-type { border-top: none; }
+    .insp-item-name { flex: 1; font-size: 13px; color: var(--text-dark); min-width: 160px; }
+    .insp-result-btns { display: flex; gap: 6px; }
+    .insp-result-btns button { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 20px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-weight: 600; }
+    .insp-result-btns button.sel-合格 { background: rgba(76,175,125,0.15); color: var(--green); border-color: var(--green); }
+    .insp-result-btns button.sel-不合格 { background: #FDECEC; color: var(--red); border-color: var(--red); }
+    .insp-result-btns button.sel-不適用 { background: #F1F1F1; color: #888; border-color: #ccc; }
+    .insp-item-note { width: 160px; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12px; font-family: inherit; outline: none; }
+    .insp-overall { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .insp-overall textarea { width: 100%; min-height: 60px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; resize: vertical; margin-top: 8px; }
+    .insp-submit-btn { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .insp-submit-btn:hover { background: var(--brown-mid); }
+    .insp-submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* ── 督導報告 ── */
+    .report-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
+    .report-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .report-date { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    .report-inspector { font-size: 12px; color: var(--text-mid); }
+    .report-note { font-size: 13px; color: var(--text-mid); margin: 8px 0; line-height: 1.6; }
+    .report-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .report-actions button { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+    .report-actions button:hover { background: var(--cream); }
+    .report-items-table { width: 100%; border-collapse: collapse; margin-top: 10px; display: none; }
+    .report-items-table.open { display: table; }
+    .report-items-table th { text-align: left; padding: 6px 8px; font-size: 11px; color: var(--text-light); border-bottom: 1px solid var(--border); }
+    .report-items-table td { padding: 6px 8px; font-size: 12px; border-bottom: 1px solid var(--border); color: var(--text-mid); }
+    .fail-tag { color: var(--red); font-weight: 700; }
+    .pass-tag { color: var(--green); font-weight: 700; }
+    .na-tag { color: #888; }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div class="brand-text">
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿管理中樞</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item active" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">🔍</span>
+    <div>
+      <div class="topbar-title" id="page-title">督導管理</div>
+      <div class="topbar-sub" id="page-sub">依照 TYP 範本完成每次督導，自動產出報告與紀錄</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="list-view">
+      <details class="typ-box" id="typ-box">
+        <summary>📋 TYP 範本設定（全分店共用，督導可自行增減調整）</summary>
+        <div class="typ-body">
+          <div class="typ-form">
+            <input id="typ-cat-input" class="t-cat" placeholder="分類，例如：環境衛生" />
+            <input id="typ-name-input" class="t-name" placeholder="督導項目名稱" onkeydown="if(event.key==='Enter')addTypItem()" />
+            <button onclick="addTypItem()">新增項目</button>
+          </div>
+          <div id="typ-list"></div>
+        </div>
+      </details>
+
+      <div class="store-grid" id="store-grid"><div class="loading">載入中…</div></div>
+    </div>
+
+    <div id="detail-view" style="display:none;">
+      <button class="back-btn" onclick="showList()">← 回到督導總覽</button>
+      <div class="detail-header" id="detail-header"></div>
+
+      <div class="detail-tabs">
+        <div class="detail-tab active" data-tab="inspect" onclick="switchTab('inspect')">🔍 執行督導</div>
+        <div class="detail-tab" data-tab="reports" onclick="switchTab('reports')">📑 督導報告與紀錄</div>
+      </div>
+
+      <div id="tab-inspect">
+        <div class="insp-meta">
+          <input id="insp-inspector" class="m-inspector" placeholder="督導人姓名" />
+        </div>
+        <div id="insp-cats"></div>
+        <div class="insp-overall">
+          <label style="font-size:12px;color:var(--text-mid);">整體備註（選填）</label>
+          <textarea id="insp-note" placeholder="這次督導整體觀察、需要跟催的事項……"></textarea>
+        </div>
+        <button class="insp-submit-btn" id="insp-submit-btn" onclick="submitInspection()">✅ 產出督導報告</button>
+      </div>
+
+      <div id="tab-reports" style="display:none;">
+        <div id="report-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const BOT_URL = 'https://guijong-linebot-production.up.railway.app';
+  const BOT_SECRET = '1JslYVY1N9-HE7xvoOMf1SU8rTDMNMLu';
+
+  let stores = [];
+  let template = [];
+  let records = [];
+  let recordItems = [];
+  let currentStoreId = null;
+  let currentTab = 'inspect';
+  let editingTypId = null;
+  let inspResults = {};   // { templateId: { result, note } }
+  let openReportId = null;
+
+  loadAll();
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function loadAll() {
+    try {
+      [stores, template, records, recordItems] = await Promise.all([
+        dbGet('stores', 'order=created_at.desc'),
+        dbGet('supervision_templates', 'order=sort_order.asc'),
+        dbGet('supervision_records', 'order=created_at.desc'),
+        dbGet('supervision_record_items', 'order=id.asc')
+      ]);
+      if (!Array.isArray(stores)) stores = [];
+      if (!Array.isArray(template)) template = [];
+      if (!Array.isArray(records)) records = [];
+      if (!Array.isArray(recordItems)) recordItems = [];
+      renderTypList();
+      renderList();
+    } catch {
+      document.getElementById('store-grid').innerHTML = '<div class="loading">載入失敗，請重新整理（若剛設好 Supabase 資料表，請確認 SQL 已執行）</div>';
+    }
+  }
+
+  // ── TYP 範本設定 ──
+  function renderTypList() {
+    const el = document.getElementById('typ-list');
+    if (template.length === 0) {
+      el.innerHTML = '<div class="empty" style="padding:20px;"><div>還沒有督導項目，新增第一筆吧</div></div>';
+      return;
+    }
+    const cats = [...new Set(template.map(t => t.category || '其他'))];
+    el.innerHTML = cats.map(cat => {
+      const items = template.filter(t => (t.category || '其他') === cat);
+      return `<div class="typ-cat-group">
+        <div class="typ-cat-title">${esc(cat)}</div>
+        ${items.map(t => {
+          if (t.id === editingTypId) {
+            return `<div class="typ-item-row">
+              <input class="typ-item-edit-cat" id="edit-typ-cat-${t.id}" value="${esc(t.category || '')}" />
+              <input class="typ-item-edit-name" id="edit-typ-name-${t.id}" value="${esc(t.item_name)}" />
+              <button onclick="saveTypEdit('${t.id}')">💾 儲存</button>
+              <button onclick="cancelTypEdit()">取消</button>
+            </div>`;
+          }
+          return `<div class="typ-item-row">
+            <span class="typ-item-name">${esc(t.item_name)}</span>
+            <button onclick="startTypEdit('${t.id}')">✏️</button>
+            <button onclick="deleteTypItem('${t.id}')">🗑</button>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  async function addTypItem() {
+    const category = document.getElementById('typ-cat-input').value.trim() || '其他';
+    const item_name = document.getElementById('typ-name-input').value.trim();
+    if (!item_name) return;
+    const sort_order = template.length + 1;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/supervision_templates`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ category, item_name, sort_order })
+      });
+      document.getElementById('typ-name-input').value = '';
+      await loadAll();
+      document.getElementById('typ-box').open = true;
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  function startTypEdit(id) { editingTypId = id; renderTypList(); }
+  function cancelTypEdit() { editingTypId = null; renderTypList(); }
+
+  async function saveTypEdit(id) {
+    const category = document.getElementById(`edit-typ-cat-${id}`).value.trim() || '其他';
+    const item_name = document.getElementById(`edit-typ-name-${id}`).value.trim();
+    if (!item_name) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/supervision_templates?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ category, item_name })
+      });
+      editingTypId = null;
+      await loadAll();
+      document.getElementById('typ-box').open = true;
+    } catch { alert('儲存失敗，請再試一次'); }
+  }
+
+  async function deleteTypItem(id) {
+    if (!confirm('確定要刪除這個督導項目嗎？（不會影響已產出的歷史報告）')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/supervision_templates?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAll();
+      document.getElementById('typ-box').open = true;
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 督導總覽（店家清單）──
+  function lastRecordOf(storeId) {
+    return records.filter(r => r.store_id === storeId)[0] || null;
+  }
+
+  function scoreClass(score) {
+    if (score == null) return 'score-none';
+    if (score >= 90) return 'score-high';
+    if (score >= 70) return 'score-mid';
+    return 'score-low';
+  }
+
+  function renderList() {
+    const grid = document.getElementById('store-grid');
+    if (stores.length === 0) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+        <div class="empty-icon">🏪</div>
+        <div>還沒有店家，請先到「展店紀錄」建立店家</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = stores.map(s => {
+      const last = lastRecordOf(s.id);
+      return `<div class="store-card" onclick="openStore('${s.id}')">
+        <div class="store-name">${esc(s.name)}</div>
+        <div class="store-addr">${esc(s.address) || '未填地址'}</div>
+        <div class="last-sup">
+          ${last
+            ? `<span class="score-badge ${scoreClass(last.score)}">合格率 ${last.score}%</span><span>${formatDate(last.created_at)}</span>`
+            : `<span class="score-badge score-none">尚未督導</span>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function showList() {
+    currentStoreId = null;
+    document.getElementById('list-view').style.display = 'block';
+    document.getElementById('detail-view').style.display = 'none';
+    document.getElementById('page-title').textContent = '督導管理';
+    document.getElementById('page-sub').textContent = '依照 TYP 範本完成每次督導，自動產出報告與紀錄';
+    renderList();
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // ── 店家督導詳情 ──
+  function openStore(id) {
+    currentStoreId = id;
+    inspResults = {};
+    template.forEach(t => { inspResults[t.id] = { result: '合格', note: '' }; });
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('detail-view').style.display = 'block';
+    switchTab('inspect');
+    renderDetail();
+  }
+
+  function renderDetail() {
+    const s = stores.find(x => x.id === currentStoreId);
+    if (!s) { showList(); return; }
+    document.getElementById('page-title').textContent = s.name;
+    document.getElementById('page-sub').textContent = '督導管理';
+    document.getElementById('detail-header').innerHTML = `
+      <div class="detail-title">${esc(s.name)}</div>
+      <div class="detail-addr">${esc(s.address) || '未填地址'}</div>
+    `;
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.detail-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    document.getElementById('tab-inspect').style.display = tab === 'inspect' ? 'block' : 'none';
+    document.getElementById('tab-reports').style.display = tab === 'reports' ? 'block' : 'none';
+    if (tab === 'inspect') renderInspectForm();
+    if (tab === 'reports') renderReports();
+  }
+
+  // ── 執行督導 ──
+  function renderInspectForm() {
+    const el = document.getElementById('insp-cats');
+    if (template.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>還沒有 TYP 範本項目，請先到上方「TYP 範本設定」新增</div></div>';
+      document.getElementById('insp-submit-btn').style.display = 'none';
+      return;
+    }
+    document.getElementById('insp-submit-btn').style.display = 'inline-block';
+    const cats = [...new Set(template.map(t => t.category || '其他'))];
+    el.innerHTML = cats.map(cat => {
+      const items = template.filter(t => (t.category || '其他') === cat);
+      return `<div class="insp-cat-group">
+        <div class="insp-cat-title">${esc(cat)}</div>
+        ${items.map(t => {
+          const cur = inspResults[t.id] || { result: '合格', note: '' };
+          return `<div class="insp-item-row">
+            <span class="insp-item-name">${esc(t.item_name)}</span>
+            <div class="insp-result-btns">
+              <button class="${cur.result === '合格' ? 'sel-合格' : ''}" onclick="setInspResult('${t.id}','合格')">合格</button>
+              <button class="${cur.result === '不合格' ? 'sel-不合格' : ''}" onclick="setInspResult('${t.id}','不合格')">不合格</button>
+              <button class="${cur.result === '不適用' ? 'sel-不適用' : ''}" onclick="setInspResult('${t.id}','不適用')">不適用</button>
+            </div>
+            <input class="insp-item-note" placeholder="備註" value="${esc(cur.note)}" onchange="setInspNote('${t.id}', this.value)" />
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  function setInspResult(id, result) {
+    if (!inspResults[id]) inspResults[id] = { result: '合格', note: '' };
+    inspResults[id].result = result;
+    renderInspectForm();
+  }
+
+  function setInspNote(id, note) {
+    if (!inspResults[id]) inspResults[id] = { result: '合格', note: '' };
+    inspResults[id].note = note;
+  }
+
+  async function submitInspection() {
+    const inspector_name = document.getElementById('insp-inspector').value.trim();
+    const overall_note = document.getElementById('insp-note').value.trim();
+    if (!inspector_name) { alert('請填寫督導人姓名'); return; }
+    if (template.length === 0) return;
+
+    const items = template.map(t => ({
+      category: t.category,
+      item_name: t.item_name,
+      result: (inspResults[t.id] || {}).result || '合格',
+      note: (inspResults[t.id] || {}).note || null
+    }));
+    const scoreable = items.filter(i => i.result !== '不適用');
+    const passed = scoreable.filter(i => i.result === '合格').length;
+    const score = scoreable.length > 0 ? Math.round(passed / scoreable.length * 100) : 100;
+
+    const btn = document.getElementById('insp-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '產出中…';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/supervision_records`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ store_id: currentStoreId, inspector_name, overall_note: overall_note || null, score })
+      });
+      const rows = await res.json();
+      const recordId = rows[0].id;
+
+      await fetch(`${SUPABASE_URL}/rest/v1/supervision_record_items`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(items.map(i => ({ ...i, record_id: recordId })))
+      });
+
+      // 同步記一筆心得紀錄，讓督導表現也累積進店家的 EXP／等級
+      const failNames = items.filter(i => i.result === '不合格').map(i => i.item_name);
+      const expByScore = score >= 90 ? 30 : score >= 70 ? 20 : 10;
+      const logContent = `📋 督導報告（${inspector_name}）合格率 ${score}%${failNames.length ? '，待改善：' + failNames.join('、') : '，全數合格'}${overall_note ? '。備註：' + overall_note : ''}`;
+      await fetch(`${SUPABASE_URL}/rest/v1/store_logs`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, category: '督導', content: logContent, exp: expByScore })
+      });
+
+      document.getElementById('insp-inspector').value = '';
+      document.getElementById('insp-note').value = '';
+      await loadAll();
+      openStore(currentStoreId);
+      switchTab('reports');
+    } catch {
+      alert('產出報告失敗，請再試一次');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✅ 產出督導報告';
+    }
+  }
+
+  // ── 督導報告與紀錄 ──
+  function renderReports() {
+    const list = records.filter(r => r.store_id === currentStoreId);
+    const el = document.getElementById('report-list');
+    el.innerHTML = list.length === 0
+      ? '<div class="empty"><div class="empty-icon">📑</div><div>還沒有督導報告，完成一次督導後會出現在這裡</div></div>'
+      : list.map(r => {
+          const items = recordItems.filter(i => i.record_id === r.id);
+          const isOpen = openReportId === r.id;
+          return `<div class="report-item">
+            <div class="report-top">
+              <span class="report-date">${formatDate(r.created_at)}</span>
+              <span class="report-inspector">督導人：${esc(r.inspector_name || '—')}</span>
+              <span class="score-badge ${scoreClass(r.score)}">合格率 ${r.score}%</span>
+            </div>
+            ${r.overall_note ? `<div class="report-note">${esc(r.overall_note)}</div>` : ''}
+            <div class="report-actions">
+              <button onclick="toggleReport('${r.id}')">${isOpen ? '收合明細' : '展開明細'}</button>
+              <button onclick="notifyReport('${r.id}')">📣 通知老闆</button>
+            </div>
+            <table class="report-items-table ${isOpen ? 'open' : ''}">
+              <thead><tr><th>分類</th><th>項目</th><th>結果</th><th>備註</th></tr></thead>
+              <tbody>
+                ${items.map(i => `<tr>
+                  <td>${esc(i.category || '')}</td>
+                  <td>${esc(i.item_name)}</td>
+                  <td class="${i.result === '合格' ? 'pass-tag' : i.result === '不合格' ? 'fail-tag' : 'na-tag'}">${esc(i.result)}</td>
+                  <td>${esc(i.note || '—')}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+        }).join('');
+  }
+
+  function toggleReport(id) {
+    openReportId = openReportId === id ? null : id;
+    renderReports();
+  }
+
+  async function notifyReport(id) {
+    const r = records.find(x => x.id === id);
+    const s = stores.find(x => x.id === currentStoreId);
+    if (!r || !s) return;
+    const failNames = recordItems.filter(i => i.record_id === id && i.result === '不合格').map(i => i.item_name);
+    const message = `📋 督導報告通知\n門市：${s.name}\n督導人：${r.inspector_name || '—'}\n合格率：${r.score}%${failNames.length ? '\n待改善：' + failNames.join('、') : '\n全數合格'}${r.overall_note ? '\n備註：' + r.overall_note : ''}`;
+    try {
+      await fetch(`${BOT_URL}/api/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: BOT_SECRET, message })
+      });
+      alert('已透過 LINE 通知老闆');
+    } catch {
+      alert('通知失敗，請確認網路連線後再試一次');
+    }
+  }
+</script>
+</body>
+</html>
