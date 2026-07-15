@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>待辦任務 · 漢柏分身</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --green-lt:    #E8F7F0;
+    }
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: var(--brown-dark);
+      display: flex; flex-direction: column; padding: 20px 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--caramel), var(--brown-main));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .brand-name { font-size: 14px; font-weight: 600; color: #fff; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; text-decoration: none;
+      color: rgba(255,255,255,0.5); font-size: 13px; transition: background 0.15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub-text { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 14px 24px; display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+    .topbar-badge {
+      margin-left: auto; font-size: 12px; font-weight: 700;
+      padding: 4px 14px; border-radius: 20px;
+      background: var(--brown-main); color: #fff;
+    }
+
+    /* ── Content ── */
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px 40px; }
+
+    /* ── Quick add ── */
+    .quick-add {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px; margin-bottom: 24px;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .quick-input {
+      flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: inherit; font-size: 13px;
+      color: var(--text-dark); background: var(--warm-white);
+      outline: none; transition: border-color 0.15s;
+    }
+    .quick-input:focus { border-color: var(--brown-main); }
+    .quick-btn {
+      padding: 10px 22px; background: var(--brown-main); color: #fff;
+      border: none; border-radius: 10px; font-family: inherit;
+      font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .quick-btn:hover { opacity: 0.85; }
+    .quick-hint {
+      font-size: 11px; color: var(--text-light);
+      padding-top: 10px; border-top: 1px solid var(--border); margin-top: 10px;
+    }
+
+    /* ── Tabs ── */
+    .tab-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .tab-pill {
+      padding: 6px 18px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--warm-white); font-family: inherit; font-size: 12px;
+      font-weight: 600; color: var(--text-light); cursor: pointer;
+    }
+    .tab-pill.active { background: var(--brown-main); color: #fff; border-color: var(--brown-main); }
+
+    /* ── Task list ── */
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
+    .task-item {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 16px 18px;
+      display: flex; align-items: flex-start; gap: 14px;
+      transition: opacity 0.2s;
+    }
+    .task-item.done { opacity: 0.5; }
+    .task-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border); flex-shrink: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px; transition: all 0.15s;
+    }
+    .task-check:hover { border-color: var(--green); }
+    .task-item.done .task-check {
+      background: var(--green); border-color: var(--green); color: #fff;
+      font-size: 12px;
+    }
+    .task-body { flex: 1; }
+    .task-content {
+      font-size: 14px; font-weight: 600; color: var(--text-dark);
+      line-height: 1.5; margin-bottom: 6px;
+    }
+    .task-item.done .task-content { text-decoration: line-through; color: var(--text-light); }
+    .task-meta { display: flex; gap: 8px; align-items: center; }
+    .task-source {
+      font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border-radius: 10px; background: var(--warm-white);
+      color: var(--text-light); border: 1px solid var(--border);
+    }
+    .task-source.voice { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+    .task-source.text  { background: #F0FDF4; color: #166534; border-color: #BBF7D0; }
+    .task-source.web   { background: #FFF7ED; color: #9A3412; border-color: #FED7AA; }
+    .task-time { font-size: 10px; color: var(--text-light); }
+    .task-empty {
+      text-align: center; padding: 48px 20px;
+      font-size: 13px; color: var(--text-light);
+    }
+    .task-empty .big { font-size: 32px; margin-bottom: 10px; }
+
+    @media (max-width: 680px) { .sidebar { display: none; } }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div>
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿管理中樞</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub-text">Dashboard</div></div>
+    </a>
+    <a class="nav-item active" href="inbox.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">待辦</div><div class="nav-sub-text">Inbox</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub-text">腳本庫</div></div>
+    </a>
+    <a class="nav-item" href="liuqiu2026.html">
+      <span class="nav-icon">🐢</span>
+      <div><div class="nav-text">小琉球</div><div class="nav-sub-text">員工旅遊</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📋</span>
+    <div>
+      <div class="topbar-title">待辦 Inbox</div>
+      <div class="topbar-sub">語音說話 → LINE Bot → 自動出現在這裡</div>
+    </div>
+    <div class="topbar-badge" id="pending-count">載入中…</div>
+  </div>
+
+  <div class="content">
+
+    <div class="quick-add">
+      <input class="quick-input" id="quick-input" placeholder="快速新增任務…" maxlength="200"
+        onkeydown="if(event.key==='Enter') addTask()" />
+      <button class="quick-btn" onclick="addTask()">新增</button>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-pill active" id="tab-pending" onclick="switchTab('pending')">待辦</button>
+      <button class="tab-pill" id="tab-done" onclick="switchTab('done')">已完成</button>
+    </div>
+
+    <div class="task-list" id="task-list">
+      <div class="task-empty"><div class="big">⏳</div>載入中…</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SB_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  let currentTab = 'pending';
+
+  async function sb(path, opts = {}) {
+    const res = await fetch(SB_URL + '/rest/v1/' + path, {
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || 'return=representation',
+        ...(opts.headers || {})
+      }, ...opts
+    });
+    return res;
+  }
+
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return '剛剛';
+    if (diff < 3600000) return Math.floor(diff / 60000) + ' 分鐘前';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小時前';
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function sourceLabel(src) {
+    if (src === 'line_voice') return { cls: 'voice', txt: '🎙️ 語音' };
+    if (src === 'line_text')  return { cls: 'text',  txt: '✍️ LINE' };
+    return { cls: 'web', txt: '🌐 網頁' };
+  }
+
+  async function loadTasks() {
+    const status = currentTab === 'pending' ? 'pending' : 'done';
+    const res = await sb(`tasks?status=eq.${status}&order=created_at.desc`);
+    if (!res.ok) {
+      document.getElementById('task-list').innerHTML = '<div class="task-empty"><div class="big">⚠️</div>請先在 Supabase 建立 tasks 資料表</div>';
+      return;
+    }
+    const data = await res.json();
+
+    // update badge
+    if (currentTab === 'pending') {
+      document.getElementById('pending-count').textContent = data.length + ' 件待辦';
+    }
+
+    const el = document.getElementById('task-list');
+    if (!data.length) {
+      el.innerHTML = currentTab === 'pending'
+        ? '<div class="task-empty"><div class="big">🎉</div>沒有待辦任務<br>對 LINE Bot 說語音，任務自動出現</div>'
+        : '<div class="task-empty"><div class="big">📭</div>還沒有完成的任務</div>';
+      return;
+    }
+    el.innerHTML = data.map(t => {
+      const src = sourceLabel(t.source);
+      const isDone = t.status === 'done';
+      return `
+        <div class="task-item${isDone ? ' done' : ''}" id="task-${t.id}">
+          <div class="task-check" onclick="toggleDone(${t.id}, '${t.status}')">
+            ${isDone ? '✓' : ''}
+          </div>
+          <div class="task-body">
+            <div class="task-content">${escHtml(t.content)}</div>
+            <div class="task-meta">
+              <span class="task-source ${src.cls}">${src.txt}</span>
+              <span class="task-time">${fmtTime(t.created_at)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function toggleDone(id, currentStatus) {
+    const newStatus = currentStatus === 'pending' ? 'done' : 'pending';
+    const body = { status: newStatus };
+    if (newStatus === 'done') body.done_at = new Date().toISOString();
+    await sb(`tasks?id=eq.${id}`, {
+      method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal'
+    });
+    await loadTasks();
+  }
+
+  async function addTask() {
+    const input = document.getElementById('quick-input');
+    const content = input.value.trim();
+    if (!content) return;
+    input.value = '';
+    await sb('tasks', {
+      method: 'POST',
+      body: JSON.stringify({ content, source: 'web', status: 'pending' })
+    });
+    await loadTasks();
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-pending').className = 'tab-pill' + (tab === 'pending' ? ' active' : '');
+    document.getElementById('tab-done').className   = 'tab-pill' + (tab === 'done'    ? ' active' : '');
+    loadTasks();
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  loadTasks();
+  setInterval(loadTasks, 30000); // 每30秒自動更新
+</script>
+</body>
+</html>
