@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>督導管理 · 漢柏分身</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -61,6 +62,19 @@
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
     .loading { text-align: center; padding: 40px; color: var(--text-light); }
     .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-mid); font-size: 13px; cursor: pointer; margin-bottom: 16px; }
+
+    /* ── 督導儀表板 ── */
+    .dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .dash-stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+    .dash-stat-label { font-size: 12px; color: var(--text-light); margin-bottom: 6px; }
+    .dash-stat-value { font-size: 24px; font-weight: 800; color: var(--brown-main); }
+    .dash-stat-value.warn { color: var(--red); }
+    .dash-charts { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .dash-charts { grid-template-columns: 1fr; } }
+    .dash-chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+    .dash-chart-title { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 12px; }
+    .dash-chart-card canvas { max-height: 260px; }
+    .dash-empty { font-size: 12px; color: var(--text-light); text-align: center; padding: 30px 0; }
 
     /* ── TYP 範本設定（全店共用） ── */
     .typ-box { background: var(--cream); border: 1px solid var(--sand); border-radius: 14px; padding: 4px 20px; margin-bottom: 20px; }
@@ -190,6 +204,20 @@
 
   <div class="content">
     <div id="list-view">
+      <div class="dash-stats" id="dash-stats"></div>
+      <div class="dash-charts">
+        <div class="dash-chart-card">
+          <div class="dash-chart-title">📈 全店平均合格率走勢（依月份）</div>
+          <div id="trend-empty" class="dash-empty" style="display:none;">還沒有足夠的督導紀錄，累積幾次之後這裡會出現走勢圖</div>
+          <canvas id="trendChart"></canvas>
+        </div>
+        <div class="dash-chart-card">
+          <div class="dash-chart-title">🏆 各店最新合格率排行（由低到高）</div>
+          <div id="rank-empty" class="dash-empty" style="display:none;">還沒有店家有督導紀錄</div>
+          <canvas id="rankChart"></canvas>
+        </div>
+      </div>
+
       <details class="typ-box" id="typ-box">
         <summary>📋 TYP 範本設定（全分店共用，督導可自行增減調整）</summary>
         <div class="typ-body">
@@ -248,6 +276,8 @@
   let editingTypId = null;
   let inspResults = {};   // { templateId: { result, note } }
   let openReportId = null;
+  let trendChart = null;
+  let rankChart = null;
 
   loadAll();
 
@@ -276,6 +306,7 @@
       if (!Array.isArray(recordItems)) recordItems = [];
       renderTypList();
       renderList();
+      renderDashboard();
     } catch {
       document.getElementById('store-grid').innerHTML = '<div class="loading">載入失敗，請重新整理（若剛設好 Supabase 資料表，請確認 SQL 已執行）</div>';
     }
@@ -393,6 +424,102 @@
         </div>
       </div>`;
     }).join('');
+  }
+
+  // ── 督導儀表板 ──
+  function renderDashboard() {
+    const latestByStore = {};
+    stores.forEach(s => { latestByStore[s.id] = lastRecordOf(s.id); });
+    const withScore = Object.values(latestByStore).filter(Boolean);
+
+    const avgScore = withScore.length
+      ? Math.round(withScore.reduce((sum, r) => sum + Number(r.score), 0) / withScore.length)
+      : null;
+    const now = new Date();
+    const inspectedStoreIdsThisMonth = new Set(
+      records.filter(r => {
+        const d = new Date(r.created_at);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      }).map(r => r.store_id)
+    );
+    const needsImprove = withScore.filter(r => Number(r.score) < 80).length;
+
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="dash-stat-card">
+        <div class="dash-stat-label">全店平均合格率</div>
+        <div class="dash-stat-value">${avgScore != null ? avgScore + '%' : '—'}</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-label">本月已督導店數</div>
+        <div class="dash-stat-value">${inspectedStoreIdsThisMonth.size} / ${stores.length}</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-label">待改善店家（合格率 &lt; 80%）</div>
+        <div class="dash-stat-value ${needsImprove > 0 ? 'warn' : ''}">${needsImprove}</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-label">累計督導次數</div>
+        <div class="dash-stat-value">${records.length}</div>
+      </div>
+    `;
+
+    // 全店平均合格率走勢（依月份）
+    const byMonth = {};
+    records.forEach(r => {
+      const d = new Date(r.created_at);
+      const key = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!byMonth[key]) byMonth[key] = [];
+      byMonth[key].push(Number(r.score));
+    });
+    const months = Object.keys(byMonth).sort();
+    document.getElementById('trend-empty').style.display = months.length === 0 ? 'block' : 'none';
+    if (trendChart) trendChart.destroy();
+    if (months.length > 0) {
+      trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [{
+            label: '平均合格率',
+            data: months.map(m => Math.round(byMonth[m].reduce((a, b) => a + b, 0) / byMonth[m].length)),
+            borderColor: '#8B5E3C',
+            backgroundColor: 'rgba(139,94,60,0.12)',
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+        }
+      });
+    }
+
+    // 各店最新合格率排行（由低到高）
+    const ranked = stores
+      .map(s => ({ name: s.name, score: latestByStore[s.id] ? Number(latestByStore[s.id].score) : null }))
+      .filter(r => r.score != null)
+      .sort((a, b) => a.score - b.score);
+    document.getElementById('rank-empty').style.display = ranked.length === 0 ? 'block' : 'none';
+    if (rankChart) rankChart.destroy();
+    if (ranked.length > 0) {
+      rankChart = new Chart(document.getElementById('rankChart'), {
+        type: 'bar',
+        data: {
+          labels: ranked.map(r => r.name),
+          datasets: [{
+            data: ranked.map(r => r.score),
+            backgroundColor: ranked.map(r => r.score >= 90 ? '#4CAF7D' : r.score >= 70 ? '#D97706' : '#C0392B'),
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: { x: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+        }
+      });
+    }
   }
 
   function showList() {
