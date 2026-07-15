@@ -266,8 +266,64 @@
       .notes-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <style>
+    #gate {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--warm-white);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gate-box {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 20px; padding: 40px 36px; text-align: center;
+      width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    }
+    .gate-icon { font-size: 36px; margin-bottom: 14px; }
+    .gate-title { font-size: 18px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+    .gate-sub { font-size: 12px; color: var(--text-light); margin-bottom: 24px; }
+    .gate-input {
+      width: 100%; padding: 11px 16px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 18px; text-align: center; letter-spacing: 6px;
+      font-family: monospace; outline: none; margin-bottom: 12px;
+      transition: border-color 0.15s;
+    }
+    .gate-input:focus { border-color: var(--brown-main); }
+    .gate-btn {
+      width: 100%; padding: 11px; background: var(--brown-main); color: #fff;
+      border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .gate-err { font-size: 12px; color: #dc2626; margin-top: 8px; display: none; }
+  </style>
 </head>
 <body>
+
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-icon">🌿</div>
+    <div class="gate-title">宜蘭家族行 2026</div>
+    <div class="gate-sub">私人頁面，請輸入密碼</div>
+    <input class="gate-input" id="gate-pwd" type="password" maxlength="10" placeholder="••••"
+      onkeydown="if(event.key==='Enter')checkPwd()" autofocus />
+    <button class="gate-btn" onclick="checkPwd()">進入</button>
+    <div class="gate-err" id="gate-err">密碼錯誤，請再試一次</div>
+  </div>
+</div>
+<script>
+  (function(){
+    const KEY = 'yilan_auth';
+    if(sessionStorage.getItem(KEY)==='ok') document.getElementById('gate').style.display='none';
+  })();
+  function checkPwd(){
+    const v = document.getElementById('gate-pwd').value;
+    if(v==='1688'){
+      sessionStorage.setItem('yilan_auth','ok');
+      document.getElementById('gate').style.display='none';
+    } else {
+      document.getElementById('gate-err').style.display='block';
+      document.getElementById('gate-pwd').value='';
+    }
+  }
+</script>
 
 <nav class="sidebar">
   <div class="sidebar-brand">
