@@ -774,30 +774,70 @@
 
     <!-- ════ 住宿 ════ -->
     <div id="tab-hotel" class="tab-panel">
-      <div class="hotel-card">
-        <div class="section-title">🏠 住宿策略</div>
-        <div class="hotel-item">
-          <div class="hotel-ico">🍖</div>
-          <div class="hotel-info">
-            <div class="hotel-badge">Night 1 · 公司安排</div>
-            <strong>名宿 + 烤肉場地</strong>
-            <span>需找能容納45人烤肉的包棟或大型民宿。小琉球單一民宿容量有限（多為10–20人），建議聯繫當地旅行社規劃套裝，協助訂2–3棟相鄰民宿 + 烤肉場地。</span>
-            <span>預算：NT$1,200–1,800/人（含場地）</span>
+
+      <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:20px;font-size:13px;color:var(--text-mid);line-height:1.75">
+        <strong style="color:var(--text-dark)">🏠 Night 1 三個方案，選一個</strong><br>
+        小琉球單一民宿容量多為10–20人。45人要住在一起，有三種做法——各有優缺點，比較後定方向再聯繫。
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:24px">
+
+        <!-- 方案 A -->
+        <div style="background:var(--card-bg);border:2px solid var(--ocean);border-radius:14px;padding:20px;position:relative">
+          <div style="position:absolute;top:12px;right:12px;background:var(--ocean);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">最推薦</div>
+          <div style="font-size:22px;margin-bottom:8px">🏘️</div>
+          <div style="font-size:15px;font-weight:800;margin-bottom:4px">相鄰包棟聯合方案</div>
+          <div style="font-size:11px;color:var(--ocean);font-weight:700;margin-bottom:10px">訂2–3間緊鄰民宿 · 打通空間烤肉</div>
+          <div style="font-size:12px;color:var(--text-mid);line-height:1.8;margin-bottom:12px">
+            在同一區域選2–3間民宿同時包棟，戶外空間合用辦烤肉。有自家感，氛圍最強。需要提前3–4週聯繫協調，找願意配合的民宿主人。
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
+            <div style="color:#16a34a">✓ 整體最有凝聚感</div>
+            <div style="color:#16a34a">✓ 戶外空間自由使用</div>
+            <div style="color:#ca8a04">△ 需要早訂、主動協調</div>
           </div>
         </div>
-        <div class="hotel-item">
-          <div class="hotel-ico">🔍</div>
-          <div class="hotel-info">
-            <div class="hotel-badge">推薦聯繫管道</div>
-            <strong>小琉球在地旅行社或民宿聯合訂房</strong>
-            <span>· 琉球旅遊服務中心：專門處理大型團體</span>
-            <span>· 屏東縣琉球鄉公所觀光課：可提供當地資訊</span>
-            <span>· 告知：45人、需烤肉場地、Night 1集體、Night 2自理</span>
+
+        <!-- 方案 B -->
+        <div style="background:var(--card-bg);border:1.5px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-size:22px;margin-bottom:8px">🏨</div>
+          <div style="font-size:15px;font-weight:800;margin-bottom:4px">大型旅館統一住</div>
+          <div style="font-size:11px;color:var(--text-light);font-weight:700;margin-bottom:10px">選島上容量最大的旅館 · 管理方便</div>
+          <div style="font-size:12px;color:var(--text-mid);line-height:1.8;margin-bottom:12px">
+            全員住同一棟旅館，行政管理最簡單。可包場餐廳或露台辦烤肉，設施完整。缺點是沒有包棟那種「整個地方都是我們的」氛圍。
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
+            <div style="color:#16a34a">✓ 行政最方便</div>
+            <div style="color:#16a34a">✓ 設施完整</div>
+            <div style="color:#ca8a04">△ 氛圍感較弱</div>
           </div>
         </div>
-        <div class="self-note">
-          <strong>Night 2（員工自理）</strong><br>
-          各自訂房或決定是否住同處。島上民宿種類多，價位 NT$800–2,000/人不等。提早告知員工自行訂房，旺季需在出發前3–4週確認。
+
+        <!-- 方案 C -->
+        <div style="background:var(--card-bg);border:1.5px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-size:22px;margin-bottom:8px">🤝</div>
+          <div style="font-size:15px;font-weight:800;margin-bottom:4px">委託在地旅行社統籌</div>
+          <div style="font-size:11px;color:var(--text-light);font-weight:700;margin-bottom:10px">住宿＋烤肉＋活動全包 · 省力</div>
+          <div style="font-size:12px;color:var(--text-mid);line-height:1.8;margin-bottom:12px">
+            聯繫小琉球在地旅行社，說明45人、Night 1集體烤肉需求，讓對方全包規劃。最省心，但彈性最低，費用通常含佣金。
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
+            <div style="color:#16a34a">✓ 零煩惱</div>
+            <div style="color:#ca8a04">△ 彈性低</div>
+            <div style="color:#dc2626">✗ 費用偏高</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#0A2540,#1a4a6a);border-radius:14px;padding:20px 24px;color:#fff">
+        <div style="font-size:13px;font-weight:700;color:var(--sand-lt);margin-bottom:14px">📞 聯繫方向（確認方案後）</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.8);line-height:2">
+          · 琉球鄉公所觀光課：提供大型團體民宿名單<br>
+          · 聯繫時說明：45人、一晚包棟、需戶外烤肉場地、旺季7月<br>
+          · 詢問是否可彈性安排 Night 2 自理（部分員工可能繼續留住）
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;color:rgba(255,255,255,0.6)">
+          Night 2 員工自理 · 島上民宿選擇多，建議提前3週讓大家自行訂房
         </div>
       </div>
     </div>
@@ -895,11 +935,31 @@ CREATE POLICY "update_all" ON trip_comments FOR UPDATE TO anon USING (true);</co
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
 
   const ACTIVITIES = [
-    { id: 'sea_turtle', icon: '🐢', title: '海龜浮潛', desc: '小琉球最著名體驗。在海裡跟綠蠵龜面對面，近到可以看清楚牠的眼睛。浮潛裝備現場提供，不用會游泳也能參與。', price: '約 NT$800–1,000' },
-    { id: 'sup',        icon: '🏄', title: 'SUP 立槳',  desc: '站在板子上，用槳在海面慢慢前進。很適合拍照，穿著也不會全濕。適合各年齡層，教練在旁指導。', price: '約 NT$700–900' },
-    { id: 'kayak',      icon: '🚣', title: '獨木舟',    desc: '划進小琉球的珊瑚礁海域，有些路線可以進入海蝕洞穴。小組進行，感受比較私密，適合喜歡安靜探索的人。', price: '約 NT$700–900' },
-    { id: 'snorkel_guide', icon: '🤿', title: '水下導覽浮潛', desc: '有教練帶領，進入珊瑚礁群看魚、看珊瑚。比自助浮潛更深入，教練會指出各種海中生物，適合第一次浮潛的人。', price: '約 NT$900–1,200' },
-    { id: 'glass_boat', icon: '🚤', title: '玻璃底船', desc: '船底透明，坐在船上就能看到海底珊瑚與魚群。不用下水，適合不敢下海或帶小孩的人。老少皆宜。', price: '約 NT$400–600' },
+    {
+      id: 'sea_turtle', icon: '🐢', title: '海龜浮潛',
+      desc: '牠就在你旁邊游——不是水族館的玻璃後面，是真實的海裡。小琉球的綠蠵龜不怕人，近到你可以看清楚牠的眼睛。不會游泳也可以，有救生衣和浮板，教練全程在旁。這是很多人說「這輩子要做一次」的事，我們把它放進行程裡。',
+      tag: '⭐ 最多人第一次', price: '約 NT$800–1,000'
+    },
+    {
+      id: 'sup', icon: '🏄', title: 'SUP 立槳',
+      desc: '站在板子上，踩著海浪前進——比你想像的還要平穩，也比你想像的還要爽。衣服不會全濕，照片會很好看。適合完全沒碰過水上運動的人，教練5分鐘就能讓你站穩。這是那種「做完會想再來一次」的體驗。',
+      tag: '📸 最上相', price: '約 NT$700–900'
+    },
+    {
+      id: 'kayak', icon: '🚣', title: '獨木舟',
+      desc: '用槳把自己划進珊瑚礁的深處——有些航線可以進入海蝕洞，光線從洞口打進來，那個畫面讓人忘記時間。小組2–4人一艘，步調自己控制。不想人擠人、想安靜感受海的人，這個最對。',
+      tag: '🌊 最沉浸感', price: '約 NT$700–900'
+    },
+    {
+      id: 'snorkel_guide', icon: '🤿', title: '教練帶水下導覽',
+      desc: '有教練帶你進去，你才知道那裡有多精彩。不只是游泳，教練會指出每一種魚的名字、珊瑚的顏色為什麼這樣。第一次浮潛的人特別適合——從來沒發現原來水面下是另一個世界的人，這次會發現。',
+      tag: '🐠 最有深度', price: '約 NT$900–1,200'
+    },
+    {
+      id: 'glass_boat', icon: '🚤', title: '玻璃底船',
+      desc: '船底透明，坐著就能看到珊瑚和魚群從你腳下游過。不用換衣服、不用下水、不用學任何技術——就只是坐在船上，讓海給你看它最美的樣子。不敢下海的人、想輕鬆一點的人，這個體驗一點都不遜色。',
+      tag: '☀️ 零門檻體驗', price: '約 NT$400–600'
+    },
   ];
 
   // ── Voter ID ──
@@ -987,6 +1047,7 @@ CREATE POLICY "update_all" ON trip_comments FOR UPDATE TO anon USING (true);</co
         <div class="vote-check">✓</div>
         <div class="vote-card-icon">${act.icon}</div>
         <div class="vote-card-title">${act.title}</div>
+        ${act.tag ? `<div style="font-size:11px;font-weight:700;color:var(--ocean);margin-bottom:6px">${act.tag}</div>` : ''}
         <div class="vote-card-desc">${act.desc}</div>
         <div style="font-size:11px;color:var(--text-light);margin-bottom:12px">${act.price}</div>
         <div class="vote-result-bar"><div class="vote-result-fill" style="width:${pct}%"></div></div>
