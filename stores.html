@@ -166,6 +166,19 @@
     .checklist-actions .pass-btn:hover { background: rgba(76,175,125,0.12); }
     .checklist-actions .fail-btn:hover { background: #FDECEC; }
 
+    /* ── 營運計畫（唯讀） ── */
+    .plan-empty { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .fin-table-wrap { overflow-x: auto; margin-bottom: 24px; }
+    .fin-table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .fin-table th { text-align: left; padding: 10px 12px; background: var(--cream); color: var(--text-mid); font-weight: 700; white-space: nowrap; }
+    .fin-table td { padding: 8px 12px; border-top: 1px solid var(--border); white-space: nowrap; }
+    .fin-table .fin-item-name { color: var(--text-dark); font-weight: 600; }
+    .fin-table .fin-pct { color: var(--text-light); font-size: 11px; margin-left: 4px; }
+    .fin-invest-row td { font-weight: 700; color: var(--brown-main); border-top: 2px solid var(--border); }
+    .plan-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
+    .plan-section-title { font-size: 13px; font-weight: 700; color: var(--brown-main); margin-bottom: 6px; }
+    .plan-section-content { font-size: 13px; color: var(--text-mid); line-height: 1.75; white-space: pre-wrap; }
+
     /* ── Add-store modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(44,26,14,0.6); display: none; align-items: center; justify-content: center; z-index: 90; }
     .modal-overlay.open { display: flex; }
@@ -247,6 +260,7 @@
         <div class="detail-tab active" data-tab="logs" onclick="switchTab('logs')">📝 心得紀錄</div>
         <div class="detail-tab" data-tab="vendors" onclick="switchTab('vendors')">🔧 工程進度</div>
         <div class="detail-tab" data-tab="checklist" onclick="switchTab('checklist')">✅ 驗收鉤稽</div>
+        <div class="detail-tab" data-tab="plan" onclick="switchTab('plan')">📑 營運計畫</div>
       </div>
 
       <div id="tab-logs">
@@ -303,6 +317,11 @@
         </div>
         <div class="checklist-list" id="checklist-list"></div>
       </div>
+
+      <div id="tab-plan" style="display:none;">
+        <div id="plan-financials"></div>
+        <div id="plan-sections"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -343,6 +362,8 @@
   let logs = [];
   let vendors = [];
   let checklist = [];
+  let financials = [];
+  let planSections = [];
   let currentStoreId = null;
   let currentTab = 'logs';
   let currentChecklistCat = '一般驗收';
@@ -389,16 +410,20 @@
 
   async function loadAll() {
     try {
-      [stores, logs, vendors, checklist] = await Promise.all([
+      [stores, logs, vendors, checklist, financials, planSections] = await Promise.all([
         dbGet('stores', 'order=created_at.desc'),
         dbGet('store_logs', 'order=created_at.desc'),
         dbGet('store_vendors', 'order=planned_in.asc'),
-        dbGet('store_checklist', 'order=created_at.asc')
+        dbGet('store_checklist', 'order=created_at.asc'),
+        dbGet('store_financials', 'order=created_at.asc'),
+        dbGet('store_plan_sections', 'order=sort_order.asc')
       ]);
       if (!Array.isArray(stores)) stores = [];
       if (!Array.isArray(logs)) logs = [];
       if (!Array.isArray(vendors)) vendors = [];
       if (!Array.isArray(checklist)) checklist = [];
+      if (!Array.isArray(financials)) financials = [];
+      if (!Array.isArray(planSections)) planSections = [];
       renderList();
     } catch {
       document.getElementById('store-grid').innerHTML = '<div class="loading">載入失敗，請重新整理（若剛設好 Supabase 資料表，請確認 SQL 已執行）</div>';
@@ -461,8 +486,10 @@
     document.getElementById('tab-logs').style.display = tab === 'logs' ? 'block' : 'none';
     document.getElementById('tab-vendors').style.display = tab === 'vendors' ? 'block' : 'none';
     document.getElementById('tab-checklist').style.display = tab === 'checklist' ? 'block' : 'none';
+    document.getElementById('tab-plan').style.display = tab === 'plan' ? 'block' : 'none';
     if (tab === 'vendors') renderVendors();
     if (tab === 'checklist') renderChecklist();
+    if (tab === 'plan') renderPlan();
   }
 
   function renderDetail() {
@@ -630,6 +657,69 @@
       await loadAll();
       switchChecklistCat(currentChecklistCat);
     } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  // ── 營運計畫（唯讀）──
+  const FIN_ITEM_ORDER = ['營業收入','營業成本','營業毛利','租金支出','薪資支出','水電費','燃料費','其他費用','折舊攤提','管理部攤提','年終提撥','勞健保','勞退金 6%','營業費用總額','營業利益'];
+  const FIN_TERM_ORDER = ['短期','中期','長期'];
+
+  function fmtMoney(n) {
+    if (n === null || n === undefined) return '—';
+    return Number(n).toLocaleString();
+  }
+
+  function renderPlan() {
+    const finRows = financials.filter(f => f.store_id === currentStoreId);
+    const sections = planSections.filter(p => p.store_id === currentStoreId);
+    const finEl = document.getElementById('plan-financials');
+    const secEl = document.getElementById('plan-sections');
+
+    if (finRows.length === 0 && sections.length === 0) {
+      finEl.innerHTML = '';
+      secEl.innerHTML = '<div class="plan-empty"><div class="empty-icon">📑</div><div>還沒有營運計畫書資料</div></div>';
+      return;
+    }
+
+    if (finRows.length > 0) {
+      const terms = FIN_TERM_ORDER.filter(t => finRows.some(f => f.term === t));
+      finRows.forEach(f => { if (!terms.includes(f.term)) terms.push(f.term); });
+
+      const itemKeys = new Set();
+      finRows.forEach(f => Object.keys(f.line_items || {}).forEach(k => itemKeys.add(k)));
+      const items = FIN_ITEM_ORDER.filter(k => itemKeys.has(k));
+      itemKeys.forEach(k => { if (!items.includes(k)) items.push(k); });
+
+      const byTerm = {};
+      finRows.forEach(f => { byTerm[f.term] = f; });
+
+      const rowsHtml = items.map(item => `<tr>
+          <td class="fin-item-name">${esc(item)}</td>
+          ${terms.map(t => {
+            const li = byTerm[t]?.line_items?.[item];
+            if (!li) return '<td>—</td>';
+            return `<td>$${fmtMoney(li.amount)}<span class="fin-pct">${li.pct != null ? li.pct + '%' : ''}</span></td>`;
+          }).join('')}
+        </tr>`).join('');
+
+      const investRow = `<tr class="fin-invest-row">
+          <td>總投資額</td>
+          ${terms.map(t => `<td>$${fmtMoney(byTerm[t]?.total_investment)}</td>`).join('')}
+        </tr>`;
+
+      finEl.innerHTML = `<div class="fin-table-wrap">
+        <table class="fin-table">
+          <thead><tr><th>會計科目</th>${terms.map(t => `<th>${esc(t)}目標</th>`).join('')}</tr></thead>
+          <tbody>${rowsHtml}${investRow}</tbody>
+        </table>
+      </div>`;
+    } else {
+      finEl.innerHTML = '';
+    }
+
+    secEl.innerHTML = sections.map(s => `<div class="plan-section">
+        <div class="plan-section-title">${esc(s.title)}</div>
+        <div class="plan-section-content">${esc(s.content)}</div>
+      </div>`).join('');
   }
 
   // ── Add log ──
