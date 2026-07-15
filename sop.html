@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>一日流程 SOP · 漢柏分身</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --green-lt:    #E8F7F0;
+    }
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: var(--brown-dark);
+      display: flex; flex-direction: column; padding: 20px 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--caramel), var(--brown-main));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .brand-name { font-size: 14px; font-weight: 600; color: #fff; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; text-decoration: none;
+      color: rgba(255,255,255,0.5); font-size: 13px; transition: background 0.15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub-text { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 14px 24px; display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .reset-btn {
+      font-size: 11px; padding: 5px 14px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: var(--warm-white);
+      color: var(--text-light); cursor: pointer; font-family: inherit;
+    }
+    .reset-btn:hover { border-color: var(--caramel); color: var(--caramel); }
+
+    /* ── Content ── */
+    .content { flex: 1; overflow-y: auto; padding: 20px 24px 48px; }
+
+    /* ── View toggle ── */
+    .view-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
+    .view-btn {
+      padding: 8px 20px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--warm-white); font-family: inherit; font-size: 12px;
+      font-weight: 600; color: var(--text-light); cursor: pointer; transition: all 0.15s;
+    }
+    .view-btn.active { background: var(--brown-main); color: #fff; border-color: var(--brown-main); }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 20px;
+    }
+    .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .progress-label { font-size: 13px; font-weight: 600; }
+    .progress-pct { font-size: 13px; color: var(--text-light); font-weight: 600; }
+    .progress-bar {
+      width: 100%; height: 8px; border-radius: 4px;
+      background: var(--border); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, var(--caramel), var(--green));
+      transition: width 0.4s ease;
+    }
+
+    /* ── Section card ── */
+    .section-card {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; margin-bottom: 12px; overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .section-card.all-done { border-color: var(--green); }
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 18px; cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .section-header:hover { background: var(--warm-white); }
+    .section-dot {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .section-info { flex: 1; }
+    .section-name { font-size: 14px; font-weight: 700; }
+    .section-time { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .section-prog {
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 12px; background: var(--warm-white);
+      color: var(--text-mid); border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .section-prog.done { background: var(--green-lt); color: #166534; border-color: #BBF7D0; }
+    .section-chevron {
+      font-size: 11px; color: var(--text-light); transition: transform 0.2s;
+    }
+    .section-card.open .section-chevron { transform: rotate(180deg); }
+
+    .section-body { display: none; border-top: 1px solid var(--border); padding: 8px 18px 14px; }
+    .section-card.open .section-body { display: block; }
+
+    /* ── Checklist items ── */
+    .check-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 4px; border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-circle {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px; transition: all 0.15s;
+    }
+    .check-item:hover .check-circle { border-color: var(--green); }
+    .check-item.checked .check-circle {
+      background: var(--green); border-color: var(--green);
+      color: #fff; font-size: 12px;
+    }
+    .check-text {
+      font-size: 14px; line-height: 1.5; padding-top: 1px;
+      transition: color 0.15s;
+    }
+    .check-item.checked .check-text {
+      text-decoration: line-through; color: var(--text-light);
+    }
+
+    /* ── Handbook items ── */
+    .book-step {
+      display: flex; gap: 12px;
+      padding: 10px 4px; border-bottom: 1px solid var(--border);
+    }
+    .book-step:last-child { border-bottom: none; }
+    .step-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--warm-white); border: 1.5px solid var(--border);
+      color: var(--text-light); font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .step-text { font-size: 14px; line-height: 1.6; padding-top: 1px; }
+
+    /* ── Empty ── */
+    .step-empty {
+      padding: 20px 4px; font-size: 13px; color: var(--text-light);
+      font-style: italic; text-align: center;
+    }
+
+    @media (max-width: 680px) { .sidebar { display: none; } }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div>
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿管理中樞</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub-text">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="inbox.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">待辦</div><div class="nav-sub-text">Inbox</div></div>
+    </a>
+    <a class="nav-item active" href="sop.html">
+      <span class="nav-icon">📖</span>
+      <div><div class="nav-text">一日流程</div><div class="nav-sub-text">SOP</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub-text">腳本庫</div></div>
+    </a>
+    <a class="nav-item" href="liuqiu2026.html">
+      <span class="nav-icon">🐢</span>
+      <div><div class="nav-text">小琉球</div><div class="nav-sub-text">員工旅遊</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📖</span>
+    <div>
+      <div class="topbar-title">一日作業流程 SOP</div>
+      <div class="topbar-sub" id="date-label">今日流程</div>
+    </div>
+    <div class="topbar-right">
+      <button class="reset-btn" onclick="confirmReset()">重置今日</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-check" onclick="setView('check')">✅ 清單模式</button>
+      <button class="view-btn" id="btn-book" onclick="setView('book')">📖 手冊模式</button>
+    </div>
+
+    <div id="progress-wrap" class="progress-wrap">
+      <div class="progress-row">
+        <span class="progress-label">今日完成進度</span>
+        <span class="progress-pct" id="pct-label">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="section-list"></div>
+  </div>
+</div>
+
+<script>
+  const SECTIONS = [
+    {
+      id: 'pre-open',
+      label: '開店前',
+      icon: '🌅',
+      bg: '#FFF8ED',
+      time: '開店前 30 分鐘',
+      items: [
+        '開燈、開冷氣、開設備電源',
+        '確認今日食材備料狀況',
+        '補充醬料、調味料至定位',
+        '清潔並整理工作台面',
+        '備齊出餐用具與消耗品',
+      ]
+    },
+    {
+      id: 'open-check',
+      label: '開店當下檢視',
+      icon: '✅',
+      bg: '#F0FFF6',
+      time: '準時開門時',
+      items: [
+        '翻牌開店、門口整理',
+        '確認收銀台零錢已備妥',
+        '開啟點餐系統 / POS',
+        '確認出餐動線暢通無阻',
+        '通知全員就位',
+      ]
+    },
+    {
+      id: 'off-peak-1',
+      label: '離峰工作（早）',
+      icon: '☕',
+      bg: '#FFFBF0',
+      time: '早離峰時段',
+      items: [
+        '補充備料、進行前置作業',
+        '清潔前台與候位區域',
+        '確認庫存並回報缺貨',
+        '環境巡視，整頓陳列',
+      ]
+    },
+    {
+      id: 'peak-1',
+      label: '巔峰工作（午）',
+      icon: '⚡',
+      bg: '#FFF5F0',
+      time: '午間尖峰時段',
+      items: [
+        '快速出餐，保持出餐節奏',
+        '即時補充食材與備料',
+        '隨時維持場域整潔',
+        '協助顧客引導與等候管理',
+      ]
+    },
+    {
+      id: 'defrost',
+      label: '退冰整頓工作',
+      icon: '❄️',
+      bg: '#F0F6FF',
+      time: '午後整備時段',
+      items: [
+        '退冰隔日所需食材',
+        '整頓與補充冷藏庫存',
+        '補充衛材、包材等消耗品',
+        '回報明日預估備料量',
+      ]
+    },
+    {
+      id: 'off-peak-2',
+      label: '離峰工作（午後）',
+      icon: '🌤️',
+      bg: '#FFFBF0',
+      time: '午後離峰時段',
+      items: [
+        '深度清潔廚具設備',
+        '補充下午場備料',
+        '小組工作交接確認',
+        '休息、補充體力',
+      ]
+    },
+    {
+      id: 'peak-2',
+      label: '巔峰工作（晚）',
+      icon: '🔥',
+      bg: '#FFF0EC',
+      time: '晚間尖峰時段',
+      items: [
+        '快速出餐，維持服務品質',
+        '即時補充食材與備料',
+        '留意剩餘備料，適時收量',
+        '協助顧客引導與等候管理',
+      ]
+    },
+    {
+      id: 'pre-close',
+      label: '收店前工作',
+      icon: '🌙',
+      bg: '#F5F0FF',
+      time: '停止接單後',
+      items: [
+        '停止接單，消化剩餘訂單',
+        '清除剩餘食材，妥善保存',
+        '清潔廚具、設備歸位',
+        '環境全面整理',
+      ]
+    },
+    {
+      id: 'closing',
+      label: '收銀打烊工作',
+      icon: '🔒',
+      bg: '#F0FFF4',
+      time: '打烊流程',
+      items: [
+        '結算今日收銀金額',
+        '填寫收銀日報單',
+        '關閉設備電源、冷氣',
+        '鎖門並回報主管確認',
+      ]
+    },
+  ];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const KEY = 'sop_' + today;
+  let checks = JSON.parse(localStorage.getItem(KEY) || '{}');
+  let view = 'check';
+  let openSections = {};
+
+  const dateEl = document.getElementById('date-label');
+  const d = new Date();
+  dateEl.textContent = `${d.getMonth()+1} 月 ${d.getDate()} 日 · ${['日','一','二','三','四','五','六'][d.getDay()]}`;
+
+  function save() { localStorage.setItem(KEY, JSON.stringify(checks)); }
+
+  function toggle(sectionId, idx) {
+    if (!checks[sectionId]) checks[sectionId] = {};
+    checks[sectionId][idx] = !checks[sectionId][idx];
+    save();
+    render();
+  }
+
+  function toggleSection(id) {
+    openSections[id] = !openSections[id];
+    render();
+  }
+
+  function setView(v) {
+    view = v;
+    document.getElementById('btn-check').className = 'view-btn' + (v === 'check' ? ' active' : '');
+    document.getElementById('btn-book').className  = 'view-btn' + (v === 'book'  ? ' active' : '');
+    document.getElementById('progress-wrap').style.display = v === 'check' ? 'block' : 'none';
+    render();
+  }
+
+  function confirmReset() {
+    if (confirm('確定要重置今日所有打勾嗎？')) {
+      checks = {};
+      save();
+      render();
+    }
+  }
+
+  function render() {
+    let total = 0, done = 0;
+    SECTIONS.forEach(s => {
+      s.items.forEach((_, i) => {
+        total++;
+        if (checks[s.id] && checks[s.id][i]) done++;
+      });
+    });
+
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('pct-label').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+
+    const list = document.getElementById('section-list');
+    list.innerHTML = SECTIONS.map(s => {
+      const secDone = s.items.filter((_, i) => checks[s.id] && checks[s.id][i]).length;
+      const allDone = secDone === s.items.length;
+      const isOpen = openSections[s.id] !== false; // default open
+
+      let bodyHtml = '';
+      if (view === 'check') {
+        bodyHtml = s.items.length
+          ? s.items.map((item, i) => {
+              const ck = checks[s.id] && checks[s.id][i];
+              return `<div class="check-item${ck ? ' checked' : ''}" onclick="toggle('${s.id}', ${i})">
+                <div class="check-circle">${ck ? '✓' : ''}</div>
+                <div class="check-text">${item}</div>
+              </div>`;
+            }).join('')
+          : '<div class="step-empty">尚未建立步驟，請透過問券收集後填入</div>';
+      } else {
+        bodyHtml = s.items.length
+          ? s.items.map((item, i) => `
+              <div class="book-step">
+                <div class="step-num">${i + 1}</div>
+                <div class="step-text">${item}</div>
+              </div>`).join('')
+          : '<div class="step-empty">尚未建立步驟，請透過問券收集後填入</div>';
+      }
+
+      const progLabel = view === 'check'
+        ? (allDone ? '✓ 完成' : `${secDone}／${s.items.length}`)
+        : `${s.items.length} 步`;
+
+      return `
+        <div class="section-card${allDone && view === 'check' ? ' all-done' : ''}${isOpen ? ' open' : ''}">
+          <div class="section-header" onclick="toggleSection('${s.id}')">
+            <div class="section-dot" style="background:${s.bg}">${s.icon}</div>
+            <div class="section-info">
+              <div class="section-name">${s.label}</div>
+              <div class="section-time">${s.time}</div>
+            </div>
+            <div class="section-prog${allDone && view === 'check' ? ' done' : ''}">${progLabel}</div>
+            <div class="section-chevron">▼</div>
+          </div>
+          <div class="section-body">${bodyHtml}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // default: all open
+  SECTIONS.forEach(s => { openSections[s.id] = true; });
+  render();
+</script>
+</body>
+</html>
