@@ -511,7 +511,6 @@
     <button class="tab-btn" onclick="go('transport',this)">交通</button>
     <button class="tab-btn" onclick="go('hotel',this)">住宿</button>
     <button class="tab-btn" onclick="go('vote',this)">🗳️ 投票</button>
-    <button class="tab-btn" onclick="go('cost',this)">💰 費用</button>
     <button class="tab-btn" onclick="go('comments',this)">💬 留言</button>
   </div>
 
@@ -850,119 +849,6 @@ CREATE POLICY "delete_own" ON activity_votes FOR DELETE TO anon USING (true);</c
     </div>
 
     <!-- ════ 費用 ════ -->
-    <div id="tab-cost" class="tab-panel">
-      <div class="cost-card">
-        <div class="cost-card-header">💼 公司出（每人估算）</div>
-        <table class="cost-table">
-          <thead>
-            <tr>
-              <th>項目</th><th>說明</th><th>單價（/人）</th><th>小計（45人）</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>遊覽車</strong><br><div class="cost-note">左營↔東港來回包車</div></td>
-              <td>1台大巴，47座</td>
-              <td class="cost-num">NT$350</td>
-              <td class="cost-num">~NT$16,000</td>
-            </tr>
-            <tr>
-              <td><strong>渡輪票</strong><br><div class="cost-note">去回各1次</div></td>
-              <td>東琉線，單程~250</td>
-              <td class="cost-num">NT$500</td>
-              <td class="cost-num">NT$22,500</td>
-            </tr>
-            <tr>
-              <td><strong>Night 1 住宿</strong><br><div class="cost-note">含烤肉場地</div></td>
-              <td>名宿包棟，45人</td>
-              <td class="cost-num">NT$1,500</td>
-              <td class="cost-num">NT$67,500</td>
-            </tr>
-            <tr>
-              <td><strong>Night 1 烤肉食材</strong><br><div class="cost-note">含飲料備品</div></td>
-              <td>每人食材費</td>
-              <td class="cost-num">NT$700</td>
-              <td class="cost-num">NT$31,500</td>
-            </tr>
-            <tr>
-              <td><strong>機車租金</strong><br><div class="cost-note">2天，22台</div></td>
-              <td>400×2天=800/台，2人分攤</td>
-              <td class="cost-num">NT$400</td>
-              <td class="cost-num">NT$18,000</td>
-            </tr>
-            <tr>
-              <td><strong>水上活動</strong><br><div class="cost-note">Day 2 主活動</div></td>
-              <td>依投票結果定項目</td>
-              <td class="cost-num">NT$1,000</td>
-              <td class="cost-num">NT$45,000</td>
-            </tr>
-            <tr>
-              <td><strong>雜費備用金</strong><br><div class="cost-note">保險、急用</div></td>
-              <td>緊急支出、入場費等</td>
-              <td class="cost-num">NT$200</td>
-              <td class="cost-num">NT$9,000</td>
-            </tr>
-            <tr class="total">
-              <td colspan="2"><strong>公司合計</strong></td>
-              <td class="cost-num"><strong>NT$4,650</strong></td>
-              <td class="cost-num"><strong>~NT$209,500</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="cost-card">
-        <div class="cost-card-header" style="background:var(--green)">🙋 員工自理（Day 2 起）</div>
-        <table class="cost-table">
-          <thead>
-            <tr><th>項目</th><th>估算範圍</th><th>說明</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Night 2 住宿</strong></td>
-              <td class="cost-num">NT$800–1,500</td>
-              <td>各自訂，需提早安排</td>
-            </tr>
-            <tr>
-              <td><strong>Day 2 午晚餐</strong></td>
-              <td class="cost-num">NT$300–600</td>
-              <td>島上餐廳、海鮮、小吃</td>
-            </tr>
-            <tr>
-              <td><strong>伴手禮/個人消費</strong></td>
-              <td class="cost-num">NT$200–500</td>
-              <td>視個人意願</td>
-            </tr>
-            <tr class="total">
-              <td><strong>員工自理小計</strong></td>
-              <td class="cost-num"><strong>NT$1,300–2,600</strong></td>
-              <td>建議各自備妥</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="budget-summary">
-        <div class="section-title" style="color:var(--sand-lt)">💰 預算總覽</div>
-        <div class="budget-row">
-          <span class="budget-label">公司預算（45人）</span>
-          <span class="budget-val">約 NT$210,000</span>
-        </div>
-        <div class="budget-row">
-          <span class="budget-label">每人公司出</span>
-          <span class="budget-val">約 NT$4,650</span>
-        </div>
-        <div class="budget-row">
-          <span class="budget-label">員工個人預備（Day 2）</span>
-          <span class="budget-val">NT$1,300–2,600</span>
-        </div>
-        <div class="budget-row">
-          <span class="budget-label" style="font-size:11px">* 以上為估算值，住宿與遊覽車費用依實際報價調整</span>
-          <span></span>
-        </div>
-      </div>
-    </div>
-
     <!-- ════ 留言 ════ -->
     <div id="tab-comments" class="tab-panel">
 
