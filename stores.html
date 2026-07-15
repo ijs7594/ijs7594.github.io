@@ -150,10 +150,20 @@
     .checklist-subtabs { display: flex; gap: 8px; margin-bottom: 16px; }
     .checklist-subtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
     .checklist-subtab.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
-    .checklist-form { display: flex; gap: 10px; margin-bottom: 16px; }
-    .checklist-form input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
-    .checklist-form input:focus { border-color: var(--caramel); }
-    .checklist-form button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .checklist-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .checklist-form input, .checklist-form select {
+      border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
+      font-size: 13px; font-family: inherit; outline: none; background: #fff;
+    }
+    .checklist-form input:focus, .checklist-form select:focus { border-color: var(--caramel); }
+    .checklist-form .f-name { flex: 1; min-width: 160px; }
+    .checklist-form .f-qty  { width: 70px; }
+    .checklist-form .f-unit { width: 80px; }
+    .checklist-form .f-amt  { width: 110px; }
+    .checklist-form button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .checklist-item-qty  { font-size: 12px; color: var(--text-mid); white-space: nowrap; }
+    .checklist-item-edit-qty  { width: 60px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit; outline: none; }
+    .checklist-item-edit-unit { width: 72px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
     .checklist-list { display: flex; flex-direction: column; gap: 8px; }
     .checklist-item { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
     .checklist-item-name { font-size: 13px; color: var(--text-dark); flex: 1; }
@@ -234,10 +244,6 @@
       <span class="nav-icon">✍️</span>
       <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
     </a>
-    <a class="nav-item" href="yilan2026.html">
-      <span class="nav-icon">🌊</span>
-      <div><div class="nav-text">宜蘭行</div><div class="nav-sub">家族旅行</div></div>
-    </a>
   </div>
 </nav>
 
@@ -316,8 +322,14 @@
           <div class="checklist-subtab" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
         </div>
         <div class="checklist-form">
-          <input id="checklist-item-input" placeholder="新增驗收項目，例如：冰箱、抽油煙機、招牌燈箱……" onkeydown="if(event.key==='Enter')addChecklistItem()" />
-          <input id="checklist-amount-input" type="number" placeholder="金額（選填）" style="max-width:140px;" onkeydown="if(event.key==='Enter')addChecklistItem()" />
+          <input id="checklist-item-input" class="f-name" placeholder="品名（一次只填一項）" onkeydown="if(event.key==='Enter')addChecklistItem()" />
+          <input id="checklist-qty-input"  class="f-qty"  type="number" placeholder="數量" min="1" value="1" onkeydown="if(event.key==='Enter')addChecklistItem()" />
+          <select id="checklist-unit-input" class="f-unit">
+            <option>個</option><option>台</option><option>組</option><option>支</option>
+            <option>件</option><option>套</option><option>罐</option><option>包</option>
+            <option>捲</option><option>塊</option><option>式</option>
+          </select>
+          <input id="checklist-amount-input" class="f-amt" type="number" placeholder="金額" onkeydown="if(event.key==='Enter')addChecklistItem()" />
           <button onclick="addChecklistItem()">新增</button>
         </div>
         <div class="checklist-list" id="checklist-list"></div>
@@ -631,7 +643,11 @@
       : list.map(c => {
           if (c.id === editingChecklistId) {
             return `<div class="checklist-item">
-              <input class="checklist-item-edit-name" id="edit-name-${c.id}" value="${esc(c.item)}" />
+              <input class="checklist-item-edit-name" id="edit-name-${c.id}" value="${esc(c.item)}" placeholder="品名" />
+              <input class="checklist-item-edit-qty"  id="edit-qty-${c.id}"  type="number" value="${c.quantity ?? 1}" style="width:60px" />
+              <select class="checklist-item-edit-unit" id="edit-unit-${c.id}">
+                ${['個','台','組','支','件','套','罐','包','捲','塊','式'].map(u=>`<option${u===(c.unit||'個')?' selected':''}>${u}</option>`).join('')}
+              </select>
               <input class="checklist-item-edit-amount" id="edit-amount-${c.id}" type="number" placeholder="金額" value="${c.amount != null ? c.amount : ''}" />
               <div class="checklist-actions">
                 <button class="pass-btn" onclick="saveChecklistEdit('${c.id}')">💾 儲存</button>
@@ -639,8 +655,11 @@
               </div>
             </div>`;
           }
+          const qty  = c.quantity ?? 1;
+          const unit = c.unit || '個';
           return `<div class="checklist-item">
           <span class="checklist-item-name">${esc(c.item)}</span>
+          <span class="checklist-item-qty">${qty} ${esc(unit)}</span>
           ${c.amount != null ? `<span class="checklist-item-amount">$${fmtMoney(c.amount)}</span>` : ''}
           <span class="checklist-status cstatus-${esc(c.status)}">${esc(c.status)}</span>
           <div class="checklist-actions">
@@ -663,15 +682,18 @@
   async function addChecklistItem() {
     const item = document.getElementById('checklist-item-input').value.trim();
     if (!item) return;
+    const quantity = Number(document.getElementById('checklist-qty-input').value) || 1;
+    const unit     = document.getElementById('checklist-unit-input').value;
     const amountVal = document.getElementById('checklist-amount-input').value;
     const amount = amountVal ? Number(amountVal) : null;
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/store_checklist`, {
         method: 'POST',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({ store_id: currentStoreId, category: currentChecklistCat, item, amount })
+        body: JSON.stringify({ store_id: currentStoreId, category: currentChecklistCat, item, quantity, unit, amount })
       });
       document.getElementById('checklist-item-input').value = '';
+      document.getElementById('checklist-qty-input').value  = '1';
       document.getElementById('checklist-amount-input').value = '';
       await loadAll();
       switchChecklistCat(currentChecklistCat);
@@ -701,15 +723,17 @@
   }
 
   async function saveChecklistEdit(id) {
-    const item = document.getElementById(`edit-name-${id}`).value.trim();
+    const item     = document.getElementById(`edit-name-${id}`).value.trim();
     if (!item) return;
+    const quantity = Number(document.getElementById(`edit-qty-${id}`).value) || 1;
+    const unit     = document.getElementById(`edit-unit-${id}`).value;
     const amountVal = document.getElementById(`edit-amount-${id}`).value;
     const amount = amountVal ? Number(amountVal) : null;
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/store_checklist?id=eq.${id}`, {
         method: 'PATCH',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({ item, amount })
+        body: JSON.stringify({ item, quantity, unit, amount })
       });
       editingChecklistId = null;
       await loadAll();
