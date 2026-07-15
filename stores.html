@@ -116,6 +116,14 @@
     .detail-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
 
     /* ── Vendors (工程進度) ── */
+    .knowhow { background: var(--cream); border: 1px solid var(--sand); border-radius: 14px; padding: 4px 20px; margin-bottom: 20px; }
+    .knowhow summary { padding: 14px 0; font-size: 14px; font-weight: 700; color: var(--brown-mid); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+    .knowhow summary::-webkit-details-marker { display: none; }
+    .knowhow summary::before { content: "▸"; color: var(--caramel); transition: transform 0.15s; }
+    .knowhow[open] summary::before { transform: rotate(90deg); }
+    .knowhow-body { padding-bottom: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .knowhow-item h4 { font-size: 13px; color: var(--brown-main); margin-bottom: 4px; }
+    .knowhow-item p { font-size: 12.5px; color: var(--text-mid); line-height: 1.7; }
     .vendor-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
     .vendor-form h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
     .vendor-form .form-row input, .vendor-form .form-row select { flex: 1; }
@@ -246,8 +254,8 @@
       <div class="detail-header" id="detail-header"></div>
 
       <div class="detail-tabs">
-        <div class="detail-tab active" data-tab="logs" onclick="switchTab('logs')">📝 心得紀錄</div>
-        <div class="detail-tab" data-tab="vendors" onclick="switchTab('vendors')">🔧 工程進度</div>
+        <div class="detail-tab active" data-tab="vendors" onclick="switchTab('vendors')">🔧 工程進度</div>
+        <div class="detail-tab" data-tab="logs" onclick="switchTab('logs')">📝 心得紀錄</div>
         <div class="detail-tab" data-tab="checklist" onclick="switchTab('checklist')">✅ 驗收鉤稽</div>
         <div class="detail-tab" data-tab="plan" onclick="switchTab('plan')">📑 營運計畫</div>
       </div>
@@ -272,6 +280,35 @@
       </div>
 
       <div id="tab-vendors" style="display:none;">
+        <details class="knowhow">
+          <summary>📚 工程順序 KNOW-HOW（為什麼要這樣排）</summary>
+          <div class="knowhow-body">
+            <div class="knowhow-item">
+              <h4>為什麼要先場勘？</h4>
+              <p>簽約前先場勘，是為了確認樑柱、給排水、電力容量等硬體條件符不符合開店需求，也才能抓出拆除與裝潢的大概範圍與天數。場勘沒做確實，簽了約才發現要花大錢補結構，就來不及了。</p>
+            </div>
+            <div class="knowhow-item">
+              <h4>場勘完要多久才能開始施工？</h4>
+              <p>場勘後通常要留 1～2 週前置期：跑合約用印、申請水電相關文件、把拆除／木工／水電的工班排進檔期。這次從場勘到拆除只抓了 2 天，算是很緊的排法，之後展店建議至少抓 7～10 天緩衝，避免工班臨時喬不到時間。</p>
+            </div>
+            <div class="knowhow-item">
+              <h4>為什麼油漆要在鋪地板之前？</h4>
+              <p>油漆施工會噴濺、滴漏、有粉塵，地板如果先鋪好，很容易被弄髒或刮傷，事後要重新拋光甚至局部換料，反而更花錢費工。等油漆完成、粉塵落定，再鋪地板，成品才會乾淨。</p>
+            </div>
+            <div class="knowhow-item">
+              <h4>為什麼設備要等地板鋪完才能進場？</h4>
+              <p>餐飲設備通常很重，需要在平整、完工的地面上定位、抓水平；地板沒鋪完就搬設備進場，一來可能壓壞底材，二來設備的定位、給排水孔位都要對應完成後的地板高度。先把地板鋪好，設備才能一次到位，不用事後搬動再施工一次。</p>
+            </div>
+            <div class="knowhow-item">
+              <h4>水電為什麼要進場 2～3 次？</h4>
+              <p><b>第一次（評估）</b>：跟拆除同期，確認用電安全、抓迴路與管線需求。<br/>
+              <b>第二次（粗胚施工）</b>：天花板/牆面封起來之前，把插座、迴路、給排水管線抓大概位置預埋好。<br/>
+              <b>第三次（精修收尾）</b>：等設備、層架、招牌都定位後，才知道插座、水龍頭、漏電斷路器的精確高度在哪，水電要回來做最後微調與驗收——包含設備全功率試車那天，如果發現電力過載或哪裡沒接好，也是水電當天回來收尾。</p>
+              <p>拆成三次，是「先求有、再求準」：太早把插座位置釘死，等設備一到現場尺寸對不上，就要打牆重拉管線，反而更貴更慢。</p>
+            </div>
+          </div>
+        </details>
+
         <div class="vendor-form">
           <h3>🔧 新增廠商排程</h3>
           <div class="form-row">
@@ -294,8 +331,8 @@
 
       <div id="tab-checklist" style="display:none;">
         <div class="checklist-subtabs">
-          <div class="checklist-subtab active" data-cat="一般驗收" onclick="switchChecklistCat('一般驗收')">一般驗收</div>
-          <div class="checklist-subtab" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
+          <div class="checklist-subtab active" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
+          <div class="checklist-subtab" data-cat="一般驗收" onclick="switchChecklistCat('一般驗收')">一般驗收</div>
         </div>
         <div class="checklist-form">
           <input id="checklist-item-input" class="f-name" placeholder="品名（一次只填一項）" onkeydown="if(event.key==='Enter')addChecklistItem()" />
@@ -359,8 +396,8 @@
   let financials = [];
   let planSections = [];
   let currentStoreId = null;
-  let currentTab = 'logs';
-  let currentChecklistCat = '一般驗收';
+  let currentTab = 'vendors';
+  let currentChecklistCat = '五金驗收';
   let editingChecklistId = null;
 
   loadAll();
@@ -457,7 +494,7 @@
     document.getElementById('list-view').style.display = 'none';
     document.getElementById('detail-view').style.display = 'block';
     document.getElementById('add-store-btn').style.display = 'none';
-    switchTab('logs');
+    switchTab('vendors');
     renderDetail();
     checkMilestones();
   }
