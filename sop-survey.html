@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>一日流程問卷 · 漢柏分身</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+    }
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    .page-header {
+      background: var(--brown-dark);
+      padding: 28px 20px 24px;
+      text-align: center;
+    }
+    .page-header .icon { font-size: 36px; margin-bottom: 10px; }
+    .page-header h1 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .page-header p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+
+    .form-body { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
+
+    .name-field {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 18px; margin-bottom: 20px;
+    }
+    .field-label {
+      font-size: 13px; font-weight: 700; color: var(--text-dark);
+      margin-bottom: 10px;
+    }
+    .field-input {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: inherit; font-size: 14px;
+      color: var(--text-dark); background: var(--warm-white);
+      outline: none; transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: var(--brown-main); }
+
+    .section-card {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; margin-bottom: 14px; overflow: hidden;
+    }
+    .section-hd {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+    }
+    .section-dot {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .section-name { font-size: 14px; font-weight: 700; }
+    .section-time { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .section-ta {
+      width: 100%; border: none; border-top: 1px solid var(--border);
+      padding: 14px 16px; font-family: inherit; font-size: 14px;
+      color: var(--text-dark); background: var(--warm-white);
+      resize: vertical; min-height: 100px; outline: none;
+      line-height: 1.7;
+    }
+    .section-ta::placeholder { color: var(--text-light); font-size: 13px; }
+
+    .submit-wrap { margin-top: 24px; text-align: center; }
+    .submit-btn {
+      width: 100%; padding: 16px; background: var(--brown-main); color: #fff;
+      border: none; border-radius: 14px; font-family: inherit;
+      font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .toast {
+      display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--brown-dark); color: #fff; padding: 12px 24px;
+      border-radius: 30px; font-size: 14px; font-weight: 600;
+      z-index: 100; white-space: nowrap;
+    }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="icon">📋</div>
+  <h1>一日作業流程問卷</h1>
+  <p>請各位店長填寫您在各時段的主要作業內容<br>AI 會將大家的回覆整理成標準流程</p>
+</div>
+
+<div class="form-body">
+
+  <div class="name-field">
+    <div class="field-label">您的姓名 / 職稱</div>
+    <input class="field-input" id="manager-name" placeholder="例：小明店長" maxlength="20" />
+  </div>
+
+  <div id="sections-form"></div>
+
+  <div class="submit-wrap">
+    <button class="submit-btn" id="submit-btn" onclick="submitSurvey()">送出問卷</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SB_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  const SECTIONS = [
+    { id: 'pre-open',   label: '開店前',         icon: '🌅', bg: '#FFF8ED', time: '開店前 30 分鐘' },
+    { id: 'open-check', label: '開店當下檢視',    icon: '✅', bg: '#F0FFF6', time: '準時開門時' },
+    { id: 'off-peak-1', label: '離峰工作（早）',  icon: '☕', bg: '#FFFBF0', time: '早離峰時段' },
+    { id: 'peak-1',     label: '巔峰工作（午）',  icon: '⚡', bg: '#FFF5F0', time: '午間尖峰時段' },
+    { id: 'defrost',    label: '退冰整頓工作',    icon: '❄️', bg: '#F0F6FF', time: '午後整備時段' },
+    { id: 'off-peak-2', label: '離峰工作（午後）',icon: '🌤️', bg: '#FFFBF0', time: '午後離峰時段' },
+    { id: 'peak-2',     label: '巔峰工作（晚）',  icon: '🔥', bg: '#FFF0EC', time: '晚間尖峰時段' },
+    { id: 'pre-close',  label: '收店前工作',      icon: '🌙', bg: '#F5F0FF', time: '停止接單後' },
+    { id: 'closing',    label: '收銀打烊工作',    icon: '🔒', bg: '#F0FFF4', time: '打烊流程' },
+  ];
+
+  document.getElementById('sections-form').innerHTML = SECTIONS.map(s => `
+    <div class="section-card">
+      <div class="section-hd">
+        <div class="section-dot" style="background:${s.bg}">${s.icon}</div>
+        <div>
+          <div class="section-name">${s.label}</div>
+          <div class="section-time">${s.time}</div>
+        </div>
+      </div>
+      <textarea class="section-ta" id="ta-${s.id}"
+        placeholder="請描述您在「${s.label}」時段主要做哪些事？不知道的可以留空，只填自己熟悉的時段。"></textarea>
+    </div>
+  `).join('');
+
+  function showToast(msg, ms = 2500) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), ms);
+  }
+
+  async function submitSurvey() {
+    const name = document.getElementById('manager-name').value.trim();
+    if (!name) { showToast('請先填寫您的姓名'); return; }
+
+    const rows = SECTIONS
+      .map(s => ({ section_id: s.id, manager_name: name, content: document.getElementById('ta-' + s.id).value.trim() }))
+      .filter(r => r.content);
+
+    if (!rows.length) { showToast('至少填寫一個時段的內容'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '送出中…';
+
+    const res = await fetch(SB_URL + '/rest/v1/sop_responses', {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(rows)
+    });
+
+    if (res.ok) {
+      btn.textContent = '✓ 已送出，謝謝！';
+      showToast(`已送出 ${rows.length} 個時段的內容`, 3000);
+      SECTIONS.forEach(s => { document.getElementById('ta-' + s.id).value = ''; });
+    } else {
+      btn.disabled = false;
+      btn.textContent = '送出問卷';
+      showToast('送出失敗，請稍後再試');
+    }
+  }
+</script>
+</body>
+</html>

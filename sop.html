@@ -17,6 +17,8 @@
       --text-mid:    #6B4C35;
       --text-light:  #9E7B60;
       --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --green-lt:    #E8F7F0;
     }
     body {
       font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -68,17 +70,35 @@
     .topbar-icon { font-size: 22px; }
     .topbar-title { font-size: 17px; font-weight: 700; }
     .topbar-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+    .topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
     .version-badge {
-      margin-left: auto; font-size: 11px; font-weight: 600;
-      padding: 4px 12px; border-radius: 20px;
-      background: var(--warm-white); border: 1.5px solid var(--border);
-      color: var(--text-light);
+      font-size: 11px; font-weight: 600; padding: 4px 12px;
+      border-radius: 20px; background: var(--warm-white);
+      border: 1.5px solid var(--border); color: var(--text-light);
     }
+    .admin-btn {
+      font-size: 12px; padding: 5px 14px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: var(--warm-white);
+      color: var(--text-mid); cursor: pointer; font-family: inherit; font-weight: 600;
+    }
+    .admin-btn.active { background: var(--brown-main); color: #fff; border-color: var(--brown-main); }
+
+    /* ── Tab toggle ── */
+    .tab-row {
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 10px 24px; display: flex; gap: 8px; flex-shrink: 0;
+    }
+    .tab-pill {
+      padding: 6px 18px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--warm-white); font-family: inherit; font-size: 12px;
+      font-weight: 600; color: var(--text-light); cursor: pointer;
+    }
+    .tab-pill.active { background: var(--brown-main); color: #fff; border-color: var(--brown-main); }
 
     /* ── Content ── */
     .content { flex: 1; overflow-y: auto; padding: 20px 24px 48px; }
 
-    /* ── Section card ── */
+    /* ── Handbook ── */
     .section-card {
       background: var(--card-bg); border: 1.5px solid var(--border);
       border-radius: 14px; margin-bottom: 12px; overflow: hidden;
@@ -102,23 +122,11 @@
       border-radius: 12px; background: var(--warm-white);
       color: var(--text-mid); border: 1px solid var(--border);
     }
-    .chevron {
-      font-size: 11px; color: var(--text-light); transition: transform 0.2s;
-      margin-left: 6px;
-    }
+    .chevron { font-size: 11px; color: var(--text-light); transition: transform 0.2s; margin-left: 6px; }
     .section-card.open .chevron { transform: rotate(180deg); }
-
-    .section-body {
-      display: none; border-top: 1px solid var(--border);
-      padding: 4px 18px 14px;
-    }
+    .section-body { display: none; border-top: 1px solid var(--border); padding: 4px 18px 14px; }
     .section-card.open .section-body { display: block; }
-
-    /* ── Steps ── */
-    .step-row {
-      display: flex; gap: 12px;
-      padding: 11px 4px; border-bottom: 1px solid var(--border);
-    }
+    .step-row { display: flex; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
     .step-row:last-child { border-bottom: none; }
     .step-num {
       width: 22px; height: 22px; border-radius: 50%;
@@ -128,13 +136,66 @@
       flex-shrink: 0; margin-top: 2px;
     }
     .step-text { font-size: 14px; line-height: 1.65; }
-    .step-note {
-      font-size: 12px; color: var(--text-light); margin-top: 3px;
+    .step-empty { padding: 18px 4px; font-size: 13px; color: var(--text-light); font-style: italic; text-align: center; }
+
+    /* ── Admin panel ── */
+    .admin-card {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; margin-bottom: 16px; overflow: hidden;
     }
-    .step-empty {
-      padding: 18px 4px; font-size: 13px; color: var(--text-light);
-      font-style: italic; text-align: center;
+    .admin-section-hd {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; cursor: pointer;
     }
+    .admin-section-hd:hover { background: var(--warm-white); }
+    .admin-section-body { display: none; border-top: 1px solid var(--border); padding: 16px 18px; }
+    .admin-card.open .admin-section-body { display: block; }
+    .resp-count {
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+      background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; margin-left: auto;
+    }
+    .resp-count.zero { background: var(--warm-white); color: var(--text-light); border-color: var(--border); }
+    .response-item {
+      background: var(--warm-white); border-radius: 10px; padding: 12px 14px;
+      margin-bottom: 10px; border: 1px solid var(--border);
+    }
+    .resp-meta { font-size: 11px; color: var(--text-light); margin-bottom: 6px; }
+    .resp-body { font-size: 13px; line-height: 1.65; white-space: pre-wrap; }
+    .ai-result {
+      background: #F0FFF6; border: 1.5px solid #BBF7D0; border-radius: 10px;
+      padding: 14px; margin-top: 14px; font-size: 14px; line-height: 1.7;
+      white-space: pre-wrap; display: none;
+    }
+    .admin-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .act-btn {
+      padding: 8px 16px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--warm-white); font-family: inherit; font-size: 12px;
+      font-weight: 600; cursor: pointer; color: var(--text-mid);
+    }
+    .act-btn:hover { border-color: var(--caramel); color: var(--caramel); }
+    .act-btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+    .act-btn.primary:hover { opacity: 0.85; }
+    .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* API key setup */
+    .api-setup {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 18px 20px; margin-bottom: 20px;
+    }
+    .api-setup-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .api-row { display: flex; gap: 8px; }
+    .api-input {
+      flex: 1; padding: 9px 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: inherit; font-size: 12px;
+      background: var(--warm-white); outline: none; color: var(--text-dark);
+    }
+    .api-input:focus { border-color: var(--brown-main); }
+    .api-save {
+      padding: 9px 16px; background: var(--brown-main); color: #fff;
+      border: none; border-radius: 10px; font-family: inherit;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .api-hint { font-size: 11px; color: var(--text-light); margin-top: 8px; }
 
     @media (max-width: 680px) { .sidebar { display: none; } }
   </style>
@@ -162,6 +223,10 @@
       <span class="nav-icon">📖</span>
       <div><div class="nav-text">一日流程</div><div class="nav-sub-text">作業手冊</div></div>
     </a>
+    <a class="nav-item" href="sop-survey.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">填寫問卷</div><div class="nav-sub-text">店長回報</div></div>
+    </a>
     <a class="nav-item" href="scripts.html">
       <span class="nav-icon">✍️</span>
       <div><div class="nav-text">Scripts</div><div class="nav-sub-text">腳本庫</div></div>
@@ -180,168 +245,128 @@
       <div class="topbar-title">一日作業流程</div>
       <div class="topbar-sub">貴焿古早味麵線羹 · 作業手冊</div>
     </div>
-    <div class="version-badge" id="ver-badge">載入中…</div>
+    <div class="topbar-right">
+      <div class="version-badge" id="ver-badge">載入中…</div>
+      <button class="admin-btn" id="admin-toggle" onclick="toggleAdmin()">管理員</button>
+    </div>
   </div>
 
-  <div class="content" id="section-list">
-    <!-- Rendered by JS -->
+  <div class="tab-row" id="tab-row" style="display:none">
+    <button class="tab-pill active" id="t-handbook" onclick="setTab('handbook')">📖 手冊</button>
+    <button class="tab-pill" id="t-admin" onclick="setTab('admin')">⚙️ 管理 &amp; 彙整</button>
+  </div>
+
+  <div class="content">
+    <div id="handbook-panel"></div>
+    <div id="admin-panel" style="display:none"></div>
   </div>
 </div>
 
 <script>
+  const SB_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
   const SECTIONS = [
-    {
-      id: 'pre-open',
-      label: '開店前',
-      icon: '🌅',
-      bg: '#FFF8ED',
-      time: '開店前 30 分鐘',
-      steps: [
-        { text: '開燈、開冷氣、開設備電源' },
-        { text: '確認今日食材備料狀況' },
-        { text: '補充醬料、調味料至定位' },
-        { text: '清潔並整理工作台面' },
-        { text: '備齊出餐用具與消耗品' },
-      ]
-    },
-    {
-      id: 'open-check',
-      label: '開店當下檢視',
-      icon: '✅',
-      bg: '#F0FFF6',
-      time: '準時開門時',
-      steps: [
-        { text: '翻牌開店、門口整理' },
-        { text: '確認收銀台零錢已備妥' },
-        { text: '開啟點餐系統 / POS' },
-        { text: '確認出餐動線暢通無阻' },
-        { text: '通知全員就位' },
-      ]
-    },
-    {
-      id: 'off-peak-1',
-      label: '離峰工作（早）',
-      icon: '☕',
-      bg: '#FFFBF0',
-      time: '早離峰時段',
-      steps: [
-        { text: '補充備料、進行前置作業' },
-        { text: '清潔前台與候位區域' },
-        { text: '確認庫存並回報缺貨' },
-        { text: '環境巡視，整頓陳列' },
-      ]
-    },
-    {
-      id: 'peak-1',
-      label: '巔峰工作（午）',
-      icon: '⚡',
-      bg: '#FFF5F0',
-      time: '午間尖峰時段',
-      steps: [
-        { text: '快速出餐，保持出餐節奏' },
-        { text: '即時補充食材與備料' },
-        { text: '隨時維持場域整潔' },
-        { text: '協助顧客引導與等候管理' },
-      ]
-    },
-    {
-      id: 'defrost',
-      label: '退冰整頓工作',
-      icon: '❄️',
-      bg: '#F0F6FF',
-      time: '午後整備時段',
-      steps: [
-        { text: '退冰隔日所需食材' },
-        { text: '整頓與補充冷藏庫存' },
-        { text: '補充衛材、包材等消耗品' },
-        { text: '回報明日預估備料量' },
-      ]
-    },
-    {
-      id: 'off-peak-2',
-      label: '離峰工作（午後）',
-      icon: '🌤️',
-      bg: '#FFFBF0',
-      time: '午後離峰時段',
-      steps: [
-        { text: '深度清潔廚具設備' },
-        { text: '補充下午場備料' },
-        { text: '小組工作交接確認' },
-      ]
-    },
-    {
-      id: 'peak-2',
-      label: '巔峰工作（晚）',
-      icon: '🔥',
-      bg: '#FFF0EC',
-      time: '晚間尖峰時段',
-      steps: [
-        { text: '快速出餐，維持服務品質' },
-        { text: '即時補充食材與備料' },
-        { text: '留意剩餘備料，適時收量' },
-        { text: '協助顧客引導與等候管理' },
-      ]
-    },
-    {
-      id: 'pre-close',
-      label: '收店前工作',
-      icon: '🌙',
-      bg: '#F5F0FF',
-      time: '停止接單後',
-      steps: [
-        { text: '停止接單，消化剩餘訂單' },
-        { text: '清除剩餘食材，妥善保存' },
-        { text: '清潔廚具、設備歸位' },
-        { text: '環境全面整理' },
-      ]
-    },
-    {
-      id: 'closing',
-      label: '收銀打烊工作',
-      icon: '🔒',
-      bg: '#F0FFF4',
-      time: '打烊流程',
-      steps: [
-        { text: '結算今日收銀金額' },
-        { text: '填寫收銀日報單' },
-        { text: '關閉設備電源、冷氣' },
-        { text: '鎖門並回報主管確認' },
-      ]
-    },
+    { id: 'pre-open',   label: '開店前',         icon: '🌅', bg: '#FFF8ED', time: '開店前 30 分鐘' },
+    { id: 'open-check', label: '開店當下檢視',    icon: '✅', bg: '#F0FFF6', time: '準時開門時' },
+    { id: 'off-peak-1', label: '離峰工作（早）',  icon: '☕', bg: '#FFFBF0', time: '早離峰時段' },
+    { id: 'peak-1',     label: '巔峰工作（午）',  icon: '⚡', bg: '#FFF5F0', time: '午間尖峰時段' },
+    { id: 'defrost',    label: '退冰整頓工作',    icon: '❄️', bg: '#F0F6FF', time: '午後整備時段' },
+    { id: 'off-peak-2', label: '離峰工作（午後）',icon: '🌤️', bg: '#FFFBF0', time: '午後離峰時段' },
+    { id: 'peak-2',     label: '巔峰工作（晚）',  icon: '🔥', bg: '#FFF0EC', time: '晚間尖峰時段' },
+    { id: 'pre-close',  label: '收店前工作',      icon: '🌙', bg: '#F5F0FF', time: '停止接單後' },
+    { id: 'closing',    label: '收銀打烊工作',    icon: '🔒', bg: '#F0FFF4', time: '打烊流程' },
   ];
 
-  let openSections = {};
-  SECTIONS.forEach(s => { openSections[s.id] = true; });
+  let adminMode = false;
+  let currentTab = 'handbook';
+  let openBook = {};
+  let openAdmin = {};
+  let contentMap = {};   // section_id → steps[]
+  let responsesMap = {}; // section_id → [{manager_name, content, submitted_at}]
+  let aiResults = {};    // section_id → string
 
-  function toggle(id) {
-    openSections[id] = !openSections[id];
-    render();
+  SECTIONS.forEach(s => { openBook[s.id] = true; });
+
+  async function sbGet(path) {
+    const r = await fetch(SB_URL + '/rest/v1/' + path, {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+    });
+    return r.ok ? r.json() : [];
   }
 
-  function render() {
-    const list = document.getElementById('section-list');
-    list.innerHTML = SECTIONS.map((s, idx) => {
-      const isOpen = openSections[s.id];
-      const stepsHtml = s.steps.length
-        ? s.steps.map((st, i) => `
-            <div class="step-row">
-              <div class="step-num">${i + 1}</div>
-              <div>
-                <div class="step-text">${st.text}</div>
-                ${st.note ? `<div class="step-note">${st.note}</div>` : ''}
-              </div>
-            </div>`).join('')
-        : '<div class="step-empty">尚未建立步驟內容</div>';
+  async function sbPost(path, body) {
+    return fetch(SB_URL + '/rest/v1/' + path, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+  }
 
+  async function sbUpsert(path, body) {
+    return fetch(SB_URL + '/rest/v1/' + path, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+  }
+
+  async function loadContent() {
+    const rows = await sbGet('sop_content?select=section_id,steps,updated_at');
+    contentMap = {};
+    rows.forEach(r => { contentMap[r.section_id] = { steps: r.steps, updated_at: r.updated_at }; });
+
+    const latest = rows.map(r => r.updated_at).sort().pop();
+    const verEl = document.getElementById('ver-badge');
+    if (latest) {
+      const d = new Date(latest);
+      verEl.textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} 版`;
+    } else {
+      const n = new Date();
+      verEl.textContent = `初稿 ${n.getMonth()+1}/${n.getDate()}`;
+    }
+  }
+
+  async function loadResponses() {
+    const rows = await sbGet('sop_responses?select=section_id,manager_name,content,submitted_at&order=submitted_at.asc');
+    responsesMap = {};
+    rows.forEach(r => {
+      if (!responsesMap[r.section_id]) responsesMap[r.section_id] = [];
+      responsesMap[r.section_id].push(r);
+    });
+  }
+
+  function getSteps(sectionId) {
+    if (contentMap[sectionId] && contentMap[sectionId].steps.length) {
+      return contentMap[sectionId].steps;
+    }
+    return [];
+  }
+
+  /* ── Handbook render ── */
+  function renderHandbook() {
+    const el = document.getElementById('handbook-panel');
+    el.innerHTML = SECTIONS.map(s => {
+      const steps = getSteps(s.id);
+      const isOpen = openBook[s.id];
+      const stepsHtml = steps.length
+        ? steps.map((st, i) => `<div class="step-row"><div class="step-num">${i+1}</div><div class="step-text">${esc(st)}</div></div>`).join('')
+        : '<div class="step-empty">尚未建立內容 — 請由管理員彙整問卷填入</div>';
       return `
         <div class="section-card${isOpen ? ' open' : ''}">
-          <div class="section-header" onclick="toggle('${s.id}')">
+          <div class="section-header" onclick="toggleBook('${s.id}')">
             <div class="section-dot" style="background:${s.bg}">${s.icon}</div>
             <div class="section-info">
               <div class="section-name">${s.label}</div>
               <div class="section-time">${s.time}</div>
             </div>
-            <div class="step-count">${s.steps.length} 步</div>
+            <div class="step-count">${steps.length ? steps.length + ' 步' : '待填入'}</div>
             <div class="chevron">▼</div>
           </div>
           <div class="section-body">${stepsHtml}</div>
@@ -349,11 +374,174 @@
     }).join('');
   }
 
-  const now = new Date();
-  document.getElementById('ver-badge').textContent =
-    `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} 版`;
+  function toggleBook(id) { openBook[id] = !openBook[id]; renderHandbook(); }
 
-  render();
+  /* ── Admin render ── */
+  function renderAdmin() {
+    const el = document.getElementById('admin-panel');
+    const groqKey = localStorage.getItem('groq_key') || '';
+
+    el.innerHTML = `
+      <div class="api-setup">
+        <div class="api-setup-title">⚙️ Groq API Key（用於 AI 彙整）</div>
+        <div class="api-row">
+          <input class="api-input" id="groq-key-input" type="password"
+            placeholder="gsk_…" value="${esc(groqKey)}" />
+          <button class="api-save" onclick="saveApiKey()">儲存</button>
+        </div>
+        <div class="api-hint">Key 只存在本裝置，不會上傳。<a href="https://console.groq.com/keys" target="_blank" style="color:var(--caramel)">申請免費 Key →</a></div>
+      </div>
+
+      ${SECTIONS.map(s => {
+        const resps = responsesMap[s.id] || [];
+        const isOpen = openAdmin[s.id];
+        const aiHtml = aiResults[s.id]
+          ? `<div class="ai-result" id="air-${s.id}" style="display:block">${esc(aiResults[s.id])}</div>`
+          : `<div class="ai-result" id="air-${s.id}"></div>`;
+        const respHtml = resps.length
+          ? resps.map(r => {
+              const d = new Date(r.submitted_at);
+              return `<div class="response-item">
+                <div class="resp-meta">${esc(r.manager_name)} · ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</div>
+                <div class="resp-body">${esc(r.content)}</div>
+              </div>`;
+            }).join('')
+          : '<div class="step-empty">尚無回覆</div>';
+
+        return `
+          <div class="admin-card${isOpen ? ' open' : ''}">
+            <div class="admin-section-hd" onclick="toggleAdmin2('${s.id}')">
+              <div class="section-dot" style="background:${s.bg};width:36px;height:36px;border-radius:9px;font-size:18px;display:flex;align-items:center;justify-content:center">${s.icon}</div>
+              <div style="flex:1;margin-left:10px">
+                <div style="font-size:13px;font-weight:700">${s.label}</div>
+                <div style="font-size:11px;color:var(--text-light)">${s.time}</div>
+              </div>
+              <div class="resp-count ${resps.length ? '' : 'zero'}">${resps.length} 份回覆</div>
+              <div class="chevron" style="margin-left:8px">▼</div>
+            </div>
+            <div class="admin-section-body">
+              ${respHtml}
+              ${aiHtml}
+              <div class="admin-actions">
+                <button class="act-btn" id="ai-btn-${s.id}"
+                  onclick="synthesize('${s.id}')"
+                  ${!resps.length ? 'disabled' : ''}>
+                  ✨ AI 彙整
+                </button>
+                <button class="act-btn primary" id="save-btn-${s.id}"
+                  onclick="saveContent('${s.id}')"
+                  ${!aiResults[s.id] ? 'disabled' : ''}>
+                  ✓ 儲存為正式版
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }).join('')}`;
+  }
+
+  function toggleAdmin2(id) {
+    openAdmin[id] = !openAdmin[id];
+    renderAdmin();
+  }
+
+  function saveApiKey() {
+    const k = document.getElementById('groq-key-input').value.trim();
+    localStorage.setItem('groq_key', k);
+    alert('已儲存');
+  }
+
+  async function synthesize(sectionId) {
+    const key = localStorage.getItem('groq_key');
+    if (!key) { alert('請先設定 Groq API Key'); return; }
+
+    const resps = responsesMap[sectionId] || [];
+    if (!resps.length) return;
+
+    const sec = SECTIONS.find(s => s.id === sectionId);
+    const btn = document.getElementById('ai-btn-' + sectionId);
+    btn.disabled = true;
+    btn.textContent = 'AI 思考中…';
+
+    const combined = resps.map((r, i) => `【${r.manager_name}】\n${r.content}`).join('\n\n---\n\n');
+    const prompt = `以下是多位店長對「${sec.label}」（${sec.time}）時段的作業描述：\n\n${combined}\n\n請將上述內容整理為 5～8 條清楚、可執行的標準作業步驟（繁體中文），每條步驟25字以內，直接列出，每條一行，不需加標號或符號。`;
+
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: '你是一位餐飲業流程整理師，擅長將口語描述整理為清晰的標準作業步驟。' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 400, temperature: 0.3
+        })
+      });
+      const data = await res.json();
+      if (data.choices && data.choices[0]) {
+        aiResults[sectionId] = data.choices[0].message.content.trim();
+      } else {
+        throw new Error(data.error?.message || '未知錯誤');
+      }
+    } catch (e) {
+      alert('AI 彙整失敗：' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '✨ AI 彙整';
+    renderAdmin();
+  }
+
+  async function saveContent(sectionId) {
+    const raw = aiResults[sectionId];
+    if (!raw) return;
+
+    const steps = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const btn = document.getElementById('save-btn-' + sectionId);
+    btn.disabled = true;
+    btn.textContent = '儲存中…';
+
+    await sbUpsert('sop_content', {
+      section_id: sectionId, steps, updated_at: new Date().toISOString(), updated_by: '管理員'
+    });
+
+    contentMap[sectionId] = { steps, updated_at: new Date().toISOString() };
+    btn.textContent = '✓ 已儲存';
+    setTimeout(() => renderAdmin(), 1000);
+    renderHandbook();
+
+    const n = new Date();
+    document.getElementById('ver-badge').textContent = `${n.getFullYear()}/${n.getMonth()+1}/${n.getDate()} 版`;
+  }
+
+  /* ── UI toggles ── */
+  function toggleAdmin() {
+    adminMode = !adminMode;
+    document.getElementById('admin-toggle').className = 'admin-btn' + (adminMode ? ' active' : '');
+    document.getElementById('tab-row').style.display = adminMode ? 'flex' : 'none';
+    if (adminMode) {
+      setTab('admin');
+      loadResponses().then(() => renderAdmin());
+    } else {
+      setTab('handbook');
+    }
+  }
+
+  function setTab(tab) {
+    currentTab = tab;
+    document.getElementById('t-handbook').className = 'tab-pill' + (tab === 'handbook' ? ' active' : '');
+    document.getElementById('t-admin').className    = 'tab-pill' + (tab === 'admin'    ? ' active' : '');
+    document.getElementById('handbook-panel').style.display = tab === 'handbook' ? 'block' : 'none';
+    document.getElementById('admin-panel').style.display    = tab === 'admin'    ? 'block' : 'none';
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  /* ── Init ── */
+  loadContent().then(() => renderHandbook());
 </script>
 </body>
 </html>
