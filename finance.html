@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>營業儀表板 · 漢柏分身</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --red:         #C0392B;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* ── Password Gate ── */
+    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .gate-box h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
+    .gate-box p { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+    .gate-box input:focus { border-color: var(--caramel); }
+    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gate-box button:hover { background: var(--brown-mid); }
+    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
+
+    .month-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .month-nav button { background: var(--brown-main); color: white; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+    .month-nav button:hover { background: var(--brown-mid); }
+    .month-nav h2 { font-size: 18px; color: var(--text-dark); }
+
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .card { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
+    .card-label { font-size: 11px; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 8px; }
+    .card-value { font-size: 26px; font-weight: 700; color: var(--text-dark); }
+    .card-value.red { color: var(--red); }
+    .card-value.green { color: var(--green); }
+
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .chart-box { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
+    .chart-box h3 { font-size: 13px; color: var(--text-mid); margin-bottom: 14px; }
+
+    .table-box { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .table-box h3 { font-size: 13px; color: var(--text-mid); margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; background: var(--cream); color: var(--text-mid); font-weight: 600; }
+    td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; background: var(--cream); color: var(--text-mid); }
+    .loading { text-align: center; padding: 32px; color: var(--text-light); }
+  </style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2>🔒 營業儀表板</h2>
+    <p>輸入密碼查看財務資料</p>
+    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
+    <button onclick="checkPw()">進入</button>
+    <div class="gate-error" id="pw-error"></div>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div class="brand-text">
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿管理中樞</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
+    </a>
+    <a class="nav-item active" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+    <a class="nav-item" href="yilan2026.html">
+      <span class="nav-icon">🌊</span>
+      <div><div class="nav-text">宜蘭行</div><div class="nav-sub">家族旅行</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📊</span>
+    <div>
+      <div class="topbar-title">營業儀表板</div>
+      <div class="topbar-sub" id="last-update">載入中…</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">◀</button>
+      <h2 id="month-label"></h2>
+      <button onclick="changeMonth(1)">▶</button>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">本月支出</div>
+        <div class="card-value red" id="total-expense">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">本月營業額</div>
+        <div class="card-value green" id="total-revenue">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">記帳筆數</div>
+        <div class="card-value" id="total-count">—</div>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="chart-box">
+        <h3>支出分類</h3>
+        <canvas id="categoryChart" height="220"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>每日營業額趨勢</h3>
+        <canvas id="revenueChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <div class="table-box">
+      <h3>支出明細</h3>
+      <table>
+        <thead><tr><th>日期</th><th>描述</th><th>分類</th><th>金額</th></tr></thead>
+        <tbody id="expense-tbody"><tr><td colspan="4" class="loading">載入中…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="table-box">
+      <h3>營業額記錄</h3>
+      <table>
+        <thead><tr><th>日期</th><th>備註</th><th>金額</th></tr></thead>
+        <tbody id="revenue-tbody"><tr><td colspan="3" class="loading">載入中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const PASSWORD = '1688';
+
+  function checkPw() {
+    const val = document.getElementById('pw-input').value;
+    if (val === PASSWORD) {
+      sessionStorage.setItem('finance_auth', '1');
+      document.getElementById('gate').style.display = 'none';
+      loadData();
+    } else {
+      document.getElementById('pw-error').textContent = '密碼錯誤';
+    }
+  }
+  if (sessionStorage.getItem('finance_auth') === '1') {
+    document.getElementById('gate').style.display = 'none';
+    loadData();
+  }
+
+  const CATEGORY_COLORS = {
+    '餐飲': '#e07b39', '交通': '#6c8ebf', '購物': '#b5a642',
+    '孩子': '#82b366', '醫療': '#d6a4a4', '娛樂': '#9b59b6',
+    '店務': '#4a2e1a', '其他': '#aaa'
+  };
+
+  let currentDate = new Date();
+  let categoryChart = null;
+  let revenueChart = null;
+
+  function changeMonth(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    loadData();
+  }
+
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function loadData() {
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const start = `${year}-${month}-01`;
+    const lastDay = new Date(year, currentDate.getMonth() + 1, 0).getDate();
+    const end = `${year}-${month}-${lastDay}`;
+
+    document.getElementById('month-label').textContent = `${year} 年 ${parseInt(month)} 月`;
+
+    const [expenses, revenues] = await Promise.all([
+      dbGet('expenses', `date=gte.${start}&date=lte.${end}&order=date.desc`),
+      dbGet('revenue', `date=gte.${start}&date=lte.${end}&order=date.asc`)
+    ]);
+
+    const totalExp = expenses.reduce((s, e) => s + parseFloat(e.amount), 0);
+    const totalRev = revenues.reduce((s, r) => s + parseFloat(r.amount), 0);
+    document.getElementById('total-expense').textContent = `$${totalExp.toLocaleString()}`;
+    document.getElementById('total-revenue').textContent = `$${totalRev.toLocaleString()}`;
+    document.getElementById('total-count').textContent = `${expenses.length} 筆`;
+    document.getElementById('last-update').textContent = `更新於 ${new Date().toLocaleTimeString('zh-TW')}`;
+
+    const catMap = {};
+    expenses.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + parseFloat(e.amount); });
+    const cats = Object.keys(catMap);
+    if (categoryChart) categoryChart.destroy();
+    categoryChart = new Chart(document.getElementById('categoryChart'), {
+      type: 'doughnut',
+      data: { labels: cats, datasets: [{ data: cats.map(c => catMap[c]), backgroundColor: cats.map(c => CATEGORY_COLORS[c] || '#aaa') }] },
+      options: { plugins: { legend: { position: 'right' } }, cutout: '55%' }
+    });
+
+    const revByDay = {};
+    revenues.forEach(r => { revByDay[r.date] = (revByDay[r.date] || 0) + parseFloat(r.amount); });
+    const days = Object.keys(revByDay).sort();
+    if (revenueChart) revenueChart.destroy();
+    revenueChart = new Chart(document.getElementById('revenueChart'), {
+      type: 'bar',
+      data: { labels: days.map(d => d.slice(5)), datasets: [{ data: days.map(d => revByDay[d]), backgroundColor: '#8b4513', borderRadius: 6 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    const etbody = document.getElementById('expense-tbody');
+    etbody.innerHTML = expenses.length === 0
+      ? '<tr><td colspan="4" class="loading">本月尚無記錄</td></tr>'
+      : expenses.map(e => `<tr>
+          <td>${e.date}</td>
+          <td>${e.description || '—'}</td>
+          <td><span class="tag">${e.category}</span></td>
+          <td>$${parseFloat(e.amount).toLocaleString()}</td>
+        </tr>`).join('');
+
+    const rtbody = document.getElementById('revenue-tbody');
+    rtbody.innerHTML = revenues.length === 0
+      ? '<tr><td colspan="3" class="loading">本月尚無記錄</td></tr>'
+      : revenues.map(r => `<tr>
+          <td>${r.date}</td>
+          <td>${r.note || '—'}</td>
+          <td>$${parseFloat(r.amount).toLocaleString()}</td>
+        </tr>`).join('');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>展店紀錄 · 漢柏分身</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --blue:        #5B8FD4;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .add-store-btn { margin-left: auto; background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .add-store-btn:hover { background: var(--brown-mid); }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* ── Password Gate ── */
+    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .gate-box h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
+    .gate-box p { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+    .gate-box input:focus { border-color: var(--caramel); }
+    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gate-box button:hover { background: var(--brown-mid); }
+    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
+
+    /* ── Store cards ── */
+    .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .store-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; cursor: pointer; transition: box-shadow 0.15s; }
+    .store-card:hover { box-shadow: 0 6px 20px rgba(44,26,14,0.08); }
+    .store-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .store-name { font-size: 16px; font-weight: 700; color: var(--text-dark); }
+    .store-status { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+    .status-籌備中 { background: #FFF7E6; color: #D97706; }
+    .status-營運中 { background: rgba(76,175,125,0.12); color: var(--green); }
+    .status-已結束 { background: #F1F1F1; color: #888; }
+    .store-addr { font-size: 12px; color: var(--text-light); margin-bottom: 14px; }
+    .level-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .level-badge { font-size: 12px; font-weight: 700; color: var(--brown-main); }
+    .exp-num { font-size: 11px; color: var(--text-light); margin-left: auto; }
+    .exp-bar-track { height: 8px; background: var(--cream); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+    .exp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--caramel), var(--brown-main)); border-radius: 6px; transition: width 0.3s; }
+    .store-log-count { font-size: 12px; color: var(--text-light); }
+
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .loading { text-align: center; padding: 40px; color: var(--text-light); }
+
+    /* ── Detail view ── */
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-mid); font-size: 13px; cursor: pointer; margin-bottom: 16px; }
+    .detail-header { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    .detail-title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .detail-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
+    .detail-addr { font-size: 13px; color: var(--text-light); margin-bottom: 16px; }
+    .detail-level-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .detail-level { font-size: 14px; font-weight: 700; color: var(--brown-main); }
+    .detail-exp { font-size: 12px; color: var(--text-light); }
+
+    .log-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .log-form h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+    .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .form-row select, .form-row input, .log-form textarea {
+      border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white);
+    }
+    .form-row select:focus, .log-form textarea:focus { border-color: var(--caramel); }
+    .log-form textarea { width: 100%; min-height: 70px; resize: vertical; margin-bottom: 10px; }
+    .log-submit-btn { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .log-submit-btn:hover { background: var(--brown-mid); }
+
+    .timeline { display: flex; flex-direction: column; gap: 10px; }
+    .log-item { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--caramel); border-radius: 10px; padding: 14px 16px; }
+    .log-item-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .log-cat { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--cream); color: var(--text-mid); font-weight: 600; }
+    .log-exp { font-size: 11px; color: var(--brown-main); font-weight: 700; }
+    .log-date { font-size: 11px; color: var(--text-light); margin-left: auto; }
+    .log-content { font-size: 13px; color: var(--text-dark); line-height: 1.6; }
+    .log-photo { display: block; max-width: 260px; width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+
+    /* ── Detail tabs ── */
+    .detail-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .detail-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
+    .detail-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
+
+    /* ── Vendors (工程進度) ── */
+    .vendor-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .vendor-form h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+    .vendor-form .form-row input, .vendor-form .form-row select { flex: 1; }
+    .vendor-list { display: flex; flex-direction: column; gap: 10px; }
+    .vendor-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .vendor-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .vendor-name { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+    .vendor-scope { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--cream); color: var(--text-mid); }
+    .vendor-status { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; margin-left: auto; }
+    .vstatus-未進場 { background: #F1F1F1; color: #888; }
+    .vstatus-進場中 { background: rgba(91,143,212,0.12); color: var(--blue); }
+    .vstatus-已完工 { background: rgba(76,175,125,0.12); color: var(--green); }
+    .vstatus-延遲 { background: #FDECEC; color: #C0392B; }
+    .vendor-dates { font-size: 12px; color: var(--text-light); margin-bottom: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
+    .vendor-dates b { color: var(--text-mid); }
+    .vendor-actions { display: flex; gap: 8px; }
+    .vendor-actions button { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+    .vendor-actions button:hover { background: var(--cream); }
+
+    /* ── Checklist (驗收鉤稽) ── */
+    .checklist-subtabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .checklist-subtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
+    .checklist-subtab.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
+    .checklist-form { display: flex; gap: 10px; margin-bottom: 16px; }
+    .checklist-form input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .checklist-form input:focus { border-color: var(--caramel); }
+    .checklist-form button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .checklist-list { display: flex; flex-direction: column; gap: 8px; }
+    .checklist-item { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+    .checklist-item-name { font-size: 13px; color: var(--text-dark); flex: 1; }
+    .checklist-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+    .cstatus-待驗收 { background: #F1F1F1; color: #888; }
+    .cstatus-合格 { background: rgba(76,175,125,0.12); color: var(--green); }
+    .cstatus-不合格 { background: #FDECEC; color: #C0392B; }
+    .checklist-actions { display: flex; gap: 6px; }
+    .checklist-actions button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+    .checklist-actions .pass-btn:hover { background: rgba(76,175,125,0.12); }
+    .checklist-actions .fail-btn:hover { background: #FDECEC; }
+
+    /* ── Add-store modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(44,26,14,0.6); display: none; align-items: center; justify-content: center; z-index: 90; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--card-bg); border-radius: 16px; padding: 28px; width: 380px; }
+    .modal-box h3 { font-size: 16px; margin-bottom: 18px; color: var(--text-dark); }
+    .modal-box label { display: block; font-size: 12px; color: var(--text-mid); margin-bottom: 5px; margin-top: 12px; }
+    .modal-box input, .modal-box select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .modal-box input:focus, .modal-box select:focus { border-color: var(--caramel); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions button { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+    .modal-cancel { background: var(--cream); color: var(--text-mid); }
+    .modal-confirm { background: var(--brown-main); color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2>🔒 展店紀錄</h2>
+    <p>輸入密碼查看展店資料</p>
+    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
+    <button onclick="checkPw()">進入</button>
+    <div class="gate-error" id="pw-error"></div>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div class="brand-text">
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿管理中樞</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item active" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+    <a class="nav-item" href="yilan2026.html">
+      <span class="nav-icon">🌊</span>
+      <div><div class="nav-text">宜蘭行</div><div class="nav-sub">家族旅行</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">🏪</span>
+    <div>
+      <div class="topbar-title" id="page-title">展店紀錄</div>
+      <div class="topbar-sub" id="page-sub">每間店的經驗，累積成下一間店的底氣</div>
+    </div>
+    <button class="add-store-btn" id="add-store-btn" onclick="openAddStoreModal()">+ 新增店家</button>
+  </div>
+
+  <div class="content">
+    <div id="list-view">
+      <div class="store-grid" id="store-grid"><div class="loading">載入中…</div></div>
+    </div>
+
+    <div id="detail-view" style="display:none;">
+      <button class="back-btn" onclick="showList()">← 回到店家列表</button>
+      <div class="detail-header" id="detail-header"></div>
+
+      <div class="detail-tabs">
+        <div class="detail-tab active" data-tab="logs" onclick="switchTab('logs')">📝 心得紀錄</div>
+        <div class="detail-tab" data-tab="vendors" onclick="switchTab('vendors')">🔧 工程進度</div>
+        <div class="detail-tab" data-tab="checklist" onclick="switchTab('checklist')">✅ 驗收鉤稽</div>
+      </div>
+
+      <div id="tab-logs">
+        <div class="log-form">
+          <h3>✍️ 新增一筆心得</h3>
+          <div class="form-row">
+            <select id="log-category">
+              <option>選址</option><option>裝潢</option><option>人事</option>
+              <option>物流</option><option>行銷</option><option>口味</option>
+              <option>客訴</option><option>其他</option>
+            </select>
+            <select id="log-exp">
+              <option value="5">🌱 小心得 +5</option>
+              <option value="10" selected>🌿 中收穫 +10</option>
+              <option value="20">🌳 大突破 +20</option>
+            </select>
+          </div>
+          <textarea id="log-content" placeholder="這次學到什麼、遇到什麼、下次會怎麼做不一樣……"></textarea>
+          <button class="log-submit-btn" onclick="addLog()">送出</button>
+        </div>
+
+        <div class="timeline" id="timeline"></div>
+      </div>
+
+      <div id="tab-vendors" style="display:none;">
+        <div class="vendor-form">
+          <h3>🔧 新增廠商排程</h3>
+          <div class="form-row">
+            <input id="vendor-name" placeholder="廠商名稱" />
+            <select id="vendor-scope">
+              <option>水電</option><option>裝潢</option><option>招牌</option>
+              <option>五金</option><option>廚房設備</option><option>消防</option><option>其他</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計進場</label>
+            <input type="date" id="vendor-planned-in" />
+            <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計出場</label>
+            <input type="date" id="vendor-planned-out" />
+          </div>
+          <button class="log-submit-btn" onclick="addVendor()">新增</button>
+        </div>
+        <div class="vendor-list" id="vendor-list"></div>
+      </div>
+
+      <div id="tab-checklist" style="display:none;">
+        <div class="checklist-subtabs">
+          <div class="checklist-subtab active" data-cat="一般驗收" onclick="switchChecklistCat('一般驗收')">一般驗收</div>
+          <div class="checklist-subtab" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
+        </div>
+        <div class="checklist-form">
+          <input id="checklist-item-input" placeholder="新增驗收項目，例如：冰箱、抽油煙機、招牌燈箱……" onkeydown="if(event.key==='Enter')addChecklistItem()" />
+          <button onclick="addChecklistItem()">新增</button>
+        </div>
+        <div class="checklist-list" id="checklist-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增店家 Modal -->
+<div class="modal-overlay" id="add-store-modal">
+  <div class="modal-box">
+    <h3>+ 新增店家</h3>
+    <label>店名</label>
+    <input id="new-store-name" placeholder="例如：貴焿古早味 三民店" />
+    <label>地址</label>
+    <input id="new-store-addr" placeholder="選填" />
+    <label>狀態</label>
+    <select id="new-store-status">
+      <option>籌備中</option><option>營運中</option><option>已結束</option>
+    </select>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAddStoreModal()">取消</button>
+      <button class="modal-confirm" onclick="submitNewStore()">建立</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const PASSWORD = '1688';
+
+  const LEVELS = [
+    { min: 0,   name: '新手店', icon: '🌱' },
+    { min: 50,  name: '上手店', icon: '🌿' },
+    { min: 150, name: '熟練店', icon: '🌳' },
+    { min: 300, name: '資深店', icon: '⭐' },
+    { min: 500, name: '大師店', icon: '👑' }
+  ];
+
+  let stores = [];
+  let logs = [];
+  let vendors = [];
+  let checklist = [];
+  let currentStoreId = null;
+  let currentTab = 'logs';
+  let currentChecklistCat = '一般驗收';
+
+  // ── Auth ──
+  function checkPw() {
+    const val = document.getElementById('pw-input').value;
+    if (val === PASSWORD) {
+      sessionStorage.setItem('stores_auth', '1');
+      document.getElementById('gate').style.display = 'none';
+      loadAll();
+    } else {
+      document.getElementById('pw-error').textContent = '密碼錯誤';
+    }
+  }
+  if (sessionStorage.getItem('stores_auth') === '1') {
+    document.getElementById('gate').style.display = 'none';
+    loadAll();
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function getLevel(exp) {
+    let lvl = LEVELS[0], idx = 0;
+    for (let i = 0; i < LEVELS.length; i++) { if (exp >= LEVELS[i].min) { lvl = LEVELS[i]; idx = i; } }
+    const next = LEVELS[idx + 1] || null;
+    const pct = next ? Math.min(100, Math.round((exp - lvl.min) / (next.min - lvl.min) * 100)) : 100;
+    return { ...lvl, next, pct };
+  }
+
+  function expOfStore(storeId) {
+    return logs.filter(l => l.store_id === storeId).reduce((s, l) => s + Number(l.exp), 0);
+  }
+
+  // ── Load ──
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function loadAll() {
+    try {
+      [stores, logs, vendors, checklist] = await Promise.all([
+        dbGet('stores', 'order=created_at.desc'),
+        dbGet('store_logs', 'order=created_at.desc'),
+        dbGet('store_vendors', 'order=planned_in.asc'),
+        dbGet('store_checklist', 'order=created_at.asc')
+      ]);
+      if (!Array.isArray(stores)) stores = [];
+      if (!Array.isArray(logs)) logs = [];
+      if (!Array.isArray(vendors)) vendors = [];
+      if (!Array.isArray(checklist)) checklist = [];
+      renderList();
+    } catch {
+      document.getElementById('store-grid').innerHTML = '<div class="loading">載入失敗，請重新整理（若剛設好 Supabase 資料表，請確認 SQL 已執行）</div>';
+    }
+  }
+
+  // ── List view ──
+  function renderList() {
+    const grid = document.getElementById('store-grid');
+    if (stores.length === 0) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+        <div class="empty-icon">🏪</div>
+        <div>還沒有店家，點右上角「+ 新增店家」開始累積經驗值</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = stores.map(s => {
+      const exp = expOfStore(s.id);
+      const lvl = getLevel(exp);
+      const count = logs.filter(l => l.store_id === s.id).length;
+      return `<div class="store-card" onclick="openStore('${s.id}')">
+        <div class="store-card-top">
+          <div class="store-name">${esc(s.name)}</div>
+          <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
+        </div>
+        <div class="store-addr">${esc(s.address) || '未填地址'}</div>
+        <div class="level-row">
+          <span class="level-badge">${lvl.icon} ${lvl.name}</span>
+          <span class="exp-num">${exp} EXP${lvl.next ? ` / ${lvl.next.min}` : ' (滿級)'}</span>
+        </div>
+        <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${lvl.pct}%"></div></div>
+        <div class="store-log-count">📝 ${count} 筆心得紀錄</div>
+      </div>`;
+    }).join('');
+  }
+
+  function showList() {
+    currentStoreId = null;
+    document.getElementById('list-view').style.display = 'block';
+    document.getElementById('detail-view').style.display = 'none';
+    document.getElementById('add-store-btn').style.display = 'inline-block';
+    document.getElementById('page-title').textContent = '展店紀錄';
+    document.getElementById('page-sub').textContent = '每間店的經驗，累積成下一間店的底氣';
+    renderList();
+  }
+
+  // ── Detail view ──
+  function openStore(id) {
+    currentStoreId = id;
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('detail-view').style.display = 'block';
+    document.getElementById('add-store-btn').style.display = 'none';
+    switchTab('logs');
+    renderDetail();
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.detail-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    document.getElementById('tab-logs').style.display = tab === 'logs' ? 'block' : 'none';
+    document.getElementById('tab-vendors').style.display = tab === 'vendors' ? 'block' : 'none';
+    document.getElementById('tab-checklist').style.display = tab === 'checklist' ? 'block' : 'none';
+    if (tab === 'vendors') renderVendors();
+    if (tab === 'checklist') renderChecklist();
+  }
+
+  function renderDetail() {
+    const s = stores.find(x => x.id === currentStoreId);
+    if (!s) { showList(); return; }
+    document.getElementById('page-title').textContent = s.name;
+    document.getElementById('page-sub').textContent = s.address || '';
+
+    const exp = expOfStore(s.id);
+    const lvl = getLevel(exp);
+    document.getElementById('detail-header').innerHTML = `
+      <div class="detail-title-row">
+        <div class="detail-title">${esc(s.name)}</div>
+        <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
+      </div>
+      <div class="detail-addr">${esc(s.address) || '未填地址'}${s.opened_date ? ` · 開幕 ${esc(s.opened_date)}` : ''}</div>
+      <div class="detail-level-row">
+        <span class="detail-level">${lvl.icon} ${lvl.name}</span>
+        <span class="detail-exp">${exp} EXP${lvl.next ? ` / 下一等級 ${lvl.next.min}` : ' · 已滿級'}</span>
+      </div>
+      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${lvl.pct}%"></div></div>
+    `;
+
+    const storeLogs = logs.filter(l => l.store_id === s.id);
+    const timeline = document.getElementById('timeline');
+    timeline.innerHTML = storeLogs.length === 0
+      ? '<div class="empty"><div class="empty-icon">📝</div><div>還沒有心得紀錄，寫下第一筆吧</div></div>'
+      : storeLogs.map(l => `<div class="log-item">
+          <div class="log-item-top">
+            <span class="log-cat">${esc(l.category)}</span>
+            <span class="log-exp">+${l.exp} EXP</span>
+            <span class="log-date">${formatDate(l.created_at)}</span>
+          </div>
+          <div class="log-content">${esc(l.content)}</div>
+          ${l.image_url ? `<img class="log-photo" src="${esc(l.image_url)}" alt="紀錄照片" loading="lazy" onclick="window.open('${esc(l.image_url)}','_blank')" />` : ''}
+        </div>`).join('');
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // ── 工程進度（廠商進出場）──
+  function renderVendors() {
+    const list = vendors.filter(v => v.store_id === currentStoreId);
+    const el = document.getElementById('vendor-list');
+    el.innerHTML = list.length === 0
+      ? '<div class="empty"><div class="empty-icon">🔧</div><div>還沒有廠商排程，新增第一筆吧</div></div>'
+      : list.map(v => `<div class="vendor-item">
+          <div class="vendor-top">
+            <span class="vendor-name">${esc(v.vendor_name)}</span>
+            <span class="vendor-scope">${esc(v.scope || '未分類')}</span>
+            <span class="vendor-status vstatus-${esc(v.status)}">${esc(v.status)}</span>
+          </div>
+          <div class="vendor-dates">
+            <span><b>預計進場</b> ${v.planned_in || '—'}</span>
+            <span><b>預計出場</b> ${v.planned_out || '—'}</span>
+            <span><b>實際進場</b> ${v.actual_in || '—'}</span>
+            <span><b>實際出場</b> ${v.actual_out || '—'}</span>
+          </div>
+          <div class="vendor-actions">
+            ${!v.actual_in ? `<button onclick="markVendor('${v.id}','in')">登記進場</button>` : ''}
+            ${v.actual_in && !v.actual_out ? `<button onclick="markVendor('${v.id}','out')">登記出場</button>` : ''}
+            ${v.status !== '延遲' && !v.actual_out ? `<button onclick="setVendorDelayed('${v.id}')">標記延遲</button>` : ''}
+          </div>
+        </div>`).join('');
+  }
+
+  async function addVendor() {
+    const vendor_name = document.getElementById('vendor-name').value.trim();
+    if (!vendor_name) return;
+    const scope = document.getElementById('vendor-scope').value;
+    const planned_in = document.getElementById('vendor-planned-in').value || null;
+    const planned_out = document.getElementById('vendor-planned-out').value || null;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendors`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, vendor_name, scope, planned_in, planned_out })
+      });
+      document.getElementById('vendor-name').value = '';
+      document.getElementById('vendor-planned-in').value = '';
+      document.getElementById('vendor-planned-out').value = '';
+      await loadAll();
+      switchTab('vendors');
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  async function markVendor(id, direction) {
+    const today = new Date().toISOString().split('T')[0];
+    const v = vendors.find(x => x.id === id);
+    if (!v) return;
+    const body = direction === 'in'
+      ? { actual_in: today, status: '進場中' }
+      : { actual_out: today, status: '已完工' };
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify(body)
+      });
+      await loadAll();
+      switchTab('vendors');
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function setVendorDelayed(id) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: '延遲' })
+      });
+      await loadAll();
+      switchTab('vendors');
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  // ── 驗收鉤稽 ──
+  function switchChecklistCat(cat) {
+    currentChecklistCat = cat;
+    document.querySelectorAll('.checklist-subtab').forEach(el => el.classList.toggle('active', el.dataset.cat === cat));
+    renderChecklist();
+  }
+
+  function renderChecklist() {
+    const list = checklist.filter(c => c.store_id === currentStoreId && c.category === currentChecklistCat);
+    const el = document.getElementById('checklist-list');
+    el.innerHTML = list.length === 0
+      ? '<div class="empty"><div class="empty-icon">✅</div><div>還沒有驗收項目，新增第一筆吧</div></div>'
+      : list.map(c => `<div class="checklist-item">
+          <span class="checklist-item-name">${esc(c.item)}</span>
+          <span class="checklist-status cstatus-${esc(c.status)}">${esc(c.status)}</span>
+          <div class="checklist-actions">
+            <button class="pass-btn" onclick="setChecklistStatus('${c.id}','合格')">✅ 合格</button>
+            <button class="fail-btn" onclick="setChecklistStatus('${c.id}','不合格')">❌ 不合格</button>
+          </div>
+        </div>`).join('');
+  }
+
+  async function addChecklistItem() {
+    const item = document.getElementById('checklist-item-input').value.trim();
+    if (!item) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_checklist`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, category: currentChecklistCat, item })
+      });
+      document.getElementById('checklist-item-input').value = '';
+      await loadAll();
+      switchChecklistCat(currentChecklistCat);
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  async function setChecklistStatus(id, status) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_checklist?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ status, checked_at: new Date().toISOString() })
+      });
+      await loadAll();
+      switchChecklistCat(currentChecklistCat);
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  // ── Add log ──
+  async function addLog() {
+    const content = document.getElementById('log-content').value.trim();
+    if (!content) return;
+    const category = document.getElementById('log-category').value;
+    const exp = Number(document.getElementById('log-exp').value);
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_logs`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ store_id: currentStoreId, category, content, exp })
+      });
+      document.getElementById('log-content').value = '';
+      await loadAll();
+      openStore(currentStoreId);
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  // ── Add store ──
+  function openAddStoreModal() { document.getElementById('add-store-modal').classList.add('open'); }
+  function closeAddStoreModal() {
+    document.getElementById('add-store-modal').classList.remove('open');
+    document.getElementById('new-store-name').value = '';
+    document.getElementById('new-store-addr').value = '';
+  }
+  async function submitNewStore() {
+    const name = document.getElementById('new-store-name').value.trim();
+    if (!name) return;
+    const address = document.getElementById('new-store-addr').value.trim();
+    const status = document.getElementById('new-store-status').value;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/stores`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ name, address, status })
+      });
+      closeAddStoreModal();
+      await loadAll();
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+</script>
+</body>
+</html>
