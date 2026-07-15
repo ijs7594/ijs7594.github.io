@@ -373,9 +373,97 @@
     .note-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
     .note-body { font-size: 12px; color: var(--text-mid); line-height: 1.85; }
 
+    /* ── Comment system ── */
+    .comment-form {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px 24px; margin-bottom: 20px;
+    }
+    .comment-inputs { display: grid; grid-template-columns: 160px 1fr; gap: 10px; margin-bottom: 12px; }
+    .comment-input {
+      padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 13px; color: var(--text-dark);
+      background: var(--warm-white); outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    .comment-input:focus { border-color: var(--ocean); }
+    .comment-textarea {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: inherit; font-size: 13px; color: var(--text-dark);
+      background: var(--warm-white); outline: none; resize: none; min-height: 90px;
+      transition: border-color 0.15s;
+    }
+    .comment-textarea:focus { border-color: var(--ocean); }
+    .comment-submit {
+      margin-top: 12px; padding: 9px 28px; background: var(--ocean);
+      color: #fff; border: none; border-radius: 20px; font-family: inherit;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    }
+    .comment-submit:hover { opacity: 0.85; }
+    .comment-submit:disabled { opacity: 0.5; cursor: default; }
+    .comment-list { display: flex; flex-direction: column; gap: 14px; }
+    .comment-item {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s;
+    }
+    .comment-item.is-important { border-color: #F59E0B; background: #FFFBEB; }
+    .comment-item.is-budget    { border-color: #F97316; background: #FFF7ED; }
+    .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .comment-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--ocean), var(--ocean-lt));
+      color: #fff; font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .comment-name { font-size: 13px; font-weight: 700; }
+    .comment-time { font-size: 11px; color: var(--text-light); margin-left: auto; }
+    .comment-body { font-size: 13px; color: var(--text-dark); line-height: 1.75; margin-bottom: 12px; }
+    .comment-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .badge {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
+    .badge-budget    { background: #FED7AA; color: #7C2D12; }
+    .badge-activity  { background: #BAE6FD; color: #075985; }
+    .badge-logistics { background: #D1FAE5; color: #064E3B; }
+    .badge-important { background: #FDE68A; color: #78350F; }
+    .badge-general   { background: #F3F4F6; color: #374151; }
+    .ai-reply {
+      background: linear-gradient(135deg, #F0F7FF, #E8F4FD);
+      border: 1px solid #BFDBFE; border-radius: 10px; padding: 12px 14px;
+    }
+    .ai-reply.budget-reply { background: linear-gradient(135deg, #FFF7ED, #FFEDD5); border-color: #FED7AA; }
+    .ai-reply-header {
+      font-size: 10px; font-weight: 700; color: var(--ocean);
+      margin-bottom: 6px; display: flex; align-items: center; gap: 5px;
+    }
+    .ai-reply.budget-reply .ai-reply-header { color: #C2410C; }
+    .ai-reply-text { font-size: 12px; color: var(--text-mid); line-height: 1.75; }
+    .comment-actions {
+      display: flex; gap: 8px; padding-top: 10px;
+      border-top: 1px solid var(--border); margin-top: 10px;
+    }
+    .action-btn {
+      font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: var(--warm-white);
+      color: var(--text-light); cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .action-btn.active { background: #FDE68A; color: #78350F; border-color: #F59E0B; }
+    .action-btn:hover:not(.active) { border-color: var(--ocean-lt); color: var(--ocean); }
+    .comment-empty { text-align: center; padding: 40px 20px; font-size: 13px; color: var(--text-light); }
+    .comment-setup-note {
+      background: #FFF7E6; border: 1px solid #FCD34D; border-radius: 12px;
+      padding: 16px 20px; margin-bottom: 20px; font-size: 12px;
+      color: #78350F; line-height: 1.75;
+    }
+    .comment-setup-note code {
+      display: block; background: #1E1E2E; color: #A6E3A1;
+      font-family: monospace; font-size: 11px; padding: 12px 14px;
+      border-radius: 8px; margin-top: 10px; white-space: pre; overflow-x: auto;
+    }
+
     @media (max-width: 680px) {
       .sidebar { display: none; }
       .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .comment-inputs { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -424,6 +512,7 @@
     <button class="tab-btn" onclick="go('hotel',this)">住宿</button>
     <button class="tab-btn" onclick="go('vote',this)">🗳️ 投票</button>
     <button class="tab-btn" onclick="go('cost',this)">💰 費用</button>
+    <button class="tab-btn" onclick="go('comments',this)">💬 留言</button>
   </div>
 
   <div class="content">
@@ -874,6 +963,44 @@ CREATE POLICY "delete_own" ON activity_votes FOR DELETE TO anon USING (true);</c
       </div>
     </div>
 
+    <!-- ════ 留言 ════ -->
+    <div id="tab-comments" class="tab-panel">
+
+      <div id="comments-setup" class="comment-setup-note" style="display:none">
+        <strong>⚠️ 留言功能需要先建立資料表</strong><br>
+        請漢柏到 Supabase Dashboard → SQL Editor，執行以下指令後重新整理頁面：
+        <code>CREATE TABLE trip_comments (
+  id bigserial PRIMARY KEY,
+  name text NOT NULL,
+  message text NOT NULL,
+  category text DEFAULT 'general',
+  ai_reply text,
+  is_important boolean DEFAULT false,
+  is_budget boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE trip_comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "select_all" ON trip_comments FOR SELECT TO anon USING (true);
+CREATE POLICY "insert_all" ON trip_comments FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "update_all" ON trip_comments FOR UPDATE TO anon USING (true);</code>
+      </div>
+
+      <div class="comment-form">
+        <div class="section-title">💬 留言 · 建議 · 想法</div>
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:16px">有任何關於行程的想法都可以留言，AI 會第一時間回覆。預算相關留言會特別標記謹慎處理。</p>
+        <div class="comment-inputs">
+          <input class="comment-input" id="c-name" placeholder="你的名字" maxlength="20" />
+          <input class="comment-input" id="c-title" placeholder="標題（選填）" maxlength="40" />
+        </div>
+        <textarea class="comment-textarea" id="c-msg" placeholder="你的建議或問題…（最多300字）" maxlength="300"></textarea>
+        <button class="comment-submit" id="c-submit" onclick="submitComment()">送出留言</button>
+      </div>
+
+      <div id="comment-list" class="comment-list">
+        <div class="comment-empty">點進此頁籤自動載入…</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1049,6 +1176,134 @@ CREATE POLICY "delete_own" ON activity_votes FOR DELETE TO anon USING (true);</c
     if (fill) fill.style.width = Math.round(((counts[activityId] || 0) / maxCount) * 100) + '%';
   }
 
+  // ── Comment AI categorizer ──
+  function categorizeComment(text) {
+    const t = text;
+    const budgetKw   = ['預算','費用','錢','貴','便宜','多少','省','成本','花費','價格','值不值','花多少','負擔','超支','報帳'];
+    const activityKw = ['浮潛','潛水','SUP','立槳','獨木舟','機車','活動','海龜','游泳','戲水','水上','玩什麼','體驗'];
+    const logisticsKw= ['集合','時間','幾點','交通','船','住宿','幾天','日期','安排','幾號','出發','回來','報名','登記'];
+    if (budgetKw.some(k => t.includes(k)))    return 'budget';
+    if (activityKw.some(k => t.includes(k)))  return 'activity';
+    if (logisticsKw.some(k => t.includes(k))) return 'logistics';
+    return 'general';
+  }
+
+  function aiReply(category, name) {
+    const n = name || '你';
+    return {
+      budget:    `謝謝 ${n} 提到費用的部分。這類建議我會標記為「預算謹慎處理」——漢柏會親自確認後再決定，這裡不會做出任何承諾。你的考量已記錄，很重要。💡`,
+      activity:  `好建議！活動相關的意見已記錄。${n} 也可以到「投票」頁籤選出最想玩的項目，一起影響最終安排。🎯`,
+      logistics: `感謝 ${n} 的提問！行程細節還在確認中，漢柏確定後會更新頁面。有任何問題繼續留言。📋`,
+      general:   `謝謝 ${n} 的留言！建議已記錄，漢柏看到了會跟進。如果你認為這個討論很重要，可以按下方「標記重要」讓大家都看到。🙏`,
+    }[category];
+  }
+
+  const CAT_LABEL = { budget:'⚠️ 預算相關', activity:'🏄 活動建議', logistics:'📋 行程安排', general:'💬 一般留言' };
+  const CAT_BADGE = { budget:'badge-budget', activity:'badge-activity', logistics:'badge-logistics', general:'badge-general' };
+
+  let commentsReady = false;
+
+  async function initComments() {
+    try {
+      const res = await sbFetch('trip_comments?select=*&order=created_at.desc');
+      if (!res.ok) {
+        document.getElementById('comments-setup').style.display = 'block';
+        document.getElementById('comment-list').innerHTML = '<div class="comment-empty">請先建立資料表後重新整理。</div>';
+        return;
+      }
+      const data = await res.json();
+      commentsReady = true;
+      renderComments(data);
+    } catch(e) {
+      document.getElementById('comment-list').innerHTML = '<div class="comment-empty">載入失敗，請重新整理。</div>';
+    }
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderComments(rows) {
+    const el = document.getElementById('comment-list');
+    if (!rows.length) {
+      el.innerHTML = '<div class="comment-empty">還沒有留言，成為第一個！</div>';
+      return;
+    }
+    el.innerHTML = rows.map(r => {
+      const initial   = r.name ? r.name[0] : '?';
+      const cls       = r.is_budget ? ' is-budget' : (r.is_important ? ' is-important' : '');
+      const dt        = new Date(r.created_at);
+      const timeStr   = `${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+      const cat       = r.category || 'general';
+      return `
+        <div class="comment-item${cls}" id="citem-${r.id}">
+          <div class="comment-header">
+            <div class="comment-avatar">${escHtml(initial)}</div>
+            <div class="comment-name">${escHtml(r.name)}</div>
+            <div class="comment-time">${timeStr}</div>
+          </div>
+          <div class="comment-body">${escHtml(r.message)}</div>
+          <div class="comment-badges">
+            <span class="badge ${CAT_BADGE[cat]}">${CAT_LABEL[cat]}</span>
+            ${r.is_important ? '<span class="badge badge-important">⭐ 重要討論</span>' : ''}
+            ${r.is_budget    ? '<span class="badge badge-budget">⚠️ 預算謹慎</span>' : ''}
+          </div>
+          ${r.ai_reply ? `
+            <div class="ai-reply${r.is_budget ? ' budget-reply' : ''}">
+              <div class="ai-reply-header">🤖 AI 回覆</div>
+              <div class="ai-reply-text">${escHtml(r.ai_reply)}</div>
+            </div>
+          ` : ''}
+          <div class="comment-actions">
+            <button class="action-btn${r.is_important ? ' active' : ''}" onclick="toggleImportant(${r.id}, ${r.is_important})">
+              ⭐ ${r.is_important ? '已標重要' : '標記重要'}
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function submitComment() {
+    if (!commentsReady) { alert('請先建立 Supabase 資料表，詳見頁面說明。'); return; }
+    const name = document.getElementById('c-name').value.trim();
+    const msg  = document.getElementById('c-msg').value.trim();
+    if (!name) { alert('請輸入你的名字'); return; }
+    if (msg.length < 5) { alert('留言太短了，多說幾個字？'); return; }
+
+    const btn = document.getElementById('c-submit');
+    btn.disabled = true; btn.textContent = '送出中…';
+
+    const category = categorizeComment(msg);
+    const isBudget = category === 'budget';
+    const reply    = aiReply(category, name);
+    const payload  = { name, message: msg, category, ai_reply: reply, is_important: false, is_budget: isBudget };
+
+    try {
+      const res = await sbFetch('trip_comments', { method: 'POST', body: JSON.stringify(payload) });
+      if (res.ok) {
+        document.getElementById('c-name').value = '';
+        document.getElementById('c-msg').value  = '';
+        await initComments();
+      } else {
+        alert('送出失敗，請再試一次。');
+      }
+    } catch(e) {
+      alert('網路錯誤，請再試一次。');
+    } finally {
+      btn.disabled = false; btn.textContent = '送出留言';
+    }
+  }
+
+  async function toggleImportant(id, current) {
+    await sbFetch(`trip_comments?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_important: !current }),
+      prefer: 'return=minimal'
+    });
+    await initComments();
+  }
+
   // ── Tab switching ──
   function go(id, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1056,7 +1311,8 @@ CREATE POLICY "delete_own" ON activity_votes FOR DELETE TO anon USING (true);</c
     document.getElementById('tab-' + id).classList.add('active');
     btn.classList.add('active');
     document.querySelector('.content').scrollTop = 0;
-    if (id === 'vote') initVoting();
+    if (id === 'vote')     initVoting();
+    if (id === 'comments') initComments();
   }
 
   // Auto-init if on vote tab
