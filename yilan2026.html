@@ -156,6 +156,22 @@
     .hl-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.85); }
     .hl-text strong { color: #fff; }
 
+    /* ── Day banner photo ── */
+    .day-banner {
+      width: 100%; height: 180px; object-fit: cover;
+      border-radius: 12px; margin-bottom: 14px;
+      display: block; background: var(--border);
+    }
+    .place-photo {
+      width: 100%; height: 110px; object-fit: cover;
+      border-radius: 8px 8px 0 0; margin: -16px -16px 12px -16px;
+      width: calc(100% + 32px); display: block;
+    }
+    .acco-photo {
+      width: 100%; height: 140px; object-fit: cover;
+      border-radius: 8px; margin-bottom: 10px; display: block;
+    }
+
     /* ── Notes ── */
     .notes-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -272,6 +288,7 @@
         <div class="day-title">開車北上，落腳員山</div>
         <div class="day-theme">高雄 → 員山 好春好然</div>
       </div>
+      <img class="day-banner" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=360&fit=crop&auto=format" alt="台灣山路風景" loading="lazy" />
       <div class="activity-grid">
         <div class="activity-card morning">
           <div class="act-time">早上</div>
@@ -310,6 +327,7 @@
         <div class="day-title">移駐礁溪，文化 + 夜市</div>
         <div class="day-theme">員山 → 礁溪 龍潭湖居</div>
       </div>
+      <img class="day-banner" src="https://images.unsplash.com/photo-1555817128-342cd0a96b22?w=900&h=360&fit=crop&auto=format" alt="夜市燈火" loading="lazy" />
       <div class="activity-grid">
         <div class="activity-card morning">
           <div class="act-time">早上</div>
@@ -347,6 +365,7 @@
         <div class="day-title">玩水 + 傳藝</div>
         <div class="day-theme">冬山河 → 傳藝中心</div>
       </div>
+      <img class="day-banner" src="https://images.unsplash.com/photo-1530053969600-caed2596d242?w=900&h=360&fit=crop&auto=format" alt="孩子玩水" loading="lazy" />
       <div class="activity-grid">
         <div class="activity-card morning">
           <div class="act-time">早上</div>
@@ -385,6 +404,7 @@
         <div class="day-title">慢慢收尾，帶著滿足回家</div>
         <div class="day-theme">礁溪 → 頭城 → 高雄</div>
       </div>
+      <img class="day-banner" src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=900&h=360&fit=crop&auto=format" alt="清晨光線" loading="lazy" />
       <div class="activity-grid">
         <div class="activity-card morning">
           <div class="act-time">早上</div>
@@ -431,7 +451,7 @@
             <span style="color:rgba(255,255,255,0.7); font-size:12px;">
               宜蘭縣礁溪鄉漳福路53巷50弄98號｜0937-790039<br>
               整棟包棟，3間房各附溫泉浴池，兒童遊戲室 + 戲水池 + KTV<br>
-              約 NT$6,300/晚 × 2晚 ≈ NT$12,600
+              NT$9,999/晚，兩晚九折 ≈ <strong>NT$17,998</strong>
             </span>
           </div>
         </div>
