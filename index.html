@@ -305,6 +305,31 @@
     .chapter-title .hl { color: var(--caramel); }
     .chapter-body { font-size: 14px; line-height: 1.85; color: var(--text-mid); }
     .chapter-body p { margin-bottom: 12px; }
+
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      justify-content: space-around; align-items: center;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -567,5 +592,13 @@
   const el = document.getElementById('days-alive');
   if (el) el.innerHTML = days + ' <span class="stat-unit">天</span>';
 </script>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item active" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item" href="inbox.html"><span class="mn-icon">📋</span><span>待辦</span></a>
+  <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+</nav>
 </body>
 </html>

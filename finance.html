@@ -92,6 +92,30 @@
     tr:last-child td { border-bottom: none; }
     .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; background: var(--cream); color: var(--text-mid); }
     .loading { text-align: center; padding: 32px; color: var(--text-light); }
+
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      justify-content: space-around; align-items: center;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -297,5 +321,13 @@
         </tr>`).join('');
   }
 </script>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item" href="inbox.html"><span class="mn-icon">📋</span><span>待辦</span></a>
+  <a class="mobile-nav-item active" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+</nav>
 </body>
 </html>
