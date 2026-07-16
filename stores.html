@@ -304,14 +304,8 @@
     .gantt-vname { width: 110px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; color: var(--text-dark); font-weight: 600; border-right: 2px solid var(--sand); word-break: break-all; line-height: 1.4; display: flex; align-items: center; }
     .gantt-cell { width: 44px; flex-shrink: 0; min-height: 42px; position: relative; border-right: 1px solid var(--border); }
     .gantt-cell:last-child { border-right: none; }
-    .gantt-work-bar { position: absolute; height: 10px; background: #5b8fd4; bottom: 9px; left: 0; right: 0; }
-    .gantt-work-bar.bar-start { left: 5px; border-radius: 5px 0 0 5px; }
-    .gantt-work-bar.bar-end { right: 5px; border-radius: 0 5px 5px 0; }
-    .gantt-work-bar.bar-only { left: 5px; right: 5px; border-radius: 5px; }
-    .gantt-work-bar.status-done { background: var(--green); }
-    .gantt-work-bar.status-active { background: var(--caramel); }
-    .gantt-work-bar.status-delay { background: #c0392b; }
-    .gantt-survey-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; top: 8px; left: 50%; transform: translateX(-50%); z-index: 2; }
+    .gantt-work-bar { position: absolute; height: 10px; bottom: 9px; }
+    .gantt-survey-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; top: 8px; transform: translateX(-50%); z-index: 2; }
 
     /* ── Vendor sub-tabs ── */
     .vtab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -876,10 +870,18 @@
       el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);font-size:12px;">尚無廠商排程，請先在「施工排程」新增廠商</div>';
       return;
     }
+
+    // 避免 timezone 偏移，統一用 local 日期解析
+    function parseD(s) {
+      if (!s) return null;
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
     let minDate = null, maxDate = null;
     list.forEach(v => {
-      [v.planned_in, v.planned_out, v.actual_in, v.actual_out, v.survey_date].filter(Boolean).forEach(d => {
-        const dt = new Date(d);
+      [v.planned_in, v.planned_out, v.actual_in, v.actual_out, v.survey_date].filter(Boolean).forEach(s => {
+        const dt = parseD(s);
         if (!minDate || dt < minDate) minDate = dt;
         if (!maxDate || dt > maxDate) maxDate = dt;
       });
@@ -909,29 +911,36 @@
     </div>`;
 
     const vendorRows = list.map(v => {
-      const workStart = v.actual_in || v.planned_in;
-      const workEnd   = v.actual_out || v.planned_out;
-      let barClass = '';
-      if (v.actual_out || v.status === '已完工') barClass = 'status-done';
-      else if (v.actual_in || v.status === '進場中') barClass = 'status-active';
-      else if (v.status === '延遲') barClass = 'status-delay';
+      const ws = parseD(v.actual_in || v.planned_in);
+      const we = parseD(v.actual_out || v.planned_out);
+      let barColor = '#5b8fd4';
+      if (v.actual_out || v.status === '已完工') barColor = 'var(--green)';
+      else if (v.actual_in || v.status === '進場中') barColor = 'var(--caramel)';
+      else if (v.status === '延遲') barColor = '#c0392b';
 
       const cells = periods.map(p => {
-        const hasSurvey = v.survey_date && (() => { const d = new Date(v.survey_date); return d >= p.start && d <= p.end; })();
-        let hasWork = false, barSeg = '';
-        if (workStart && workEnd) {
-          const ws = new Date(workStart), we = new Date(workEnd);
-          hasWork = ws <= p.end && we >= p.start;
-          if (hasWork) {
-            const isFirst = ws >= p.start && ws <= p.end;
-            const isLast  = we >= p.start && we <= p.end;
-            barSeg = (isFirst && isLast) ? 'bar-only' : isFirst ? 'bar-start' : isLast ? 'bar-end' : '';
-          }
+        const pMs = p.end - p.start;
+
+        // 場勘點：按日期比例定位在格子內
+        let surveyDot = '';
+        const sd = parseD(v.survey_date);
+        if (sd && sd >= p.start && sd <= p.end) {
+          const leftPx = Math.round((sd - p.start) / pMs * CELL_W);
+          surveyDot = `<div class="gantt-survey-dot" style="left:${Math.max(4, Math.min(CELL_W - 4, leftPx))}px"></div>`;
         }
-        return `<div class="gantt-cell">
-          ${hasSurvey ? '<div class="gantt-survey-dot"></div>' : ''}
-          ${hasWork ? `<div class="gantt-work-bar ${barClass} ${barSeg}"></div>` : ''}
-        </div>`;
+
+        // 工期條：按日期比例計算 left/right px
+        let workBar = '';
+        if (ws && we && ws <= p.end && we >= p.start) {
+          const isFirst = ws >= p.start;
+          const isLast  = we <= p.end;
+          const leftPx  = isFirst ? Math.round((ws - p.start) / pMs * CELL_W) : 0;
+          const rightPx = isLast  ? Math.round((p.end - we)   / pMs * CELL_W) : 0;
+          const r = (isFirst && isLast) ? '4px' : isFirst ? '4px 0 0 4px' : isLast ? '0 4px 4px 0' : '0';
+          workBar = `<div class="gantt-work-bar" style="left:${leftPx}px;right:${rightPx}px;background:${barColor};border-radius:${r}"></div>`;
+        }
+
+        return `<div class="gantt-cell">${surveyDot}${workBar}</div>`;
       }).join('');
 
       return `<div class="gantt-vendor-row">
