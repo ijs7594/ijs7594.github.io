@@ -115,6 +115,12 @@
     .detail-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
     .detail-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
 
+    /* ── Store list tabs（籌備中／營運中／已結束）── */
+    .store-list-tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+    .store-list-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
+    .store-list-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
+    .store-list-tab .tab-count { font-size: 11px; color: var(--text-light); margin-left: 4px; }
+
     /* ── Vendors (工程進度) ── */
     .knowhow { background: var(--cream); border: 1px solid var(--sand); border-radius: 14px; padding: 4px 20px; margin-bottom: 20px; }
     .knowhow summary { padding: 14px 0; font-size: 14px; font-weight: 700; color: var(--brown-mid); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
@@ -253,6 +259,7 @@
 
   <div class="content">
     <div id="list-view">
+      <div class="store-list-tabs" id="store-list-tabs"></div>
       <div class="store-grid" id="store-grid"><div class="loading">載入中…</div></div>
     </div>
 
@@ -431,6 +438,7 @@
   let financials = [];
   let planSections = [];
   let currentStoreId = null;
+  let currentStoreListTab = '籌備中';
   let currentTab = 'vendors';
   let currentChecklistCat = '五金驗收';
   let editingChecklistId = null;
@@ -485,7 +493,24 @@
   }
 
   // ── List view ──
+  const STORE_LIST_TABS = [
+    { status: '籌備中', label: '🏗️ 籌備中' },
+    { status: '營運中', label: '✅ 營運中' },
+    { status: '已結束', label: '🗂 已結束' }
+  ];
+
+  function switchStoreListTab(status) {
+    currentStoreListTab = status;
+    renderList();
+  }
+
   function renderList() {
+    const tabsEl = document.getElementById('store-list-tabs');
+    tabsEl.innerHTML = STORE_LIST_TABS.map(t => {
+      const count = stores.filter(s => s.status === t.status).length;
+      return `<div class="store-list-tab${t.status === currentStoreListTab ? ' active' : ''}" onclick="switchStoreListTab('${t.status}')">${t.label}<span class="tab-count">${count}</span></div>`;
+    }).join('');
+
     const grid = document.getElementById('store-grid');
     if (stores.length === 0) {
       grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
@@ -494,7 +519,15 @@
       </div>`;
       return;
     }
-    grid.innerHTML = stores.map(s => {
+    const list = stores.filter(s => s.status === currentStoreListTab);
+    if (list.length === 0) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+        <div class="empty-icon">🏪</div>
+        <div>「${esc(currentStoreListTab)}」目前沒有店家</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = list.map(s => {
       const exp = expOfStore(s.id);
       const lvl = getLevel(exp);
       const count = logs.filter(l => l.store_id === s.id).length;
