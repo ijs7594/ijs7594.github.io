@@ -306,6 +306,7 @@
     .gantt-cell:last-child { border-right: none; }
     .gantt-work-bar { position: absolute; height: 10px; bottom: 9px; }
     .gantt-survey-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; top: 8px; transform: translateX(-50%); z-index: 2; }
+    .gantt-mid-tick { position: absolute; bottom: 0; left: 50%; width: 1px; height: 5px; background: var(--border); }
 
     /* ── Vendor sub-tabs ── */
     .vtab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -848,14 +849,13 @@
     document.getElementById('vtab-construction').style.display = tab === 'construction' ? 'block' : 'none';
   }
 
-  function getHalfMonthPeriods(startDate, endDate) {
+  function getMonthPeriods(startDate, endDate) {
     const periods = [];
     let year = startDate.getFullYear();
     let month = startDate.getMonth();
     while (new Date(year, month, 1) <= endDate) {
       const lastDay = new Date(year, month + 1, 0).getDate();
-      periods.push({ year, month, half: 'upper', label: `${month+1}上`, start: new Date(year, month, 1), end: new Date(year, month, 15, 23, 59, 59) });
-      periods.push({ year, month, half: 'lower', label: `${month+1}下`, start: new Date(year, month, 16), end: new Date(year, month, lastDay, 23, 59, 59) });
+      periods.push({ year, month, label: `${month+1}月`, start: new Date(year, month, 1), end: new Date(year, month, lastDay, 23, 59, 59), days: lastDay });
       month++;
       if (month > 11) { month = 0; year++; }
     }
@@ -889,25 +889,17 @@
     if (!minDate) { minDate = new Date(); maxDate = new Date(); maxDate.setMonth(maxDate.getMonth() + 1); }
     minDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
-    const periods = getHalfMonthPeriods(minDate, maxDate);
+    const periods = getMonthPeriods(minDate, maxDate);
 
-    const monthGroups = [];
-    periods.forEach(p => {
-      const last = monthGroups[monthGroups.length - 1];
-      if (last && last.year === p.year && last.month === p.month) { last.count++; }
-      else monthGroups.push({ year: p.year, month: p.month, count: 1 });
-    });
+    const CELL_W = 90; // 一個月一欄，90px 呈現完整 30 天比例
 
-    const CELL_W = 44;
-
+    // 月份標題列，加上15日中線標記
     const hdrHtml = `<div class="gantt-hdr-row">
       <div class="gantt-name-col">廠商</div>
-      ${monthGroups.map(g => `<div class="gantt-month-hdr" style="width:${g.count * CELL_W}px">${g.month+1}月</div>`).join('')}
-    </div>`;
-
-    const halfHtml = `<div class="gantt-half-row">
-      <div class="gantt-name-col"></div>
-      ${periods.map(p => `<div class="gantt-period-cell">${p.half === 'upper' ? '上' : '下'}</div>`).join('')}
+      ${periods.map(p => `<div class="gantt-month-hdr" style="width:${CELL_W}px;position:relative;">
+        ${p.label}
+        <div class="gantt-mid-tick"></div>
+      </div>`).join('')}
     </div>`;
 
     const vendorRows = list.map(v => {
@@ -921,7 +913,7 @@
       const cells = periods.map(p => {
         const pMs = p.end - p.start;
 
-        // 場勘點：按日期比例定位在格子內
+        // 場勘點：按比例定位
         let surveyDot = '';
         const sd = parseD(v.survey_date);
         if (sd && sd >= p.start && sd <= p.end) {
@@ -929,7 +921,7 @@
           surveyDot = `<div class="gantt-survey-dot" style="left:${Math.max(4, Math.min(CELL_W - 4, leftPx))}px"></div>`;
         }
 
-        // 工期條：按日期比例計算 left/right px
+        // 工期條：按比例計算 left/right px，精確到天
         let workBar = '';
         if (ws && we && ws <= p.end && we >= p.start) {
           const isFirst = ws >= p.start;
@@ -940,7 +932,7 @@
           workBar = `<div class="gantt-work-bar" style="left:${leftPx}px;right:${rightPx}px;background:${barColor};border-radius:${r}"></div>`;
         }
 
-        return `<div class="gantt-cell">${surveyDot}${workBar}</div>`;
+        return `<div class="gantt-cell" style="width:${CELL_W}px">${surveyDot}${workBar}</div>`;
       }).join('');
 
       return `<div class="gantt-vendor-row">
@@ -949,7 +941,7 @@
       </div>`;
     }).join('');
 
-    el.innerHTML = `<div class="gantt-table">${hdrHtml}${halfHtml}${vendorRows}</div>`;
+    el.innerHTML = `<div class="gantt-table">${hdrHtml}${vendorRows}</div>`;
   }
 
   function renderVendors() {
