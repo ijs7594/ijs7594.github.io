@@ -69,12 +69,6 @@
     .status-營運中 { background: rgba(76,175,125,0.12); color: var(--green); }
     .status-已結束 { background: #F1F1F1; color: #888; }
     .store-addr { font-size: 12px; color: var(--text-light); margin-bottom: 14px; }
-    .level-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .level-badge { font-size: 12px; font-weight: 700; color: var(--brown-main); }
-    .exp-num { font-size: 11px; color: var(--text-light); margin-left: auto; }
-    .exp-bar-track { height: 8px; background: var(--cream); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
-    .exp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--caramel), var(--brown-main)); border-radius: 6px; transition: width 0.3s; }
-    .store-log-count { font-size: 12px; color: var(--text-light); }
 
     .empty { text-align: center; padding: 60px 20px; color: var(--text-light); }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
@@ -86,29 +80,14 @@
     .detail-title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
     .detail-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
     .detail-addr { font-size: 13px; color: var(--text-light); margin-bottom: 16px; }
-    .detail-level-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .detail-level { font-size: 14px; font-weight: 700; color: var(--brown-main); }
-    .detail-exp { font-size: 12px; color: var(--text-light); }
 
-    .log-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
-    .log-form h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
     .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
-    .form-row select, .form-row input, .log-form textarea {
+    .form-row select, .form-row input {
       border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white);
     }
-    .form-row select:focus, .log-form textarea:focus { border-color: var(--caramel); }
-    .log-form textarea { width: 100%; min-height: 70px; resize: vertical; margin-bottom: 10px; }
+    .form-row select:focus { border-color: var(--caramel); }
     .log-submit-btn { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .log-submit-btn:hover { background: var(--brown-mid); }
-
-    .timeline { display: flex; flex-direction: column; gap: 10px; }
-    .log-item { background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--caramel); border-radius: 10px; padding: 14px 16px; }
-    .log-item-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .log-cat { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--cream); color: var(--text-mid); font-weight: 600; }
-    .log-exp { font-size: 11px; color: var(--brown-main); font-weight: 700; }
-    .log-date { font-size: 11px; color: var(--text-light); margin-left: auto; }
-    .log-content { font-size: 13px; color: var(--text-dark); line-height: 1.6; }
-    .log-photo { display: block; max-width: 260px; width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer; }
 
     /* ── Detail tabs ── */
     .detail-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -245,7 +224,7 @@
       .checklist-mode-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
       .checklist-form .f-name { min-width: 100%; }
       .checklist-form { flex-wrap: wrap; }
-      .log-form, .vendor-form { padding: 16px; }
+      .vendor-form { padding: 16px; }
       .detail-header { padding: 16px; }
       .vendor-dates { flex-direction: column; gap: 4px; }
       .modal-overlay { align-items: flex-end; }
@@ -323,28 +302,8 @@
 
       <div class="detail-tabs">
         <div class="detail-tab active" data-tab="vendors" onclick="switchTab('vendors')">🔧 工程進度</div>
-        <div class="detail-tab" data-tab="logs" onclick="switchTab('logs')">📝 心得紀錄</div>
         <div class="detail-tab" data-tab="checklist" onclick="switchTab('checklist')">✅ 驗收鉤稽</div>
         <div class="detail-tab" data-tab="plan" onclick="switchTab('plan')">📑 營運計畫</div>
-      </div>
-
-      <div id="tab-logs">
-        <div class="log-form">
-          <h3>✍️ 新增一筆心得</h3>
-          <div class="form-row">
-            <select id="log-category">
-              <option>選址</option><option>裝潢</option><option>人事</option>
-              <option>物流</option><option>行銷</option><option>口味</option>
-              <option>客訴</option><option>其他</option>
-            </select>
-          </div>
-          <textarea id="log-content" placeholder="這次學到什麼、遇到什麼、下次會怎麼做不一樣……"></textarea>
-          <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">🤖 分數由 AI 自動判斷，送出後會給你一句回應</div>
-          <button class="log-submit-btn" id="log-submit-btn" onclick="addLog()">送出</button>
-          <div id="log-ai-reply" style="display:none;margin-top:12px;padding:12px 14px;background:var(--cream);border-radius:10px;font-size:13px;color:var(--text-mid);"></div>
-        </div>
-
-        <div class="timeline" id="timeline"></div>
       </div>
 
       <div id="tab-vendors" style="display:none;">
@@ -485,16 +444,6 @@
 <script>
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
-  const BOT_URL = 'https://guijong-linebot-production.up.railway.app';
-  const BOT_SECRET = '1JslYVY1N9-HE7xvoOMf1SU8rTDMNMLu';
-
-  const LEVELS = [
-    { min: 0,    name: '新手店', icon: '🌱' },
-    { min: 150,  name: '上手店', icon: '🌿' },
-    { min: 400,  name: '熟練店', icon: '🌳' },
-    { min: 800,  name: '資深店', icon: '⭐' },
-    { min: 1500, name: '大師店', icon: '👑' }
-  ];
 
   let stores = [];
   let logs = [];
@@ -515,18 +464,6 @@
 
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function getLevel(exp) {
-    let lvl = LEVELS[0], idx = 0;
-    for (let i = 0; i < LEVELS.length; i++) { if (exp >= LEVELS[i].min) { lvl = LEVELS[i]; idx = i; } }
-    const next = LEVELS[idx + 1] || null;
-    const pct = next ? Math.min(100, Math.round((exp - lvl.min) / (next.min - lvl.min) * 100)) : 100;
-    return { ...lvl, next, pct };
-  }
-
-  function expOfStore(storeId) {
-    return logs.filter(l => l.store_id === storeId).reduce((s, l) => s + Number(l.exp), 0);
   }
 
   // ── Load ──
@@ -665,7 +602,6 @@
   function switchTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.detail-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-    document.getElementById('tab-logs').style.display = tab === 'logs' ? 'block' : 'none';
     document.getElementById('tab-vendors').style.display = tab === 'vendors' ? 'block' : 'none';
     document.getElementById('tab-checklist').style.display = tab === 'checklist' ? 'block' : 'none';
     document.getElementById('tab-plan').style.display = tab === 'plan' ? 'block' : 'none';
@@ -680,40 +616,13 @@
     document.getElementById('page-title').textContent = s.name;
     document.getElementById('page-sub').textContent = s.address || '';
 
-    const exp = expOfStore(s.id);
-    const lvl = getLevel(exp);
     document.getElementById('detail-header').innerHTML = `
       <div class="detail-title-row">
         <div class="detail-title">${esc(s.name)}</div>
         <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
       </div>
       <div class="detail-addr">${esc(s.address) || '未填地址'}${s.opened_date ? ` · 開幕 ${esc(s.opened_date)}` : ''}</div>
-      <div class="detail-level-row">
-        <span class="detail-level">${lvl.icon} ${lvl.name}</span>
-        <span class="detail-exp">${exp} EXP${lvl.next ? ` / 下一等級 ${lvl.next.min}` : ' · 已滿級'}</span>
-      </div>
-      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${lvl.pct}%"></div></div>
     `;
-
-    const storeLogs = logs.filter(l => l.store_id === s.id);
-    const timeline = document.getElementById('timeline');
-    timeline.innerHTML = storeLogs.length === 0
-      ? '<div class="empty"><div class="empty-icon">📝</div><div>還沒有心得紀錄，寫下第一筆吧</div></div>'
-      : storeLogs.map(l => `<div class="log-item">
-          <div class="log-item-top">
-            <span class="log-cat">${esc(l.category)}</span>
-            <span class="log-exp">+${l.exp} EXP</span>
-            <span class="log-date">${formatDate(l.created_at)}</span>
-          </div>
-          <div class="log-content">${esc(l.content)}</div>
-          ${l.image_url ? `<img class="log-photo" src="${esc(l.image_url)}" alt="紀錄照片" loading="lazy" onclick="window.open('${esc(l.image_url)}','_blank')" />` : ''}
-        </div>`).join('');
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
   }
 
   // ── 工程進度（廠商進出場）──
@@ -1106,51 +1015,6 @@
         <div class="plan-section-title">${esc(s.title)}</div>
         <div class="plan-section-content">${esc(s.content)}</div>
       </div>`).join('');
-  }
-
-  // ── Add log ──
-  async function addLog() {
-    const content = document.getElementById('log-content').value.trim();
-    if (!content) return;
-    const category = document.getElementById('log-category').value;
-    const btn = document.getElementById('log-submit-btn');
-    const replyBox = document.getElementById('log-ai-reply');
-    btn.disabled = true;
-    btn.textContent = '🤖 AI 評分中…';
-    replyBox.style.display = 'none';
-
-    let exp = 30;
-    let reply = '';
-    try {
-      const res = await fetch(`${BOT_URL}/api/classify-log`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: BOT_SECRET, content, category })
-      });
-      const data = await res.json();
-      exp = data.exp || 30;
-      reply = data.reply || '';
-    } catch {}
-
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/store_logs`, {
-        method: 'POST',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-        body: JSON.stringify({ store_id: currentStoreId, category, content, exp })
-      });
-      document.getElementById('log-content').value = '';
-      if (reply) {
-        replyBox.textContent = `🤖 ${reply}（+${exp} EXP）`;
-        replyBox.style.display = 'block';
-      }
-      await loadAll();
-      openStore(currentStoreId);
-    } catch {
-      alert('新增失敗，請再試一次');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '送出';
-    }
   }
 
   // ── Add store ──
