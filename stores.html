@@ -244,6 +244,42 @@
       .mobile-nav { display: flex; }
     }
 
+    /* ── 里程碑 ── */
+    .milestone-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .milestone-label { font-size: 11px; font-weight: 700; color: var(--text-light); margin-bottom: 8px; letter-spacing: 0.04em; }
+    .milestone-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .milestone-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 20px; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--warm-white);
+      font-size: 12px; color: var(--text-mid); transition: all 0.15s; user-select: none;
+    }
+    .milestone-chip:hover { border-color: var(--brown-main); }
+    .milestone-chip.done { background: rgba(76,175,125,0.1); color: var(--green); border-color: var(--green); }
+
+    /* ── 廠商就緒看板 ── */
+    .vendor-ready-section { margin-bottom: 16px; }
+    .vendor-ready-title { font-size: 12px; font-weight: 700; color: var(--text-mid); margin-bottom: 8px; }
+    .vendor-ready-card {
+      background: rgba(76,175,125,0.07); border: 1px solid rgba(76,175,125,0.25);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .vendor-blocked-card {
+      background: #FFFBF0; border: 1px solid #F0D070;
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .vendor-ready-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    .vendor-ready-why { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .vendor-ready-action {
+      margin-left: auto; flex-shrink: 0;
+      border: 1px solid var(--green); background: rgba(76,175,125,0.1); color: var(--green);
+      border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .survey-done-row { font-size: 11px; color: var(--green); font-weight: 600; margin-bottom: 6px; }
+    .prereq-hint { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+
     /* ── Add-store modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(44,26,14,0.6); display: none; align-items: center; justify-content: center; z-index: 90; }
     .modal-overlay.open { display: flex; }
@@ -391,6 +427,26 @@
             <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計出場</label>
             <input type="date" id="vendor-planned-out" />
           </div>
+          <div class="form-row">
+            <select id="vendor-survey-prereq" style="flex:1">
+              <option value="">場勘前置：無（可立即約）</option>
+              <option value="contract">場勘需等：合約簽訂後</option>
+              <option value="floor_plan">場勘需等：平面圖完成後</option>
+              <option value="demolition">場勘需等：拆除完工後</option>
+              <option value="rough_plumbing">場勘需等：水電粗胚完工後</option>
+              <option value="carpentry">場勘需等：木工完工後</option>
+              <option value="flooring">場勘需等：地板完工後</option>
+            </select>
+            <select id="vendor-work-prereq" style="flex:1">
+              <option value="">施作前置：無（場勘後即可）</option>
+              <option value="contract">施作需等：合約簽訂後</option>
+              <option value="floor_plan">施作需等：平面圖完成後</option>
+              <option value="demolition">施作需等：拆除完工後</option>
+              <option value="rough_plumbing">施作需等：水電粗胚完工後</option>
+              <option value="carpentry">施作需等：木工完工後</option>
+              <option value="flooring">施作需等：地板完工後</option>
+            </select>
+          </div>
           <button class="log-submit-btn" onclick="addVendor()">新增</button>
         </div>
         <div class="vendor-list" id="vendor-list"></div>
@@ -477,6 +533,23 @@
   let checklistVerifyFilter = '全部';
   let checklistStatusFilter = '待驗收';
   const CHECKLIST_SOURCES = ['9*9文具', '南台灣餐飲設備', '蝦皮', '淘寶', '小北百貨', '特規品採購'];
+  const MILESTONES = [
+    { key: 'contract',       label: '合約簽訂',     icon: '📝' },
+    { key: 'floor_plan',     label: '平面圖完成',   icon: '📐' },
+    { key: 'demolition',     label: '拆除完工',     icon: '🔨' },
+    { key: 'rough_plumbing', label: '水電粗胚完工', icon: '🔌' },
+    { key: 'carpentry',      label: '木工完工',     icon: '🪵' },
+    { key: 'flooring',       label: '地板完工',     icon: '🏠' },
+  ];
+  const PREREQ_OPTIONS = [
+    { key: '',               label: '無（可立即約）' },
+    { key: 'contract',       label: '合約簽訂後' },
+    { key: 'floor_plan',     label: '平面圖完成後' },
+    { key: 'demolition',     label: '拆除完工後' },
+    { key: 'rough_plumbing', label: '水電粗胚完工後' },
+    { key: 'carpentry',      label: '木工完工後' },
+    { key: 'flooring',       label: '地板完工後' },
+  ];
   const CHECKLIST_GENERAL_TYPES = ['工作驗收', '區域定位', '文件張貼', '其他'];
   function checklistCategoryOptions() {
     return currentChecklistCat === '五金驗收' ? CHECKLIST_SOURCES : CHECKLIST_GENERAL_TYPES;
@@ -644,14 +717,111 @@
         <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
       </div>
       <div class="detail-addr">${esc(s.address) || '未填地址'}${s.opened_date ? ` · 開幕 ${esc(s.opened_date)}` : ''}</div>
+      <div class="milestone-section">
+        <div class="milestone-label">🗂 展店里程碑（點選切換）</div>
+        <div class="milestone-grid" id="milestone-grid"></div>
+      </div>
     `;
+    renderMilestones();
+  }
+
+  function getStoreMilestones() {
+    const s = stores.find(x => x.id === currentStoreId);
+    return (s && s.milestones) ? s.milestones : {};
+  }
+
+  function isMilestoneReady(prereqKey, m) {
+    return !prereqKey || m[prereqKey] === true;
+  }
+
+  function prereqLabel(key) {
+    const o = PREREQ_OPTIONS.find(x => x.key === key);
+    return o ? o.label : key;
+  }
+
+  function renderMilestones() {
+    const el = document.getElementById('milestone-grid');
+    if (!el) return;
+    const m = getStoreMilestones();
+    el.innerHTML = MILESTONES.map(ms => `
+      <div class="milestone-chip${m[ms.key] ? ' done' : ''}" onclick="toggleMilestone('${ms.key}')">
+        ${m[ms.key] ? '✅' : '⬜'} ${ms.label}
+      </div>
+    `).join('');
+  }
+
+  async function toggleMilestone(key) {
+    const s = stores.find(x => x.id === currentStoreId);
+    if (!s) return;
+    const m = Object.assign({}, s.milestones || {});
+    m[key] = !m[key];
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/stores?id=eq.${currentStoreId}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ milestones: m })
+      });
+      await loadAll();
+      if (currentStoreId) { renderDetail(); if (currentTab === 'vendors') renderVendors(); }
+    } catch { alert('更新失敗'); }
+  }
+
+  async function recordSurvey(id) {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ survey_date: today })
+      });
+      await loadAll();
+      switchTab('vendors');
+    } catch { alert('更新失敗'); }
   }
 
   // ── 工程進度（廠商進出場）──
   function renderVendors() {
     const list = vendors.filter(v => v.store_id === currentStoreId);
     const el = document.getElementById('vendor-list');
-    el.innerHTML = list.length === 0
+    const m = getStoreMilestones();
+
+    // 就緒看板
+    const canSurvey = list.filter(v => !v.survey_date && !v.actual_in && isMilestoneReady(v.survey_prereq, m));
+    const canWork   = list.filter(v => v.survey_date && !v.actual_in && isMilestoneReady(v.work_prereq, m));
+    const blocked   = list.filter(v => !v.survey_date && !v.actual_in && !isMilestoneReady(v.survey_prereq, m));
+
+    let readyHtml = '';
+    if (canSurvey.length || canWork.length) {
+      readyHtml += `<div class="vendor-ready-section">
+        <div class="vendor-ready-title">📞 現在可以聯絡（${canSurvey.length + canWork.length} 家）</div>
+        ${canSurvey.map(v => `<div class="vendor-ready-card">
+          <div style="flex:1">
+            <div class="vendor-ready-name">${esc(v.vendor_name)}</div>
+            <div class="vendor-ready-why">可約場勘${v.survey_prereq ? '（' + prereqLabel(v.survey_prereq) + '已達成）' : ''}</div>
+          </div>
+          <button class="vendor-ready-action" onclick="recordSurvey('${v.id}')">✓ 記錄場勘日</button>
+        </div>`).join('')}
+        ${canWork.map(v => `<div class="vendor-ready-card">
+          <div style="flex:1">
+            <div class="vendor-ready-name">${esc(v.vendor_name)}</div>
+            <div class="vendor-ready-why">已場勘 ${v.survey_date}，可安排進場${v.work_prereq ? '（' + prereqLabel(v.work_prereq) + '已達成）' : ''}</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+    }
+    if (blocked.length) {
+      readyHtml += `<div class="vendor-ready-section">
+        <div class="vendor-ready-title">⏳ 等待條件中（${blocked.length} 家）</div>
+        ${blocked.map(v => `<div class="vendor-blocked-card">
+          <div>
+            <div class="vendor-ready-name">${esc(v.vendor_name)}</div>
+            <div class="vendor-ready-why">場勘需等：${prereqLabel(v.survey_prereq)}</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+    }
+
+    const vendorCards = list.length === 0
       ? '<div class="empty"><div class="empty-icon">🔧</div><div>還沒有廠商排程，新增第一筆吧</div></div>'
       : list.map(v => {
           if (v.id === editingVendorId) {
@@ -678,6 +848,9 @@
             <span class="vendor-scope">${esc(v.scope || '未分類')}</span>
             <span class="vendor-status vstatus-${esc(v.status)}">${esc(v.status)}</span>
           </div>
+          ${v.survey_date ? `<div class="survey-done-row">✅ 已場勘：${v.survey_date}</div>` :
+            v.survey_prereq ? `<div class="prereq-hint">場勘需等：${prereqLabel(v.survey_prereq)}</div>` : ''}
+          ${v.work_prereq && !v.actual_in ? `<div class="prereq-hint">施作需等：${prereqLabel(v.work_prereq)}</div>` : ''}
           <div class="vendor-dates">
             <span><b>預計進場</b> ${v.planned_in || '—'}</span>
             <span><b>預計出場</b> ${v.planned_out || '—'}</span>
@@ -685,6 +858,7 @@
             <span><b>實際出場</b> ${v.actual_out || '—'}</span>
           </div>
           <div class="vendor-actions">
+            ${!v.survey_date && !v.actual_in ? `<button onclick="recordSurvey('${v.id}')">📅 記錄場勘</button>` : ''}
             ${!v.actual_in ? `<button onclick="markVendor('${v.id}','in')">登記進場</button>` : ''}
             ${v.actual_in && !v.actual_out ? `<button onclick="markVendor('${v.id}','out')">✅ 標記完工</button>` : ''}
             ${v.status !== '延遲' && !v.actual_out ? `<button onclick="setVendorDelayed('${v.id}')">標記延遲</button>` : ''}
@@ -693,6 +867,8 @@
           </div>
         </div>`;
         }).join('');
+
+    el.innerHTML = readyHtml + vendorCards;
   }
 
   function startEditVendor(id) {
@@ -741,15 +917,19 @@
     const scope = document.getElementById('vendor-scope').value;
     const planned_in = document.getElementById('vendor-planned-in').value || null;
     const planned_out = document.getElementById('vendor-planned-out').value || null;
+    const survey_prereq = document.getElementById('vendor-survey-prereq').value || null;
+    const work_prereq = document.getElementById('vendor-work-prereq').value || null;
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/store_vendors`, {
         method: 'POST',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({ store_id: currentStoreId, vendor_name, scope, planned_in, planned_out })
+        body: JSON.stringify({ store_id: currentStoreId, vendor_name, scope, planned_in, planned_out, survey_prereq, work_prereq })
       });
       document.getElementById('vendor-name').value = '';
       document.getElementById('vendor-planned-in').value = '';
       document.getElementById('vendor-planned-out').value = '';
+      document.getElementById('vendor-survey-prereq').value = '';
+      document.getElementById('vendor-work-prereq').value = '';
       await loadAll();
       switchTab('vendors');
     } catch { alert('新增失敗，請再試一次'); }
