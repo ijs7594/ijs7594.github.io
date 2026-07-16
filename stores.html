@@ -280,6 +280,45 @@
     .survey-done-row { font-size: 11px; color: var(--green); font-weight: 600; margin-bottom: 6px; }
     .prereq-hint { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
 
+    /* ── Gantt ── */
+    .gantt-section { margin-bottom: 20px; }
+    .gantt-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; font-size: 11px; color: var(--text-mid); align-items: center; }
+    .gl-survey { display: inline-flex; align-items: center; gap: 4px; }
+    .gl-survey::before { content: "●"; color: var(--caramel); font-size: 13px; }
+    .gl-planned { display: inline-flex; align-items: center; gap: 4px; }
+    .gl-planned::before { content: "▬"; color: #5b8fd4; font-size: 13px; }
+    .gl-done { display: inline-flex; align-items: center; gap: 4px; }
+    .gl-done::before { content: "▬"; color: var(--green); font-size: 13px; }
+    .gl-delay { display: inline-flex; align-items: center; gap: 4px; }
+    .gl-delay::before { content: "▬"; color: #c0392b; font-size: 13px; }
+    .gantt-scroll-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); }
+    .gantt-table { display: inline-flex; flex-direction: column; min-width: 100%; }
+    .gantt-hdr-row { display: flex; background: var(--cream); border-bottom: 1px solid var(--border); }
+    .gantt-half-row { display: flex; background: var(--warm-white); border-bottom: 2px solid var(--sand); }
+    .gantt-name-col { width: 110px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; font-weight: 700; color: var(--text-light); letter-spacing: 0.03em; border-right: 2px solid var(--sand); display: flex; align-items: center; }
+    .gantt-month-hdr { flex-shrink: 0; text-align: center; font-size: 11px; font-weight: 700; color: var(--brown-mid); padding: 5px 0; border-right: 1px solid var(--sand); }
+    .gantt-period-cell { width: 44px; flex-shrink: 0; text-align: center; font-size: 10px; color: var(--text-light); padding: 4px 0; border-right: 1px solid var(--border); }
+    .gantt-period-cell:last-child { border-right: none; }
+    .gantt-vendor-row { display: flex; align-items: stretch; border-top: 1px solid var(--border); }
+    .gantt-vendor-row:nth-child(even) { background: rgba(245,240,232,0.4); }
+    .gantt-vname { width: 110px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; color: var(--text-dark); font-weight: 600; border-right: 2px solid var(--sand); word-break: break-all; line-height: 1.4; display: flex; align-items: center; }
+    .gantt-cell { width: 44px; flex-shrink: 0; min-height: 42px; position: relative; border-right: 1px solid var(--border); }
+    .gantt-cell:last-child { border-right: none; }
+    .gantt-work-bar { position: absolute; height: 10px; background: #5b8fd4; bottom: 9px; left: 0; right: 0; }
+    .gantt-work-bar.bar-start { left: 5px; border-radius: 5px 0 0 5px; }
+    .gantt-work-bar.bar-end { right: 5px; border-radius: 0 5px 5px 0; }
+    .gantt-work-bar.bar-only { left: 5px; right: 5px; border-radius: 5px; }
+    .gantt-work-bar.status-done { background: var(--green); }
+    .gantt-work-bar.status-active { background: var(--caramel); }
+    .gantt-work-bar.status-delay { background: #c0392b; }
+    .gantt-survey-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; top: 8px; left: 50%; transform: translateX(-50%); z-index: 2; }
+
+    /* ── Vendor sub-tabs ── */
+    .vtab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .vtab { flex: 1; text-align: center; padding: 10px 6px; font-size: 13px; font-weight: 600; color: var(--text-mid); cursor: pointer; background: var(--warm-white); border-right: 1px solid var(--border); transition: background 0.15s; white-space: nowrap; }
+    .vtab:last-child { border-right: none; }
+    .vtab.active { background: var(--brown-main); color: #fff; }
+
     /* ── Add-store modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(44,26,14,0.6); display: none; align-items: center; justify-content: center; z-index: 90; }
     .modal-overlay.open { display: flex; }
@@ -355,101 +394,128 @@
       </div>
 
       <div id="tab-vendors" style="display:none;">
-        <details class="knowhow">
-          <summary>📚 工程順序 KNOW-HOW（為什麼要這樣排）</summary>
-          <div class="knowhow-body">
-            <div class="knowhow-item">
-              <h4>為什麼要先場勘？</h4>
-              <p>簽約前先場勘，是為了確認樑柱、給排水、電力容量等硬體條件符不符合開店需求，也才能抓出拆除與裝潢的大概範圍與天數。場勘沒做確實，簽了約才發現要花大錢補結構，就來不及了。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>場勘完要多久才能開始施工？</h4>
-              <p>場勘後通常要留 1～2 週前置期：跑合約用印、申請水電相關文件、把拆除／木工／水電的工班排進檔期。這次從場勘到拆除只抓了 2 天，算是很緊的排法，之後展店建議至少抓 7～10 天緩衝，避免工班臨時喬不到時間。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼油漆要在鋪地板之前？</h4>
-              <p>油漆施工會噴濺、滴漏、有粉塵，地板如果先鋪好，很容易被弄髒或刮傷，事後要重新拋光甚至局部換料，反而更花錢費工。等油漆完成、粉塵落定，再鋪地板，成品才會乾淨。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼設備要等地板鋪完才能進場？</h4>
-              <p>餐飲設備通常很重，需要在平整、完工的地面上定位、抓水平；地板沒鋪完就搬設備進場，一來可能壓壞底材，二來設備的定位、給排水孔位都要對應完成後的地板高度。先把地板鋪好，設備才能一次到位，不用事後搬動再施工一次。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>水電為什麼要進場 2～3 次？</h4>
-              <p><b>第一次（評估）</b>：跟拆除同期，確認用電安全、抓迴路與管線需求。<br/>
-              <b>第二次（粗胚施工）</b>：天花板/牆面封起來之前，把插座、迴路、給排水管線抓大概位置預埋好。<br/>
-              <b>第三次（精修收尾）</b>：等設備、層架、招牌都定位後，才知道插座、水龍頭、漏電斷路器的精確高度在哪，水電要回來做最後微調與驗收——包含設備全功率試車那天，如果發現電力過載或哪裡沒接好，也是水電當天回來收尾。</p>
-              <p>拆成三次，是「先求有、再求準」：太早把插座位置釘死，等設備一到現場尺寸對不上，就要打牆重拉管線，反而更貴更慢。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼舊玻璃門、舊招牌要在簽約前就先找人評估？</h4>
-              <p>能不能沿用，直接影響裝潢預算跟拆除範圍。如果簽約後才發現舊門歪斜、招牌厚度做不出無接縫，這些「原本以為能省的錢」會臨時變成額外支出，工期也會被打亂。提早評估，才能把重做的成本跟時間一開始就算進去。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼拆除完才約木工、水電來丈量報價？</h4>
-              <p>拆除前現場還有舊隔間、舊裝潢擋著，管線真正的走向、樑柱位置、實際可用坪數都看不清楚。太早丈量，抓的是不準的數字，報價跟工法都可能要重來。等拆除完、現場淨空，木工水電量的才是「真的要施工」的尺寸。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼冷氣要找兩家廠商評估？</h4>
-              <p>噸數、安裝位置、管線走法、報價，兩家一比就知道有沒有漏算或坑錢的地方，也能互相驗證噸數抓得準不準。只找一家，好壞都沒得比較。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼鐵工要先裝門框，玻璃才能裝？</h4>
-              <p>鐵工先把門框、地鉸鏈這個「骨架」定案，玻璃廠商才能照實際框體的精確尺寸訂做玻璃門。順序顛倒的話，玻璃尺寸會跟框對不上，等於白做一次。這也是為什麼玻璃從 7/16 首次勘查、到 7/23 才能真正裝完——中間要等 7/20 鐵工把框定案。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼監視器、音響要等五金定位、桌椅都差不多才裝？</h4>
-              <p>鏡頭角度、喇叭擺位，都要對應「最終」的空間格局跟家具位置。太早裝好，之後桌椅、層架一擺，鏡頭可能被擋、音響效果也可能被家具吸音改變，等於裝好了還要再調整一次。所以放在 7/23、五金也在同一天定位，是刻意排在一起。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼設備要「同時全功率」運轉測試，不能分開測試？</h4>
-              <p>分開開機只能確認單一設備能不能動，看不出「同時使用」時的總用電量。餐飲店尖峰時段電磁爐、冷藏冷凍、冷氣、POS 通常會一起運作，只有全部同時開著測，才抓得出電力總容量夠不夠、會不會跳電——這是唯一能在正式營運前先發現用電問題的方法。</p>
-            </div>
-            <div class="knowhow-item">
-              <h4>為什麼 7/25～30 要抓「試營運」，不直接開幕？</h4>
-              <p>備料、出餐、清洗、收銀的動線，只有在真實客人上門的狀況下才會暴露問題。試營運期間出的包（設備小問題、動線卡住、水電細節沒接好）都還有時間修，留到正式開幕當天才發現，代價會高很多。</p>
-            </div>
+        <!-- Gantt chart -->
+        <div class="gantt-section">
+          <div class="gantt-legend">
+            <span class="gl-survey">場勘</span>
+            <span class="gl-planned">預計施工</span>
+            <span class="gl-done">已完工</span>
+            <span class="gl-delay">延遲</span>
           </div>
-        </details>
-
-        <div class="vendor-form">
-          <h3>🔧 新增廠商排程</h3>
-          <div class="form-row">
-            <input id="vendor-name" placeholder="廠商名稱" />
-            <select id="vendor-scope">
-              <option>水電</option><option>裝潢</option><option>招牌</option>
-              <option>五金</option><option>廚房設備</option><option>消防</option><option>其他</option>
-            </select>
+          <div class="gantt-scroll-wrap">
+            <div id="gantt-chart"></div>
           </div>
-          <div class="form-row">
-            <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計進場</label>
-            <input type="date" id="vendor-planned-in" />
-            <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計出場</label>
-            <input type="date" id="vendor-planned-out" />
-          </div>
-          <div class="form-row">
-            <select id="vendor-survey-prereq" style="flex:1">
-              <option value="">場勘前置：無（可立即約）</option>
-              <option value="contract">場勘需等：合約簽訂後</option>
-              <option value="floor_plan">場勘需等：平面圖完成後</option>
-              <option value="demolition">場勘需等：拆除完工後</option>
-              <option value="rough_plumbing">場勘需等：水電粗胚完工後</option>
-              <option value="carpentry">場勘需等：木工完工後</option>
-              <option value="flooring">場勘需等：地板完工後</option>
-            </select>
-            <select id="vendor-work-prereq" style="flex:1">
-              <option value="">施作前置：無（場勘後即可）</option>
-              <option value="contract">施作需等：合約簽訂後</option>
-              <option value="floor_plan">施作需等：平面圖完成後</option>
-              <option value="demolition">施作需等：拆除完工後</option>
-              <option value="rough_plumbing">施作需等：水電粗胚完工後</option>
-              <option value="carpentry">施作需等：木工完工後</option>
-              <option value="flooring">施作需等：地板完工後</option>
-            </select>
-          </div>
-          <button class="log-submit-btn" onclick="addVendor()">新增</button>
         </div>
-        <div class="vendor-list" id="vendor-list"></div>
+
+        <!-- Sub-tabs -->
+        <div class="vtab-row">
+          <div class="vtab active" data-vtab="survey" onclick="switchVendorTab('survey')">📅 場勘管理</div>
+          <div class="vtab" data-vtab="construction" onclick="switchVendorTab('construction')">🔧 施工排程</div>
+        </div>
+
+        <!-- 場勘 sub-tab -->
+        <div id="vtab-survey">
+          <div id="vendor-survey-list"></div>
+        </div>
+
+        <!-- 施工 sub-tab -->
+        <div id="vtab-construction" style="display:none">
+          <details class="knowhow">
+            <summary>📚 工程順序 KNOW-HOW（為什麼要這樣排）</summary>
+            <div class="knowhow-body">
+              <div class="knowhow-item">
+                <h4>為什麼要先場勘？</h4>
+                <p>簽約前先場勘，是為了確認樑柱、給排水、電力容量等硬體條件符不符合開店需求，也才能抓出拆除與裝潢的大概範圍與天數。場勘沒做確實，簽了約才發現要花大錢補結構，就來不及了。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>場勘完要多久才能開始施工？</h4>
+                <p>場勘後通常要留 1～2 週前置期：跑合約用印、申請水電相關文件、把拆除／木工／水電的工班排進檔期。這次從場勘到拆除只抓了 2 天，算是很緊的排法，之後展店建議至少抓 7～10 天緩衝，避免工班臨時喬不到時間。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼油漆要在鋪地板之前？</h4>
+                <p>油漆施工會噴濺、滴漏、有粉塵，地板如果先鋪好，很容易被弄髒或刮傷，事後要重新拋光甚至局部換料，反而更花錢費工。等油漆完成、粉塵落定，再鋪地板，成品才會乾淨。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼設備要等地板鋪完才能進場？</h4>
+                <p>餐飲設備通常很重，需要在平整、完工的地面上定位、抓水平；地板沒鋪完就搬設備進場，一來可能壓壞底材，二來設備的定位、給排水孔位都要對應完成後的地板高度。先把地板鋪好，設備才能一次到位，不用事後搬動再施工一次。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>水電為什麼要進場 2～3 次？</h4>
+                <p><b>第一次（評估）</b>：跟拆除同期，確認用電安全、抓迴路與管線需求。<br/>
+                <b>第二次（粗胚施工）</b>：天花板/牆面封起來之前，把插座、迴路、給排水管線抓大概位置預埋好。<br/>
+                <b>第三次（精修收尾）</b>：等設備、層架、招牌都定位後，才知道插座、水龍頭、漏電斷路器的精確高度在哪，水電要回來做最後微調與驗收——包含設備全功率試車那天，如果發現電力過載或哪裡沒接好，也是水電當天回來收尾。</p>
+                <p>拆成三次，是「先求有、再求準」：太早把插座位置釘死，等設備一到現場尺寸對不上，就要打牆重拉管線，反而更貴更慢。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼舊玻璃門、舊招牌要在簽約前就先找人評估？</h4>
+                <p>能不能沿用，直接影響裝潢預算跟拆除範圍。如果簽約後才發現舊門歪斜、招牌厚度做不出無接縫，這些「原本以為能省的錢」會臨時變成額外支出，工期也會被打亂。提早評估，才能把重做的成本跟時間一開始就算進去。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼拆除完才約木工、水電來丈量報價？</h4>
+                <p>拆除前現場還有舊隔間、舊裝潢擋著，管線真正的走向、樑柱位置、實際可用坪數都看不清楚。太早丈量，抓的是不準的數字，報價跟工法都可能要重來。等拆除完、現場淨空，木工水電量的才是「真的要施工」的尺寸。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼冷氣要找兩家廠商評估？</h4>
+                <p>噸數、安裝位置、管線走法、報價，兩家一比就知道有沒有漏算或坑錢的地方，也能互相驗證噸數抓得準不準。只找一家，好壞都沒得比較。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼鐵工要先裝門框，玻璃才能裝？</h4>
+                <p>鐵工先把門框、地鉸鏈這個「骨架」定案，玻璃廠商才能照實際框體的精確尺寸訂做玻璃門。順序顛倒的話，玻璃尺寸會跟框對不上，等於白做一次。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼監視器、音響要等五金定位、桌椅都差不多才裝？</h4>
+                <p>鏡頭角度、喇叭擺位，都要對應「最終」的空間格局跟家具位置。太早裝好，之後桌椅、層架一擺，鏡頭可能被擋、音響效果也可能被家具吸音改變，等於裝好了還要再調整一次。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼設備要「同時全功率」運轉測試，不能分開測試？</h4>
+                <p>分開開機只能確認單一設備能不能動，看不出「同時使用」時的總用電量。餐飲店尖峰時段電磁爐、冷藏冷凍、冷氣、POS 通常會一起運作，只有全部同時開著測，才抓得出電力總容量夠不夠、會不會跳電。</p>
+              </div>
+              <div class="knowhow-item">
+                <h4>為什麼要抓「試營運」，不直接開幕？</h4>
+                <p>備料、出餐、清洗、收銀的動線，只有在真實客人上門的狀況下才會暴露問題。試營運期間出的包都還有時間修，留到正式開幕當天才發現，代價會高很多。</p>
+              </div>
+            </div>
+          </details>
+
+          <div class="vendor-form">
+            <h3>🔧 新增廠商排程</h3>
+            <div class="form-row">
+              <input id="vendor-name" placeholder="廠商名稱" />
+              <select id="vendor-scope">
+                <option>水電</option><option>裝潢</option><option>招牌</option>
+                <option>五金</option><option>廚房設備</option><option>消防</option><option>其他</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計進場</label>
+              <input type="date" id="vendor-planned-in" />
+              <label style="font-size:12px;color:var(--text-mid);align-self:center;">預計出場</label>
+              <input type="date" id="vendor-planned-out" />
+            </div>
+            <div class="form-row">
+              <select id="vendor-survey-prereq" style="flex:1">
+                <option value="">場勘前置：無（可立即約）</option>
+                <option value="contract">場勘需等：合約簽訂後</option>
+                <option value="floor_plan">場勘需等：平面圖完成後</option>
+                <option value="demolition">場勘需等：拆除完工後</option>
+                <option value="rough_plumbing">場勘需等：水電粗胚完工後</option>
+                <option value="carpentry">場勘需等：木工完工後</option>
+                <option value="flooring">場勘需等：地板完工後</option>
+              </select>
+              <select id="vendor-work-prereq" style="flex:1">
+                <option value="">施作前置：無（場勘後即可）</option>
+                <option value="contract">施作需等：合約簽訂後</option>
+                <option value="floor_plan">施作需等：平面圖完成後</option>
+                <option value="demolition">施作需等：拆除完工後</option>
+                <option value="rough_plumbing">施作需等：水電粗胚完工後</option>
+                <option value="carpentry">施作需等：木工完工後</option>
+                <option value="flooring">施作需等：地板完工後</option>
+              </select>
+            </div>
+            <button class="log-submit-btn" onclick="addVendor()">新增</button>
+          </div>
+          <div class="vendor-list" id="vendor-list"></div>
+        </div>
       </div>
 
       <div id="tab-checklist" style="display:none;">
@@ -528,6 +594,7 @@
   let currentChecklistCat = '五金驗收';
   let editingChecklistId = null;
   let editingVendorId = null;
+  let currentVendorTab = 'survey';
   let checklistAdminMode = false;
   let checklistAdminFilter = '未分類';
   let checklistVerifyFilter = '全部';
@@ -780,19 +847,116 @@
   }
 
   // ── 工程進度（廠商進出場）──
-  function renderVendors() {
+  function switchVendorTab(tab) {
+    currentVendorTab = tab;
+    document.querySelectorAll('.vtab').forEach(t => t.classList.toggle('active', t.dataset.vtab === tab));
+    document.getElementById('vtab-survey').style.display = tab === 'survey' ? 'block' : 'none';
+    document.getElementById('vtab-construction').style.display = tab === 'construction' ? 'block' : 'none';
+  }
+
+  function getHalfMonthPeriods(startDate, endDate) {
+    const periods = [];
+    let year = startDate.getFullYear();
+    let month = startDate.getMonth();
+    while (new Date(year, month, 1) <= endDate) {
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      periods.push({ year, month, half: 'upper', label: `${month+1}上`, start: new Date(year, month, 1), end: new Date(year, month, 15, 23, 59, 59) });
+      periods.push({ year, month, half: 'lower', label: `${month+1}下`, start: new Date(year, month, 16), end: new Date(year, month, lastDay, 23, 59, 59) });
+      month++;
+      if (month > 11) { month = 0; year++; }
+    }
+    return periods;
+  }
+
+  function renderGantt() {
+    const el = document.getElementById('gantt-chart');
+    if (!el) return;
     const list = vendors.filter(v => v.store_id === currentStoreId);
-    const el = document.getElementById('vendor-list');
+    if (!list.length) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);font-size:12px;">尚無廠商排程，請先在「施工排程」新增廠商</div>';
+      return;
+    }
+    let minDate = null, maxDate = null;
+    list.forEach(v => {
+      [v.planned_in, v.planned_out, v.actual_in, v.actual_out, v.survey_date].filter(Boolean).forEach(d => {
+        const dt = new Date(d);
+        if (!minDate || dt < minDate) minDate = dt;
+        if (!maxDate || dt > maxDate) maxDate = dt;
+      });
+    });
+    if (!minDate) { minDate = new Date(); maxDate = new Date(); maxDate.setMonth(maxDate.getMonth() + 1); }
+    minDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+    const periods = getHalfMonthPeriods(minDate, maxDate);
+
+    const monthGroups = [];
+    periods.forEach(p => {
+      const last = monthGroups[monthGroups.length - 1];
+      if (last && last.year === p.year && last.month === p.month) { last.count++; }
+      else monthGroups.push({ year: p.year, month: p.month, count: 1 });
+    });
+
+    const CELL_W = 44;
+
+    const hdrHtml = `<div class="gantt-hdr-row">
+      <div class="gantt-name-col">廠商</div>
+      ${monthGroups.map(g => `<div class="gantt-month-hdr" style="width:${g.count * CELL_W}px">${g.month+1}月</div>`).join('')}
+    </div>`;
+
+    const halfHtml = `<div class="gantt-half-row">
+      <div class="gantt-name-col"></div>
+      ${periods.map(p => `<div class="gantt-period-cell">${p.half === 'upper' ? '上' : '下'}</div>`).join('')}
+    </div>`;
+
+    const vendorRows = list.map(v => {
+      const workStart = v.actual_in || v.planned_in;
+      const workEnd   = v.actual_out || v.planned_out;
+      let barClass = '';
+      if (v.actual_out || v.status === '已完工') barClass = 'status-done';
+      else if (v.actual_in || v.status === '進場中') barClass = 'status-active';
+      else if (v.status === '延遲') barClass = 'status-delay';
+
+      const cells = periods.map(p => {
+        const hasSurvey = v.survey_date && (() => { const d = new Date(v.survey_date); return d >= p.start && d <= p.end; })();
+        let hasWork = false, barSeg = '';
+        if (workStart && workEnd) {
+          const ws = new Date(workStart), we = new Date(workEnd);
+          hasWork = ws <= p.end && we >= p.start;
+          if (hasWork) {
+            const isFirst = ws >= p.start && ws <= p.end;
+            const isLast  = we >= p.start && we <= p.end;
+            barSeg = (isFirst && isLast) ? 'bar-only' : isFirst ? 'bar-start' : isLast ? 'bar-end' : '';
+          }
+        }
+        return `<div class="gantt-cell">
+          ${hasSurvey ? '<div class="gantt-survey-dot"></div>' : ''}
+          ${hasWork ? `<div class="gantt-work-bar ${barClass} ${barSeg}"></div>` : ''}
+        </div>`;
+      }).join('');
+
+      return `<div class="gantt-vendor-row">
+        <div class="gantt-vname">${esc(v.vendor_name)}</div>
+        ${cells}
+      </div>`;
+    }).join('');
+
+    el.innerHTML = `<div class="gantt-table">${hdrHtml}${halfHtml}${vendorRows}</div>`;
+  }
+
+  function renderVendors() {
+    renderGantt();
+    switchVendorTab(currentVendorTab);
+
+    const list = vendors.filter(v => v.store_id === currentStoreId);
     const m = getStoreMilestones();
 
-    // 就緒看板
+    // 場勘 sub-tab
     const canSurvey = list.filter(v => !v.survey_date && !v.actual_in && isMilestoneReady(v.survey_prereq, m));
     const canWork   = list.filter(v => v.survey_date && !v.actual_in && isMilestoneReady(v.work_prereq, m));
     const blocked   = list.filter(v => !v.survey_date && !v.actual_in && !isMilestoneReady(v.survey_prereq, m));
-
-    let readyHtml = '';
+    let surveyHtml = '';
     if (canSurvey.length || canWork.length) {
-      readyHtml += `<div class="vendor-ready-section">
+      surveyHtml += `<div class="vendor-ready-section">
         <div class="vendor-ready-title">📞 現在可以聯絡（${canSurvey.length + canWork.length} 家）</div>
         ${canSurvey.map(v => `<div class="vendor-ready-card">
           <div style="flex:1">
@@ -810,7 +974,7 @@
       </div>`;
     }
     if (blocked.length) {
-      readyHtml += `<div class="vendor-ready-section">
+      surveyHtml += `<div class="vendor-ready-section">
         <div class="vendor-ready-title">⏳ 等待條件中（${blocked.length} 家）</div>
         ${blocked.map(v => `<div class="vendor-blocked-card">
           <div>
@@ -820,7 +984,10 @@
         </div>`).join('')}
       </div>`;
     }
+    if (!list.length) surveyHtml = '<div class="empty"><div class="empty-icon">📅</div><div>還沒有廠商，請先到「施工排程」新增</div></div>';
+    document.getElementById('vendor-survey-list').innerHTML = surveyHtml;
 
+    // 施工 sub-tab
     const vendorCards = list.length === 0
       ? '<div class="empty"><div class="empty-icon">🔧</div><div>還沒有廠商排程，新增第一筆吧</div></div>'
       : list.map(v => {
@@ -867,8 +1034,7 @@
           </div>
         </div>`;
         }).join('');
-
-    el.innerHTML = readyHtml + vendorCards;
+    document.getElementById('vendor-list').innerHTML = vendorCards;
   }
 
   function startEditVendor(id) {
