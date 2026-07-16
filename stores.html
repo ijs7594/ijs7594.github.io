@@ -153,9 +153,19 @@
     .vendor-actions button:hover { background: var(--cream); }
 
     /* ── Checklist (驗收鉤稽) ── */
-    .checklist-subtabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .checklist-mode-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .checklist-subtabs { display: flex; gap: 8px; }
     .checklist-subtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
     .checklist-subtab.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
+    .admin-toggle-btn { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .admin-toggle-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .source-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .source-btn { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 20px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .source-btn.selected { background: rgba(91,143,212,0.15); color: var(--blue); border-color: var(--blue); }
+    .source-url-input { margin-top: 8px; width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; outline: none; }
+    .source-tag { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: rgba(91,143,212,0.12); color: var(--blue); white-space: nowrap; text-decoration: none; }
+    .checklist-item.admin-row { flex-direction: column; align-items: stretch; }
+    .checklist-item.admin-row .admin-row-top { display: flex; align-items: center; gap: 12px; }
     .checklist-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .checklist-form input, .checklist-form select {
       border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
@@ -372,11 +382,14 @@
       </div>
 
       <div id="tab-checklist" style="display:none;">
-        <div class="checklist-subtabs">
-          <div class="checklist-subtab active" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
-          <div class="checklist-subtab" data-cat="一般驗收" onclick="switchChecklistCat('一般驗收')">一般驗收</div>
+        <div class="checklist-mode-bar">
+          <div class="checklist-subtabs">
+            <div class="checklist-subtab active" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
+            <div class="checklist-subtab" data-cat="一般驗收" onclick="switchChecklistCat('一般驗收')">一般驗收</div>
+          </div>
+          <button class="admin-toggle-btn" id="checklist-admin-toggle" onclick="toggleChecklistAdminMode()">🗂 管理員模式：歸類採購來源</button>
         </div>
-        <div class="checklist-form">
+        <div class="checklist-form" id="checklist-add-form">
           <input id="checklist-item-input" class="f-name" placeholder="品名（一次只填一項）" onkeydown="if(event.key==='Enter')addChecklistItem()" />
           <input id="checklist-qty-input"  class="f-qty"  type="number" placeholder="數量" min="1" value="1" onkeydown="if(event.key==='Enter')addChecklistItem()" />
           <select id="checklist-unit-input" class="f-unit">
@@ -443,6 +456,8 @@
   let currentChecklistCat = '五金驗收';
   let editingChecklistId = null;
   let editingVendorId = null;
+  let checklistAdminMode = false;
+  const CHECKLIST_SOURCES = ['9*9文具', '南台灣餐飲設備', '蝦皮', '淘寶', '小北百貨', '特規品採購'];
 
   loadAll();
 
@@ -798,9 +813,43 @@
     renderChecklist();
   }
 
+  function toggleChecklistAdminMode() {
+    checklistAdminMode = !checklistAdminMode;
+    renderChecklist();
+  }
+
+  function sourceTag(c) {
+    if (!c.source) return '';
+    return c.source_url
+      ? `<a class="source-tag" href="${esc(c.source_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🛒 ${esc(c.source)}</a>`
+      : `<span class="source-tag">🛒 ${esc(c.source)}</span>`;
+  }
+
   function renderChecklist() {
     const list = checklist.filter(c => c.store_id === currentStoreId && c.category === currentChecklistCat);
     const el = document.getElementById('checklist-list');
+
+    const toggleBtn = document.getElementById('checklist-admin-toggle');
+    toggleBtn.textContent = checklistAdminMode ? '✅ 完成分類，返回鉤稽模式' : '🗂 管理員模式：歸類採購來源';
+    toggleBtn.classList.toggle('active', checklistAdminMode);
+    document.getElementById('checklist-add-form').style.display = checklistAdminMode ? 'none' : 'flex';
+
+    if (checklistAdminMode) {
+      el.innerHTML = list.length === 0
+        ? '<div class="empty"><div class="empty-icon">🗂</div><div>還沒有驗收項目可以分類</div></div>'
+        : list.map(c => `<div class="checklist-item admin-row">
+            <div class="admin-row-top">
+              <span class="checklist-item-name">${esc(c.item)}</span>
+              ${sourceTag(c)}
+            </div>
+            <div class="source-btns">
+              ${CHECKLIST_SOURCES.map(src => `<button class="source-btn${c.source === src ? ' selected' : ''}" onclick="setChecklistSource('${c.id}','${src}')">${esc(src)}</button>`).join('')}
+            </div>
+            ${c.source === '蝦皮' ? `<input class="source-url-input" placeholder="蝦皮商品連結（選填）" value="${esc(c.source_url || '')}" onchange="setChecklistSourceUrl('${c.id}', this.value)" />` : ''}
+          </div>`).join('');
+      return;
+    }
+
     el.innerHTML = list.length === 0
       ? '<div class="empty"><div class="empty-icon">✅</div><div>還沒有驗收項目，新增第一筆吧</div></div>'
       : list.map(c => {
@@ -822,6 +871,7 @@
           const unit = c.unit || '個';
           return `<div class="checklist-item">
           <span class="checklist-item-name">${esc(c.item)}</span>
+          ${sourceTag(c)}
           <span class="checklist-item-qty">${qty} ${esc(unit)}</span>
           ${c.amount != null ? `<span class="checklist-item-amount">$${fmtMoney(c.amount)}</span>` : ''}
           <span class="checklist-status cstatus-${esc(c.status)}">${esc(c.status)}</span>
@@ -873,6 +923,32 @@
       await loadAll();
       switchChecklistCat(currentChecklistCat);
       await checkMilestones();
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function setChecklistSource(id, source) {
+    const c = checklist.find(x => x.id === id);
+    const source_url = c && c.source === source ? null : (c ? c.source_url : null);
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_checklist?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ source: c && c.source === source ? null : source, source_url: source === '蝦皮' ? source_url : null })
+      });
+      await loadAll();
+      switchChecklistCat(currentChecklistCat);
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function setChecklistSourceUrl(id, url) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_checklist?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ source_url: url.trim() || null })
+      });
+      await loadAll();
+      switchChecklistCat(currentChecklistCat);
     } catch { alert('更新失敗，請再試一次'); }
   }
 
