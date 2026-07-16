@@ -452,8 +452,9 @@
   // ── 督導儀表板 ──
   function renderDashboard() {
     if (typeof Chart === 'undefined') return;
+    const list = activeStores();
     const latestByStore = {};
-    stores.forEach(s => { latestByStore[s.id] = lastRecordOf(s.id); });
+    list.forEach(s => { latestByStore[s.id] = lastRecordOf(s.id); });
     const withScore = Object.values(latestByStore).filter(Boolean);
 
     const avgScore = withScore.length
@@ -475,7 +476,7 @@
       </div>
       <div class="dash-stat-card">
         <div class="dash-stat-label">本月已督導店數</div>
-        <div class="dash-stat-value">${inspectedStoreIdsThisMonth.size} / ${stores.length}</div>
+        <div class="dash-stat-value">${inspectedStoreIdsThisMonth.size} / ${list.length}</div>
       </div>
       <div class="dash-stat-card">
         <div class="dash-stat-label">待改善店家（合格率 &lt; 80%）</div>
@@ -520,7 +521,7 @@
     }
 
     // 各店最新合格率排行（由低到高）
-    const ranked = stores
+    const ranked = list
       .map(s => ({ name: s.name, score: latestByStore[s.id] ? Number(latestByStore[s.id].score) : null }))
       .filter(r => r.score != null && !isNaN(Number(r.score)))
       .sort((a, b) => a.score - b.score);
