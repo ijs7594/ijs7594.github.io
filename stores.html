@@ -292,21 +292,23 @@
     .gl-delay { display: inline-flex; align-items: center; gap: 4px; }
     .gl-delay::before { content: "▬"; color: #c0392b; font-size: 13px; }
     .gantt-scroll-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); }
-    .gantt-table { display: inline-flex; flex-direction: column; min-width: 100%; }
-    .gantt-hdr-row { display: flex; background: var(--cream); border-bottom: 1px solid var(--border); }
-    .gantt-half-row { display: flex; background: var(--warm-white); border-bottom: 2px solid var(--sand); }
-    .gantt-name-col { width: 110px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; font-weight: 700; color: var(--text-light); letter-spacing: 0.03em; border-right: 2px solid var(--sand); display: flex; align-items: center; }
-    .gantt-month-hdr { flex-shrink: 0; text-align: center; font-size: 11px; font-weight: 700; color: var(--brown-mid); padding: 5px 0; border-right: 1px solid var(--sand); }
-    .gantt-period-cell { width: 44px; flex-shrink: 0; text-align: center; font-size: 10px; color: var(--text-light); padding: 4px 0; border-right: 1px solid var(--border); }
-    .gantt-period-cell:last-child { border-right: none; }
-    .gantt-vendor-row { display: flex; align-items: stretch; border-top: 1px solid var(--border); }
+    .gantt-table { display: flex; flex-direction: column; width: 100%; }
+    .gantt-hdr-row { display: flex; width: 100%; background: var(--cream); border-bottom: 1px solid var(--border); }
+    .gantt-name-col { width: 100px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; font-weight: 700; color: var(--text-light); letter-spacing: 0.03em; border-right: 2px solid var(--sand); display: flex; align-items: center; }
+    .gantt-month-hdr { flex: 1; text-align: center; font-size: 12px; font-weight: 700; color: var(--brown-mid); padding: 6px 0; border-right: 1px solid var(--sand); position: relative; }
+    .gantt-month-hdr:last-child { border-right: none; }
+    .gantt-vendor-row { display: flex; width: 100%; align-items: stretch; border-top: 1px solid var(--border); cursor: pointer; }
     .gantt-vendor-row:nth-child(even) { background: rgba(245,240,232,0.4); }
-    .gantt-vname { width: 110px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; color: var(--text-dark); font-weight: 600; border-right: 2px solid var(--sand); word-break: break-all; line-height: 1.4; display: flex; align-items: center; }
-    .gantt-cell { width: 44px; flex-shrink: 0; min-height: 42px; position: relative; border-right: 1px solid var(--border); }
+    .gantt-vendor-row:hover { background: rgba(180,130,80,0.07); }
+    .gantt-vname { width: 100px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; color: var(--text-dark); font-weight: 600; border-right: 2px solid var(--sand); word-break: break-all; line-height: 1.4; display: flex; align-items: center; }
+    .gantt-cell { flex: 1; min-height: 42px; position: relative; border-right: 1px solid var(--border); }
     .gantt-cell:last-child { border-right: none; }
     .gantt-work-bar { position: absolute; height: 10px; bottom: 9px; }
     .gantt-survey-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; top: 8px; transform: translateX(-50%); z-index: 2; }
-    .gantt-mid-tick { position: absolute; bottom: 0; left: 50%; width: 1px; height: 5px; background: var(--border); }
+    .gantt-mid-tick { position: absolute; bottom: 0; left: 50%; width: 1px; height: 6px; background: var(--border); }
+    .gantt-popup { display: none; position: fixed; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; box-shadow: 0 4px 24px rgba(44,26,14,0.18); z-index: 300; font-size: 12px; min-width: 190px; pointer-events: none; }
+    .gantt-popup-title { font-weight: 700; color: var(--text-dark); margin-bottom: 8px; font-size: 13px; }
+    .gantt-popup-line { color: var(--text-mid); padding: 2px 0; }
 
     /* ── Vendor sub-tabs ── */
     .vtab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -842,6 +844,24 @@
   }
 
   // ── 工程進度（廠商進出場）──
+  function ganttRowClick(event, vendorId) {
+    event.stopPropagation();
+    const v = vendors.find(x => x.id === vendorId);
+    if (!v) return;
+    const pop = document.getElementById('gantt-popup');
+    if (!pop) return;
+    const lines = [];
+    if (v.survey_date) lines.push(`📅 場勘：${v.survey_date}`);
+    if (v.planned_in || v.planned_out) lines.push(`📋 預計進場：${v.planned_in || '未填'} ～ ${v.planned_out || '未填'}`);
+    if (v.actual_in || v.actual_out) lines.push(`✅ 實際進場：${v.actual_in || '?'} ～ ${v.actual_out || '進行中'}`);
+    if (!lines.length) lines.push('尚無日期資料');
+    pop.innerHTML = `<div class="gantt-popup-title">${esc(v.vendor_name)} <span style="font-size:10px;font-weight:400;color:var(--text-light)">${esc(v.scope||'')}</span></div>${lines.map(l=>`<div class="gantt-popup-line">${l}</div>`).join('')}`;
+    const rect = event.currentTarget.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 6) + 'px';
+    pop.style.left = Math.min(rect.left + 100, window.innerWidth - 210) + 'px';
+    pop.style.display = 'block';
+  }
+
   function switchVendorTab(tab) {
     currentVendorTab = tab;
     document.querySelectorAll('.vtab').forEach(t => t.classList.toggle('active', t.dataset.vtab === tab));
@@ -891,15 +911,13 @@
     maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
     const periods = getMonthPeriods(minDate, maxDate);
 
-    const CELL_W = 90; // 一個月一欄，90px 呈現完整 30 天比例
-
-    // 月份標題列，加上15日中線標記
+    // 月份標題列，15日有刻度標記
     const hdrHtml = `<div class="gantt-hdr-row">
       <div class="gantt-name-col">廠商</div>
-      ${periods.map(p => `<div class="gantt-month-hdr" style="width:${CELL_W}px;position:relative;">
-        ${p.label}
-        <div class="gantt-mid-tick"></div>
-      </div>`).join('')}
+      ${periods.map(p => {
+        const midPct = (15 / p.days * 100).toFixed(1);
+        return `<div class="gantt-month-hdr">${p.label}<div class="gantt-mid-tick" style="left:${midPct}%"></div></div>`;
+      }).join('')}
     </div>`;
 
     const vendorRows = list.map(v => {
@@ -913,33 +931,42 @@
       const cells = periods.map(p => {
         const pMs = p.end - p.start;
 
-        // 場勘點：按比例定位
+        // 場勘點：按比例定位（%）
         let surveyDot = '';
         const sd = parseD(v.survey_date);
         if (sd && sd >= p.start && sd <= p.end) {
-          const leftPx = Math.round((sd - p.start) / pMs * CELL_W);
-          surveyDot = `<div class="gantt-survey-dot" style="left:${Math.max(4, Math.min(CELL_W - 4, leftPx))}px"></div>`;
+          const pct = ((sd - p.start) / pMs * 100).toFixed(1);
+          surveyDot = `<div class="gantt-survey-dot" style="left:${pct}%"></div>`;
         }
 
-        // 工期條：按比例計算 left/right px，精確到天
+        // 工期條：按比例計算 left%/right%，精確到天
         let workBar = '';
         if (ws && we && ws <= p.end && we >= p.start) {
           const isFirst = ws >= p.start;
           const isLast  = we <= p.end;
-          const leftPx  = isFirst ? Math.round((ws - p.start) / pMs * CELL_W) : 0;
-          const rightPx = isLast  ? Math.round((p.end - we)   / pMs * CELL_W) : 0;
+          const leftPct  = isFirst ? ((ws - p.start) / pMs * 100).toFixed(1) : 0;
+          const rightPct = isLast  ? ((p.end - we)   / pMs * 100).toFixed(1) : 0;
           const r = (isFirst && isLast) ? '4px' : isFirst ? '4px 0 0 4px' : isLast ? '0 4px 4px 0' : '0';
-          workBar = `<div class="gantt-work-bar" style="left:${leftPx}px;right:${rightPx}px;background:${barColor};border-radius:${r}"></div>`;
+          workBar = `<div class="gantt-work-bar" style="left:${leftPct}%;right:${rightPct}%;background:${barColor};border-radius:${r}"></div>`;
         }
 
-        return `<div class="gantt-cell" style="width:${CELL_W}px">${surveyDot}${workBar}</div>`;
+        return `<div class="gantt-cell">${surveyDot}${workBar}</div>`;
       }).join('');
 
-      return `<div class="gantt-vendor-row">
+      return `<div class="gantt-vendor-row" onclick="ganttRowClick(event,'${v.id}')">
         <div class="gantt-vname">${esc(v.vendor_name)}</div>
         ${cells}
       </div>`;
     }).join('');
+
+    // 建立日期 popup（全域，只建一次）
+    if (!document.getElementById('gantt-popup')) {
+      const pop = document.createElement('div');
+      pop.id = 'gantt-popup';
+      pop.className = 'gantt-popup';
+      document.body.appendChild(pop);
+      document.addEventListener('click', () => { pop.style.display = 'none'; });
+    }
 
     el.innerHTML = `<div class="gantt-table">${hdrHtml}${vendorRows}</div>`;
   }
