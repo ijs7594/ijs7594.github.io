@@ -528,21 +528,12 @@
       return;
     }
     grid.innerHTML = list.map(s => {
-      const exp = expOfStore(s.id);
-      const lvl = getLevel(exp);
-      const count = logs.filter(l => l.store_id === s.id).length;
       return `<div class="store-card" onclick="openStore('${s.id}')">
         <div class="store-card-top">
           <div class="store-name">${esc(s.name)}</div>
           <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
         </div>
         <div class="store-addr">${esc(s.address) || '未填地址'}</div>
-        <div class="level-row">
-          <span class="level-badge">${lvl.icon} ${lvl.name}</span>
-          <span class="exp-num">${exp} EXP${lvl.next ? ` / ${lvl.next.min}` : ' (滿級)'}</span>
-        </div>
-        <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${lvl.pct}%"></div></div>
-        <div class="store-log-count">📝 ${count} 筆心得紀錄</div>
       </div>`;
     }).join('');
   }
