@@ -209,6 +209,50 @@
     .plan-section-title { font-size: 13px; font-weight: 700; color: var(--brown-main); margin-bottom: 6px; }
     .plan-section-content { font-size: 13px; color: var(--text-mid); line-height: 1.75; white-space: pre-wrap; }
 
+    /* ── Mobile bottom nav ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      justify-content: space-around; align-items: center;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px; transition: color 0.15s;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .topbar { padding: 12px 16px; }
+      .topbar-title { font-size: 16px; }
+      .add-store-btn { padding: 7px 12px; font-size: 12px; }
+      .content { padding: 14px 14px 80px; }
+      .store-grid { grid-template-columns: 1fr; gap: 12px; }
+      .detail-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .detail-tab { white-space: nowrap; flex-shrink: 0; }
+      .store-list-tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+      .store-list-tab { white-space: nowrap; flex-shrink: 0; }
+      .form-row { flex-wrap: wrap; }
+      .form-row input, .form-row select { flex: 1 1 calc(50% - 5px); }
+      .vendor-edit-row { flex-direction: column; gap: 8px; }
+      .checklist-mode-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .checklist-form .f-name { min-width: 100%; }
+      .checklist-form { flex-wrap: wrap; }
+      .log-form, .vendor-form { padding: 16px; }
+      .detail-header { padding: 16px; }
+      .vendor-dates { flex-direction: column; gap: 4px; }
+      .modal-overlay { align-items: flex-end; }
+      .modal-box { width: 100%; border-radius: 20px 20px 0 0; padding: 24px 20px; max-height: 85vh; overflow-y: auto; }
+      .mobile-nav { display: flex; }
+    }
+
     /* ── Add-store modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(44,26,14,0.6); display: none; align-items: center; justify-content: center; z-index: 90; }
     .modal-overlay.open { display: flex; }
@@ -429,6 +473,14 @@
     </div>
   </div>
 </div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
+  <a class="mobile-nav-item active" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+</nav>
 
 <script>
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
