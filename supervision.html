@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>督導管理 · 漢柏分身</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -174,6 +174,14 @@
       <span class="nav-icon">🏠</span>
       <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
     </a>
+    <a class="nav-item" href="sop.html">
+      <span class="nav-icon">📖</span>
+      <div><div class="nav-text">一日流程</div><div class="nav-sub">作業手冊</div></div>
+    </a>
+    <a class="nav-item" href="inbox.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">待辦</div><div class="nav-sub">Inbox</div></div>
+    </a>
     <a class="nav-item" href="finance.html">
       <span class="nav-icon">📊</span>
       <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
@@ -306,9 +314,11 @@
       if (!Array.isArray(recordItems)) recordItems = [];
       renderTypList();
       renderList();
-      renderDashboard();
     } catch {
       document.getElementById('store-grid').innerHTML = '<div class="loading">載入失敗，請重新整理（若剛設好 Supabase 資料表，請確認 SQL 已執行）</div>';
+    }
+    if (document.getElementById('list-view').style.display !== 'none') {
+      try { renderDashboard(); } catch(e) { console.error('chart:', e); }
     }
   }
 
@@ -392,6 +402,11 @@
   }
 
   // ── 督導總覽（店家清單）──
+  // 只有裝修完成、正在營運的店才需要督導；還在籌備／裝修中的店（例如剛簽約的新店）先不排入
+  function activeStores() {
+    return stores.filter(s => s.status !== '籌備中');
+  }
+
   function lastRecordOf(storeId) {
     return records.filter(r => r.store_id === storeId)[0] || null;
   }
@@ -405,6 +420,7 @@
 
   function renderList() {
     const grid = document.getElementById('store-grid');
+    const list = activeStores();
     if (stores.length === 0) {
       grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
         <div class="empty-icon">🏪</div>
@@ -412,7 +428,14 @@
       </div>`;
       return;
     }
-    grid.innerHTML = stores.map(s => {
+    if (list.length === 0) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+        <div class="empty-icon">🚧</div>
+        <div>目前所有店家都還在籌備／裝修中，裝修完成後會自動出現在這裡</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = list.map(s => {
       const last = lastRecordOf(s.id);
       return `<div class="store-card" onclick="openStore('${s.id}')">
         <div class="store-name">${esc(s.name)}</div>
@@ -428,6 +451,7 @@
 
   // ── 督導儀表板 ──
   function renderDashboard() {
+    if (typeof Chart === 'undefined') return;
     const latestByStore = {};
     stores.forEach(s => { latestByStore[s.id] = lastRecordOf(s.id); });
     const withScore = Object.values(latestByStore).filter(Boolean);
@@ -469,11 +493,11 @@
       const d = new Date(r.created_at);
       const key = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
       if (!byMonth[key]) byMonth[key] = [];
-      byMonth[key].push(Number(r.score));
+      const s = Number(r.score); if (!isNaN(s)) byMonth[key].push(s);
     });
     const months = Object.keys(byMonth).sort();
     document.getElementById('trend-empty').style.display = months.length === 0 ? 'block' : 'none';
-    if (trendChart) trendChart.destroy();
+    if (trendChart) { trendChart.destroy(); trendChart = null; }
     if (months.length > 0) {
       trendChart = new Chart(document.getElementById('trendChart'), {
         type: 'line',
@@ -498,10 +522,10 @@
     // 各店最新合格率排行（由低到高）
     const ranked = stores
       .map(s => ({ name: s.name, score: latestByStore[s.id] ? Number(latestByStore[s.id].score) : null }))
-      .filter(r => r.score != null)
+      .filter(r => r.score != null && !isNaN(Number(r.score)))
       .sort((a, b) => a.score - b.score);
     document.getElementById('rank-empty').style.display = ranked.length === 0 ? 'block' : 'none';
-    if (rankChart) rankChart.destroy();
+    if (rankChart) { rankChart.destroy(); rankChart = null; }
     if (ranked.length > 0) {
       rankChart = new Chart(document.getElementById('rankChart'), {
         type: 'bar',
@@ -529,6 +553,7 @@
     document.getElementById('page-title').textContent = '督導管理';
     document.getElementById('page-sub').textContent = '依照 TYP 範本完成每次督導，自動產出報告與紀錄';
     renderList();
+    try { renderDashboard(); } catch(e) { console.error('chart:', e); }
   }
 
   function formatDate(iso) {
