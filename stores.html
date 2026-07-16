@@ -98,7 +98,7 @@
     .store-list-tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
     .store-list-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
     .store-list-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
-    .store-list-tab .tab-count { font-size: 11px; color: var(--text-light); margin-left: 4px; }
+    .tab-count { font-size: 11px; color: var(--text-light); margin-left: 4px; }
 
     /* ── Vendors (工程進度) ── */
     .knowhow { background: var(--cream); border: 1px solid var(--sand); border-radius: 14px; padding: 4px 20px; margin-bottom: 20px; }
@@ -136,6 +136,9 @@
     .checklist-subtabs { display: flex; gap: 8px; }
     .checklist-subtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
     .checklist-subtab.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
+    .checklist-subtab.active .tab-count { color: rgba(255,255,255,0.85); }
+    .checklist-admin-filter-tabs { display: none; gap: 8px; margin-bottom: 14px; }
+    .checklist-verify-filter-tabs { display: none; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
     .admin-toggle-btn { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .admin-toggle-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
     .source-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -392,6 +395,7 @@
           </div>
           <button class="admin-toggle-btn" id="checklist-admin-toggle" onclick="toggleChecklistAdminMode()">🗂 管理員模式：歸類採購來源</button>
         </div>
+        <div class="checklist-admin-filter-tabs" id="checklist-admin-filter-tabs"></div>
         <div class="checklist-form" id="checklist-add-form">
           <input id="checklist-item-input" class="f-name" placeholder="品名（一次只填一項）" onkeydown="if(event.key==='Enter')addChecklistItem()" />
           <input id="checklist-qty-input"  class="f-qty"  type="number" placeholder="數量" min="1" value="1" onkeydown="if(event.key==='Enter')addChecklistItem()" />
@@ -403,6 +407,7 @@
           <input id="checklist-amount-input" class="f-amt" type="number" placeholder="金額" onkeydown="if(event.key==='Enter')addChecklistItem()" />
           <button onclick="addChecklistItem()">新增</button>
         </div>
+        <div class="checklist-verify-filter-tabs" id="checklist-verify-filter-tabs"></div>
         <div class="checklist-list" id="checklist-list"></div>
       </div>
 
@@ -458,6 +463,8 @@
   let editingChecklistId = null;
   let editingVendorId = null;
   let checklistAdminMode = false;
+  let checklistAdminFilter = '未分類';
+  let checklistVerifyFilter = '全部';
   const CHECKLIST_SOURCES = ['9*9文具', '南台灣餐飲設備', '蝦皮', '淘寶', '小北百貨', '特規品採購'];
 
   loadAll();
@@ -770,12 +777,25 @@
   // ── 驗收鉤稽 ──
   function switchChecklistCat(cat) {
     currentChecklistCat = cat;
+    checklistVerifyFilter = '全部';
     document.querySelectorAll('.checklist-subtab').forEach(el => el.classList.toggle('active', el.dataset.cat === cat));
     renderChecklist();
   }
 
   function toggleChecklistAdminMode() {
     checklistAdminMode = !checklistAdminMode;
+    checklistAdminFilter = '未分類';
+    checklistVerifyFilter = '全部';
+    renderChecklist();
+  }
+
+  function switchChecklistAdminFilter(filter) {
+    checklistAdminFilter = filter;
+    renderChecklist();
+  }
+
+  function switchChecklistVerifyFilter(filter) {
+    checklistVerifyFilter = filter;
     renderChecklist();
   }
 
@@ -796,9 +816,20 @@
     document.getElementById('checklist-add-form').style.display = checklistAdminMode ? 'none' : 'flex';
 
     if (checklistAdminMode) {
-      el.innerHTML = list.length === 0
-        ? '<div class="empty"><div class="empty-icon">🗂</div><div>還沒有驗收項目可以分類</div></div>'
-        : list.map(c => `<div class="checklist-item admin-row">
+      const unclassified = list.filter(c => !c.source);
+      const classified = list.filter(c => c.source);
+      const filtered = checklistAdminFilter === '未分類' ? unclassified : classified;
+
+      const filterTabsEl = document.getElementById('checklist-admin-filter-tabs');
+      filterTabsEl.style.display = 'flex';
+      filterTabsEl.innerHTML = `
+        <div class="checklist-subtab${checklistAdminFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('未分類')">🕓 未分類<span class="tab-count"> ${unclassified.length}</span></div>
+        <div class="checklist-subtab${checklistAdminFilter === '已分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('已分類')">✅ 已分類（可補救）<span class="tab-count"> ${classified.length}</span></div>
+      `;
+
+      el.innerHTML = filtered.length === 0
+        ? `<div class="empty"><div class="empty-icon">🗂</div><div>${checklistAdminFilter === '未分類' ? '都分類完了，切到「已分類」可以再調整' : '還沒有已分類的項目'}</div></div>`
+        : filtered.map(c => `<div class="checklist-item admin-row">
             <div class="admin-row-top">
               <span class="checklist-item-name">${esc(c.item)}</span>
               ${sourceTag(c)}
@@ -810,10 +841,33 @@
           </div>`).join('');
       return;
     }
+    document.getElementById('checklist-admin-filter-tabs').style.display = 'none';
 
-    el.innerHTML = list.length === 0
-      ? '<div class="empty"><div class="empty-icon">✅</div><div>還沒有驗收項目，新增第一筆吧</div></div>'
-      : list.map(c => {
+    const usedSources = CHECKLIST_SOURCES.filter(src => list.some(c => c.source === src));
+    const uncategorized = list.filter(c => !c.source).length;
+    const verifyTabsEl = document.getElementById('checklist-verify-filter-tabs');
+    if (usedSources.length === 0) {
+      verifyTabsEl.style.display = 'none';
+      verifyTabsEl.innerHTML = '';
+    } else {
+      verifyTabsEl.style.display = 'flex';
+      verifyTabsEl.innerHTML = `
+        <div class="checklist-subtab${checklistVerifyFilter === '全部' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('全部')">全部<span class="tab-count"> ${list.length}</span></div>
+        ${usedSources.map(src => `<div class="checklist-subtab${checklistVerifyFilter === src ? ' active' : ''}" onclick="switchChecklistVerifyFilter('${src}')">${esc(src)}<span class="tab-count"> ${list.filter(c => c.source === src).length}</span></div>`).join('')}
+        ${uncategorized > 0 ? `<div class="checklist-subtab${checklistVerifyFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('未分類')">未分類<span class="tab-count"> ${uncategorized}</span></div>` : ''}
+      `;
+    }
+    const visibleList = checklistVerifyFilter === '全部'
+      ? list
+      : checklistVerifyFilter === '未分類'
+        ? list.filter(c => !c.source)
+        : list.filter(c => c.source === checklistVerifyFilter);
+
+    el.innerHTML = visibleList.length === 0
+      ? (list.length === 0
+          ? '<div class="empty"><div class="empty-icon">✅</div><div>還沒有驗收項目，新增第一筆吧</div></div>'
+          : '<div class="empty"><div class="empty-icon">✅</div><div>這個分類目前沒有驗收項目</div></div>')
+      : visibleList.map(c => {
           if (c.id === editingChecklistId) {
             return `<div class="checklist-item">
               <input class="checklist-item-edit-name" id="edit-name-${c.id}" value="${esc(c.item)}" placeholder="品名" />
@@ -844,7 +898,7 @@
           </div>
         </div>`;
         }).join('');
-    const total = list.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const total = visibleList.reduce((s, c) => s + (Number(c.amount) || 0), 0);
     if (total > 0) {
       el.innerHTML += `<div class="checklist-item" style="font-weight:700;background:var(--cream);">
         <span class="checklist-item-name">小計</span>
