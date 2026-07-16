@@ -139,6 +139,7 @@
     .checklist-subtab.active .tab-count { color: rgba(255,255,255,0.85); }
     .checklist-admin-filter-tabs { display: none; gap: 8px; margin-bottom: 14px; }
     .checklist-verify-filter-tabs { display: none; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .checklist-status-filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
     .admin-toggle-btn { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .admin-toggle-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
     .source-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -166,14 +167,9 @@
     .checklist-item { display: flex; align-items: center; gap: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
     .checklist-item-name { font-size: 13px; color: var(--text-dark); flex: 1; }
     .checklist-item-amount { font-size: 12px; color: var(--brown-main); font-weight: 700; white-space: nowrap; }
-    .checklist-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
-    .cstatus-待驗收 { background: #F1F1F1; color: #888; }
-    .cstatus-合格 { background: rgba(76,175,125,0.12); color: var(--green); }
-    .cstatus-不合格 { background: #FDECEC; color: #C0392B; }
     .checklist-actions { display: flex; gap: 6px; }
     .checklist-actions button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
     .checklist-actions .pass-btn:hover { background: rgba(76,175,125,0.12); }
-    .checklist-actions .fail-btn:hover { background: #FDECEC; }
     .checklist-item-edit-name { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: inherit; outline: none; }
     .checklist-item-edit-amount { width: 100px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; font-family: inherit; outline: none; }
     .checklist-item-edit-name:focus, .checklist-item-edit-amount:focus { border-color: var(--caramel); }
@@ -393,7 +389,7 @@
             <div class="checklist-subtab active" data-cat="五金驗收" onclick="switchChecklistCat('五金驗收')">五金驗收</div>
             <div class="checklist-subtab" data-cat="一般驗收" onclick="switchChecklistCat('一般驗收')">一般驗收</div>
           </div>
-          <button class="admin-toggle-btn" id="checklist-admin-toggle" onclick="toggleChecklistAdminMode()">🗂 管理員模式：歸類採購來源</button>
+          <button class="admin-toggle-btn" id="checklist-admin-toggle" onclick="toggleChecklistAdminMode()">🗂 管理員模式：項目分類</button>
         </div>
         <div class="checklist-admin-filter-tabs" id="checklist-admin-filter-tabs"></div>
         <div class="checklist-form" id="checklist-add-form">
@@ -408,6 +404,7 @@
           <button onclick="addChecklistItem()">新增</button>
         </div>
         <div class="checklist-verify-filter-tabs" id="checklist-verify-filter-tabs"></div>
+        <div class="checklist-status-filter-tabs" id="checklist-status-filter-tabs"></div>
         <div class="checklist-list" id="checklist-list"></div>
       </div>
 
@@ -465,7 +462,12 @@
   let checklistAdminMode = false;
   let checklistAdminFilter = '未分類';
   let checklistVerifyFilter = '全部';
+  let checklistStatusFilter = '待驗收';
   const CHECKLIST_SOURCES = ['9*9文具', '南台灣餐飲設備', '蝦皮', '淘寶', '小北百貨', '特規品採購'];
+  const CHECKLIST_GENERAL_TYPES = ['工作驗收', '區域定位', '文件張貼', '其他'];
+  function checklistCategoryOptions() {
+    return currentChecklistCat === '五金驗收' ? CHECKLIST_SOURCES : CHECKLIST_GENERAL_TYPES;
+  }
 
   loadAll();
 
@@ -778,6 +780,7 @@
   function switchChecklistCat(cat) {
     currentChecklistCat = cat;
     checklistVerifyFilter = '全部';
+    checklistStatusFilter = '待驗收';
     document.querySelectorAll('.checklist-subtab').forEach(el => el.classList.toggle('active', el.dataset.cat === cat));
     renderChecklist();
   }
@@ -786,6 +789,7 @@
     checklistAdminMode = !checklistAdminMode;
     checklistAdminFilter = '未分類';
     checklistVerifyFilter = '全部';
+    checklistStatusFilter = '待驗收';
     renderChecklist();
   }
 
@@ -796,14 +800,21 @@
 
   function switchChecklistVerifyFilter(filter) {
     checklistVerifyFilter = filter;
+    checklistStatusFilter = '待驗收';
+    renderChecklist();
+  }
+
+  function switchChecklistStatusFilter(filter) {
+    checklistStatusFilter = filter;
     renderChecklist();
   }
 
   function sourceTag(c) {
     if (!c.source) return '';
+    const icon = c.source_url ? '🛒' : '🏷️';
     return c.source_url
-      ? `<a class="source-tag" href="${esc(c.source_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🛒 ${esc(c.source)}</a>`
-      : `<span class="source-tag">🛒 ${esc(c.source)}</span>`;
+      ? `<a class="source-tag" href="${esc(c.source_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${icon} ${esc(c.source)}</a>`
+      : `<span class="source-tag">${icon} ${esc(c.source)}</span>`;
   }
 
   function renderChecklist() {
@@ -811,7 +822,7 @@
     const el = document.getElementById('checklist-list');
 
     const toggleBtn = document.getElementById('checklist-admin-toggle');
-    toggleBtn.textContent = checklistAdminMode ? '✅ 完成分類，返回鉤稽模式' : '🗂 管理員模式：歸類採購來源';
+    toggleBtn.textContent = checklistAdminMode ? '✅ 完成分類，返回鉤稽模式' : '🗂 管理員模式：項目分類';
     toggleBtn.classList.toggle('active', checklistAdminMode);
     document.getElementById('checklist-add-form').style.display = checklistAdminMode ? 'none' : 'flex';
 
@@ -835,7 +846,7 @@
               ${sourceTag(c)}
             </div>
             <div class="source-btns">
-              ${CHECKLIST_SOURCES.map(src => `<button class="source-btn${c.source === src ? ' selected' : ''}" onclick="setChecklistSource('${c.id}','${src}')">${esc(src)}</button>`).join('')}
+              ${checklistCategoryOptions().map(src => `<button class="source-btn${c.source === src ? ' selected' : ''}" onclick="setChecklistSource('${c.id}','${src}')">${esc(src)}</button>`).join('')}
             </div>
             ${c.source === '蝦皮' ? `<input class="source-url-input" placeholder="蝦皮商品連結（選填）" value="${esc(c.source_url || '')}" onchange="setChecklistSourceUrl('${c.id}', this.value)" />` : ''}
           </div>`).join('');
@@ -843,7 +854,7 @@
     }
     document.getElementById('checklist-admin-filter-tabs').style.display = 'none';
 
-    const usedSources = CHECKLIST_SOURCES.filter(src => list.some(c => c.source === src));
+    const usedSources = checklistCategoryOptions().filter(src => list.some(c => c.source === src));
     const uncategorized = list.filter(c => !c.source).length;
     const verifyTabsEl = document.getElementById('checklist-verify-filter-tabs');
     if (usedSources.length === 0) {
@@ -857,16 +868,28 @@
         ${uncategorized > 0 ? `<div class="checklist-subtab${checklistVerifyFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('未分類')">未分類<span class="tab-count"> ${uncategorized}</span></div>` : ''}
       `;
     }
-    const visibleList = checklistVerifyFilter === '全部'
+    const sourceFiltered = checklistVerifyFilter === '全部'
       ? list
       : checklistVerifyFilter === '未分類'
         ? list.filter(c => !c.source)
         : list.filter(c => c.source === checklistVerifyFilter);
 
+    const pendingCount = sourceFiltered.filter(c => c.status !== '合格').length;
+    const passedCount = sourceFiltered.filter(c => c.status === '合格').length;
+    const statusTabsEl = document.getElementById('checklist-status-filter-tabs');
+    statusTabsEl.innerHTML = `
+      <div class="checklist-subtab${checklistStatusFilter === '待驗收' ? ' active' : ''}" onclick="switchChecklistStatusFilter('待驗收')">⏳ 待驗收<span class="tab-count"> ${pendingCount}</span></div>
+      <div class="checklist-subtab${checklistStatusFilter === '合格' ? ' active' : ''}" onclick="switchChecklistStatusFilter('合格')">✅ 合格<span class="tab-count"> ${passedCount}</span></div>
+    `;
+
+    const visibleList = checklistStatusFilter === '合格'
+      ? sourceFiltered.filter(c => c.status === '合格')
+      : sourceFiltered.filter(c => c.status !== '合格');
+
     el.innerHTML = visibleList.length === 0
       ? (list.length === 0
           ? '<div class="empty"><div class="empty-icon">✅</div><div>還沒有驗收項目，新增第一筆吧</div></div>'
-          : '<div class="empty"><div class="empty-icon">✅</div><div>這個分類目前沒有驗收項目</div></div>')
+          : `<div class="empty"><div class="empty-icon">✅</div><div>${checklistStatusFilter === '合格' ? '這裡還沒有驗收合格的項目' : '都驗收完了，切到「合格」可以看已完成的項目'}</div></div>`)
       : visibleList.map(c => {
           if (c.id === editingChecklistId) {
             return `<div class="checklist-item">
@@ -889,10 +912,10 @@
           ${sourceTag(c)}
           <span class="checklist-item-qty">${qty} ${esc(unit)}</span>
           ${c.amount != null ? `<span class="checklist-item-amount">$${fmtMoney(c.amount)}</span>` : ''}
-          <span class="checklist-status cstatus-${esc(c.status)}">${esc(c.status)}</span>
           <div class="checklist-actions">
-            <button class="pass-btn" onclick="setChecklistStatus('${c.id}','合格')">✅ 合格</button>
-            <button class="fail-btn" onclick="setChecklistStatus('${c.id}','不合格')">❌ 不合格</button>
+            ${c.status === '合格'
+              ? `<button onclick="setChecklistStatus('${c.id}','待驗收')">↩️ 取消合格</button>`
+              : `<button class="pass-btn" onclick="setChecklistStatus('${c.id}','合格')">✅ 標記合格</button>`}
             <button onclick="startEditChecklist('${c.id}')">✏️</button>
             <button onclick="deleteChecklistItem('${c.id}')">🗑</button>
           </div>
