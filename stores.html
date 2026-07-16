@@ -137,9 +137,22 @@
     .checklist-subtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
     .checklist-subtab.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
     .checklist-subtab.active .tab-count { color: rgba(255,255,255,0.85); }
-    .checklist-admin-filter-tabs { display: none; gap: 8px; margin-bottom: 14px; }
-    .checklist-verify-filter-tabs { display: none; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-    .checklist-status-filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+
+    /* 第二層：來源／未分類-已分類 篩選（比主分類矮一階，藍色系呼應 source-tag） */
+    .checklist-admin-filter-tabs { display: none; gap: 6px; margin-bottom: 16px; }
+    .checklist-verify-filter-tabs { display: none; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .source-filter-tab { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--warm-white); font-size: 11px; color: var(--text-mid); cursor: pointer; }
+    .source-filter-tab.active { background: rgba(91,143,212,0.15); color: var(--blue); border-color: var(--blue); font-weight: 600; }
+    .source-filter-tab.active .tab-count { color: var(--blue); }
+
+    /* 第三層：待驗收／合格，巢狀在來源篩選底下，做成無縫切換鈕＋縮排箭頭 */
+    .checklist-status-filter-tabs { display: flex; gap: 0; margin: 0 0 16px 2px; align-items: center; }
+    .checklist-status-filter-tabs::before { content: "↳"; color: var(--text-light); font-size: 13px; margin-right: 8px; }
+    .status-filter-tab { padding: 5px 14px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
+    .status-filter-tab:first-child { border-radius: 20px 0 0 20px; border-right: none; }
+    .status-filter-tab:last-child { border-radius: 0 20px 20px 0; }
+    .status-filter-tab.active { background: var(--brown-mid); color: white; border-color: var(--brown-mid); }
+    .status-filter-tab.active .tab-count { color: rgba(255,255,255,0.85); }
     .admin-toggle-btn { border: 1px solid var(--border); background: var(--warm-white); color: var(--text-mid); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .admin-toggle-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
     .source-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -834,8 +847,8 @@
       const filterTabsEl = document.getElementById('checklist-admin-filter-tabs');
       filterTabsEl.style.display = 'flex';
       filterTabsEl.innerHTML = `
-        <div class="checklist-subtab${checklistAdminFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('未分類')">🕓 未分類<span class="tab-count"> ${unclassified.length}</span></div>
-        <div class="checklist-subtab${checklistAdminFilter === '已分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('已分類')">✅ 已分類（可補救）<span class="tab-count"> ${classified.length}</span></div>
+        <div class="source-filter-tab${checklistAdminFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('未分類')">🕓 未分類<span class="tab-count"> ${unclassified.length}</span></div>
+        <div class="source-filter-tab${checklistAdminFilter === '已分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('已分類')">✅ 已分類（可補救）<span class="tab-count"> ${classified.length}</span></div>
       `;
 
       el.innerHTML = filtered.length === 0
@@ -863,9 +876,9 @@
     } else {
       verifyTabsEl.style.display = 'flex';
       verifyTabsEl.innerHTML = `
-        <div class="checklist-subtab${checklistVerifyFilter === '全部' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('全部')">全部<span class="tab-count"> ${list.length}</span></div>
-        ${usedSources.map(src => `<div class="checklist-subtab${checklistVerifyFilter === src ? ' active' : ''}" onclick="switchChecklistVerifyFilter('${src}')">${esc(src)}<span class="tab-count"> ${list.filter(c => c.source === src).length}</span></div>`).join('')}
-        ${uncategorized > 0 ? `<div class="checklist-subtab${checklistVerifyFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('未分類')">未分類<span class="tab-count"> ${uncategorized}</span></div>` : ''}
+        <div class="source-filter-tab${checklistVerifyFilter === '全部' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('全部')">全部<span class="tab-count"> ${list.length}</span></div>
+        ${usedSources.map(src => `<div class="source-filter-tab${checklistVerifyFilter === src ? ' active' : ''}" onclick="switchChecklistVerifyFilter('${src}')">${esc(src)}<span class="tab-count"> ${list.filter(c => c.source === src).length}</span></div>`).join('')}
+        ${uncategorized > 0 ? `<div class="source-filter-tab${checklistVerifyFilter === '未分類' ? ' active' : ''}" onclick="switchChecklistVerifyFilter('未分類')">未分類<span class="tab-count"> ${uncategorized}</span></div>` : ''}
       `;
     }
     const sourceFiltered = checklistVerifyFilter === '全部'
@@ -878,8 +891,8 @@
     const passedCount = sourceFiltered.filter(c => c.status === '合格').length;
     const statusTabsEl = document.getElementById('checklist-status-filter-tabs');
     statusTabsEl.innerHTML = `
-      <div class="checklist-subtab${checklistStatusFilter === '待驗收' ? ' active' : ''}" onclick="switchChecklistStatusFilter('待驗收')">⏳ 待驗收<span class="tab-count"> ${pendingCount}</span></div>
-      <div class="checklist-subtab${checklistStatusFilter === '合格' ? ' active' : ''}" onclick="switchChecklistStatusFilter('合格')">✅ 合格<span class="tab-count"> ${passedCount}</span></div>
+      <div class="status-filter-tab${checklistStatusFilter === '待驗收' ? ' active' : ''}" onclick="switchChecklistStatusFilter('待驗收')">⏳ 待驗收<span class="tab-count"> ${pendingCount}</span></div>
+      <div class="status-filter-tab${checklistStatusFilter === '合格' ? ' active' : ''}" onclick="switchChecklistStatusFilter('合格')">✅ 合格<span class="tab-count"> ${passedCount}</span></div>
     `;
 
     const visibleList = checklistStatusFilter === '合格'
