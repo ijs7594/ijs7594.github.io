@@ -162,6 +162,14 @@
     .source-tag { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: rgba(91,143,212,0.12); color: var(--blue); white-space: nowrap; text-decoration: none; }
     .checklist-item.admin-row { flex-direction: column; align-items: stretch; }
     .checklist-item.admin-row .admin-row-top { display: flex; align-items: center; gap: 12px; }
+    .checklist-tag-manager { display: none; flex-direction: column; gap: 8px; margin-bottom: 16px; padding: 10px 12px; background: var(--warm-white); border: 1px dashed var(--border); border-radius: 10px; }
+    .tag-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border-radius: 20px; background: rgba(91,143,212,0.12); color: var(--blue); font-size: 11px; font-weight: 600; }
+    .tag-chip button { border: none; background: transparent; color: var(--blue); cursor: pointer; font-size: 11px; line-height: 1; padding: 2px; }
+    .tag-add-row { display: flex; gap: 6px; }
+    .tag-add-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12px; font-family: inherit; outline: none; }
+    .tag-add-row input:focus { border-color: var(--caramel); }
+    .tag-add-row button { border: 1px solid var(--blue); background: var(--blue); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .checklist-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .checklist-form input, .checklist-form select {
       border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
@@ -524,6 +532,7 @@
           <button class="admin-toggle-btn" id="checklist-admin-toggle" onclick="toggleChecklistAdminMode()">🗂 管理員模式：項目分類</button>
         </div>
         <div class="checklist-admin-filter-tabs" id="checklist-admin-filter-tabs"></div>
+        <div class="checklist-tag-manager" id="checklist-tag-manager"></div>
         <div class="checklist-form" id="checklist-add-form">
           <input id="checklist-item-input" class="f-name" placeholder="品名（一次只填一項）" onkeydown="if(event.key==='Enter')addChecklistItem()" />
           <input id="checklist-qty-input"  class="f-qty"  type="number" placeholder="數量" min="1" value="1" onkeydown="if(event.key==='Enter')addChecklistItem()" />
@@ -583,6 +592,7 @@
   let logs = [];
   let vendors = [];
   let checklist = [];
+  let checklistTags = [];
   let financials = [];
   let planSections = [];
   let currentStoreId = null;
@@ -614,9 +624,14 @@
     { key: 'carpentry',      label: '木工完工後' },
     { key: 'flooring',       label: '地板完工後' },
   ];
-  const CHECKLIST_GENERAL_TYPES = ['工作驗收', '區域定位', '文件張貼', '其他'];
+  const CHECKLIST_GENERAL_TYPES = ['工作驗收', '開店前備料', '區域定位', '文件張貼', '文件存檔', '其他'];
   function checklistCategoryOptions() {
-    return currentChecklistCat === '五金驗收' ? CHECKLIST_SOURCES : CHECKLIST_GENERAL_TYPES;
+    const fallback = currentChecklistCat === '五金驗收' ? CHECKLIST_SOURCES : CHECKLIST_GENERAL_TYPES;
+    const dbTags = checklistTags
+      .filter(t => t.category_group === currentChecklistCat)
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(t => t.name);
+    return dbTags.length ? dbTags : fallback;
   }
 
   loadAll();
@@ -635,11 +650,12 @@
 
   async function loadAll() {
     try {
-      [stores, logs, vendors, checklist, financials, planSections] = await Promise.all([
+      [stores, logs, vendors, checklist, checklistTags, financials, planSections] = await Promise.all([
         dbGet('stores', 'order=created_at.desc'),
         dbGet('store_logs', 'order=created_at.desc'),
         dbGet('store_vendors', 'order=planned_in.asc'),
         dbGet('store_checklist', 'order=created_at.asc'),
+        dbGet('checklist_tags', 'order=sort_order.asc'),
         dbGet('store_financials', 'order=created_at.asc'),
         dbGet('store_plan_sections', 'order=sort_order.asc')
       ]);
@@ -647,6 +663,7 @@
       if (!Array.isArray(logs)) logs = [];
       if (!Array.isArray(vendors)) vendors = [];
       if (!Array.isArray(checklist)) checklist = [];
+      if (!Array.isArray(checklistTags)) checklistTags = [];
       if (!Array.isArray(financials)) financials = [];
       if (!Array.isArray(planSections)) planSections = [];
       renderList();
@@ -1225,6 +1242,22 @@
         <div class="source-filter-tab${checklistAdminFilter === '已分類' ? ' active' : ''}" onclick="switchChecklistAdminFilter('已分類')">✅ 已分類（可補救）<span class="tab-count"> ${classified.length}</span></div>
       `;
 
+      const dbTagsForGroup = checklistTags.filter(t => t.category_group === currentChecklistCat);
+      const tagMgrEl = document.getElementById('checklist-tag-manager');
+      tagMgrEl.style.display = 'flex';
+      tagMgrEl.innerHTML = `
+        <div class="tag-chip-row">
+          ${checklistCategoryOptions().map(name => {
+            const tag = dbTagsForGroup.find(t => t.name === name);
+            return `<span class="tag-chip">${esc(name)}${tag ? `<button onclick="deleteChecklistTag('${tag.id}')">✕</button>` : ''}</span>`;
+          }).join('')}
+        </div>
+        <div class="tag-add-row">
+          <input id="new-tag-input" placeholder="新增分類名稱，例如：驗收簽收單" onkeydown="if(event.key==='Enter')addChecklistTag()" />
+          <button onclick="addChecklistTag()">+ 新增分類</button>
+        </div>
+      `;
+
       el.innerHTML = filtered.length === 0
         ? `<div class="empty"><div class="empty-icon">🗂</div><div>${checklistAdminFilter === '未分類' ? '都分類完了，切到「已分類」可以再調整' : '還沒有已分類的項目'}</div></div>`
         : filtered.map(c => `<div class="checklist-item admin-row">
@@ -1240,6 +1273,7 @@
       return;
     }
     document.getElementById('checklist-admin-filter-tabs').style.display = 'none';
+    document.getElementById('checklist-tag-manager').style.display = 'none';
 
     const usedSources = checklistCategoryOptions().filter(src => list.some(c => c.source === src));
     const uncategorized = list.filter(c => !c.source).length;
@@ -1375,6 +1409,40 @@
       await loadAll();
       switchChecklistCat(currentChecklistCat);
     } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function addChecklistTag() {
+    const input = document.getElementById('new-tag-input');
+    const name = input.value.trim();
+    if (!name) return;
+    const existing = checklistTags.filter(t => t.category_group === currentChecklistCat);
+    if (checklistCategoryOptions().includes(name)) { input.value = ''; return; }
+    const maxOrder = existing.reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/checklist_tags`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ category_group: currentChecklistCat, name, sort_order: maxOrder + 1 })
+      });
+      await loadAll();
+      switchChecklistCat(currentChecklistCat);
+    } catch { alert('新增分類失敗，請再試一次'); }
+  }
+
+  async function deleteChecklistTag(tagId) {
+    const tag = checklistTags.find(t => t.id === tagId);
+    if (!tag) return;
+    const inUse = checklist.some(c => c.category === currentChecklistCat && c.source === tag.name);
+    if (inUse) { alert('這個分類還有項目在用，無法刪除'); return; }
+    if (!confirm(`確定要刪除分類「${tag.name}」嗎？`)) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/checklist_tags?id=eq.${tagId}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAll();
+      switchChecklistCat(currentChecklistCat);
+    } catch { alert('刪除失敗，請再試一次'); }
   }
 
   function startEditChecklist(id) {
