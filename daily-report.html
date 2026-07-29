@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>日報表 · 漢柏分身</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --red:         #C0392B;
+      --blue:        #5B8FD4;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Password Gate ── */
+    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .gate-box h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
+    .gate-box p { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+    .gate-box input:focus { border-color: var(--caramel); }
+    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gate-box button:hover { background: var(--brown-mid); }
+    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .month-nav { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .month-nav button { border: 1px solid var(--border); background: white; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+    .month-nav h2 { font-size: 16px; color: var(--text-dark); }
+
+    .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+    .stat-label { font-size: 12px; color: var(--text-light); margin-bottom: 6px; }
+    .stat-value { font-size: 20px; font-weight: 800; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.red { color: var(--red); }
+    .stat-value.brown { color: var(--brown-main); }
+    .stat-value.blue { color: var(--blue); }
+
+    /* ── Entry form ── */
+    .entry-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .entry-card h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+    .field-group { margin-bottom: 16px; }
+    .field-group-label { font-size: 11px; font-weight: 700; color: var(--brown-main); margin-bottom: 8px; }
+    .field-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; color: var(--text-light); }
+    .field input, .field select {
+      border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); width: 140px;
+    }
+    .field input:focus, .field select:focus { border-color: var(--caramel); }
+    .field.wide input { width: 220px; }
+    .field.narrow input { width: 100px; }
+
+    .live-preview { background: var(--cream); border: 1px solid var(--sand); border-radius: 10px; padding: 12px 16px; display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; font-size: 12px; }
+    .live-preview b { font-size: 14px; }
+
+    .exp-rows { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+    .exp-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .exp-row .f-desc { flex: 1; min-width: 140px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .exp-row .f-amt { width: 110px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .exp-row .f-ship { width: 110px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .exp-row button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+    .add-exp-row-btn { background: none; border: 1px dashed var(--sand); color: var(--brown-main); border-radius: 8px; padding: 8px 14px; font-size: 12px; cursor: pointer; }
+    .submit-btn { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 14px; }
+    .submit-btn:hover { background: var(--brown-mid); }
+    .submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* ── History table ── */
+    .history-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .history-card h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+    .day-row { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+    .day-row-top { display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; flex-wrap: wrap; }
+    .day-row-top:hover { background: var(--warm-white); }
+    .day-date { font-size: 13px; font-weight: 700; color: var(--text-dark); width: 90px; }
+    .day-figure { font-size: 12px; color: var(--text-mid); }
+    .day-figure b { font-size: 13px; }
+    .day-net { margin-left: auto; font-weight: 700; font-size: 13px; }
+    .day-detail { display: none; padding: 0 16px 14px; border-top: 1px solid var(--border); }
+    .day-detail.open { display: block; }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 12px 0; font-size: 12px; }
+    .detail-grid div span { display: block; color: var(--text-light); font-size: 11px; }
+    .detail-grid div b { color: var(--text-dark); }
+    .exp-detail-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 12px; color: var(--text-mid); border-top: 1px dashed var(--border); }
+    .exp-detail-amt { margin-left: auto; font-weight: 700; }
+    .row-actions { display: flex; gap: 6px; }
+    .row-actions button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+    .empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      justify-content: space-around; align-items: center;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2>🔒 日報表</h2>
+    <p>輸入密碼查看營收與支出資料</p>
+    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
+    <button onclick="checkPw()">進入</button>
+    <div class="gate-error" id="pw-error"></div>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div class="brand-text">
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿共好系統</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item active" href="daily-report.html">
+      <span class="nav-icon">📆</span>
+      <div><div class="nav-text">日報表</div><div class="nav-sub">營收／支出</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📆</span>
+    <div>
+      <div class="topbar-title">日報表</div>
+      <div class="topbar-sub">每天登載營收與支出，之後自動疊成內帳與損益表</div>
+    </div>
+    <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
+  </div>
+
+  <div class="content">
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">◀</button>
+      <h2 id="month-label"></h2>
+      <button onclick="changeMonth(1)">▶</button>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-label">本月整日營收總額</div>
+        <div class="stat-value green" id="stat-revenue">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本月支出</div>
+        <div class="stat-value red" id="stat-expense">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本月淨利</div>
+        <div class="stat-value brown" id="stat-net">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">平均人效值</div>
+        <div class="stat-value blue" id="stat-efficiency">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">已登載天數</div>
+        <div class="stat-value" id="stat-days">—</div>
+      </div>
+    </div>
+
+    <div class="entry-card">
+      <h3>✍️ 新增／更新今日日報表</h3>
+
+      <div class="field-group">
+        <div class="field-row">
+          <div class="field"><label>日期</label><input type="date" id="f-date" onchange="loadExistingDay()" /></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-group-label">早班 / 晚班</div>
+        <div class="field-row">
+          <div class="field"><label>早班客數</label><input type="number" id="f-morning-customers" oninput="updatePreview()" /></div>
+          <div class="field"><label>早班營收</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
+          <div class="field"><label>晚班客數</label><input type="number" id="f-evening-customers" oninput="updatePreview()" /></div>
+          <div class="field"><label>晚班營收</label><input type="number" id="f-evening-revenue" oninput="updatePreview()" /></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-group-label">其他營收管道</div>
+        <div class="field-row">
+          <div class="field"><label>line pay</label><input type="number" id="f-line-pay" oninput="updatePreview()" /></div>
+          <div class="field"><label>UBER金額</label><input type="number" id="f-uber" oninput="updatePreview()" /></div>
+          <div class="field"><label>熊貓金額</label><input type="number" id="f-foodpanda" oninput="updatePreview()" /></div>
+          <div class="field"><label>當日未收款</label><input type="number" id="f-uncollected" oninput="updatePreview()" /></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-group-label">現金與其他</div>
+        <div class="field-row">
+          <div class="field"><label>實存現金</label><input type="number" id="f-cash-counted" oninput="updatePreview()" /></div>
+          <div class="field"><label>未存（零錢）</label><input type="number" id="f-cash-undeposited" /></div>
+          <div class="field"><label>整日鍋數</label><input type="number" step="0.01" id="f-pot-count" /></div>
+          <div class="field"><label>時數</label><input type="number" step="0.01" id="f-labor-hours" oninput="updatePreview()" /></div>
+        </div>
+      </div>
+
+      <div class="live-preview" id="live-preview"></div>
+
+      <div class="field-group-label">雜項支出（品項／金額／運費，可新增多筆）</div>
+      <div class="exp-rows" id="exp-rows"></div>
+      <button class="add-exp-row-btn" onclick="addExpRow()">+ 新增一筆支出</button>
+      <br />
+      <button class="submit-btn" id="submit-btn" onclick="submitDailyReport()">送出今日日報表</button>
+    </div>
+
+    <div class="history-card">
+      <h3>📋 歷史紀錄</h3>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
+  <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+  <a class="mobile-nav-item active" href="daily-report.html"><span class="mn-icon">📆</span><span>日報表</span></a>
+</nav>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const PASSWORD = '1688';
+
+  function checkPw() {
+    const val = document.getElementById('pw-input').value;
+    if (val === PASSWORD) {
+      sessionStorage.setItem('finance_auth', '1');
+      document.getElementById('gate').style.display = 'none';
+      init();
+    } else {
+      document.getElementById('pw-error').textContent = '密碼錯誤';
+    }
+  }
+  if (sessionStorage.getItem('finance_auth') === '1') {
+    document.getElementById('gate').style.display = 'none';
+  }
+
+  let stores = [];
+  let reportRows = [];
+  let expenseRows = [];
+  let currentStoreId = null;
+  let currentMonth = new Date();
+  let expRowCount = 0;
+  let openDayKey = null;
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function num(id) {
+    const v = document.getElementById(id).value;
+    return v === '' ? null : Number(v);
+  }
+  function fmt(n) {
+    return n == null ? '—' : `$${Math.round(n).toLocaleString()}`;
+  }
+
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function init() {
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    addExpRow();
+    updatePreview();
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    currentStoreId = stores[0]?.id || null;
+    await loadAndRender();
+  }
+  if (sessionStorage.getItem('finance_auth') === '1') init();
+
+  function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    loadAndRender();
+  }
+
+  function changeMonth(delta) {
+    currentMonth.setMonth(currentMonth.getMonth() + delta);
+    loadAndRender();
+  }
+
+  // ── 公式：現場營收合計 / 整日營收總額 / 人效值 ──
+  function calcOnsite(r) {
+    return (Number(r.morning_revenue) || 0) + (Number(r.evening_revenue) || 0) + (Number(r.line_pay) || 0);
+  }
+  function calcTotal(r) {
+    return calcOnsite(r) + (Number(r.uber_amount) || 0) + (Number(r.foodpanda_amount) || 0) + (Number(r.uncollected) || 0);
+  }
+  function calcEfficiency(r) {
+    const hours = Number(r.labor_hours);
+    if (!hours) return null;
+    return calcTotal(r) / hours;
+  }
+
+  function updatePreview() {
+    const draft = {
+      morning_revenue: document.getElementById('f-morning-revenue').value,
+      evening_revenue: document.getElementById('f-evening-revenue').value,
+      line_pay: document.getElementById('f-line-pay').value,
+      uber_amount: document.getElementById('f-uber').value,
+      foodpanda_amount: document.getElementById('f-foodpanda').value,
+      uncollected: document.getElementById('f-uncollected').value,
+      labor_hours: document.getElementById('f-labor-hours').value
+    };
+    const dailyCustomers = (Number(document.getElementById('f-morning-customers').value) || 0) + (Number(document.getElementById('f-evening-customers').value) || 0);
+    const onsite = calcOnsite(draft);
+    const total = calcTotal(draft);
+    const eff = calcEfficiency(draft);
+    const cashCounted = document.getElementById('f-cash-counted').value;
+    const cashDiff = cashCounted !== '' ? Number(cashCounted) - ((Number(draft.morning_revenue)||0) + (Number(draft.evening_revenue)||0)) : null;
+
+    document.getElementById('live-preview').innerHTML = `
+      <div>日客數 <b>${dailyCustomers}</b></div>
+      <div>現場營收合計 <b>${fmt(onsite)}</b></div>
+      <div>整日營收總額 <b style="color:var(--green)">${fmt(total)}</b></div>
+      <div>人效值 <b style="color:var(--blue)">${eff != null ? eff.toFixed(1) : '—'}</b></div>
+      ${cashDiff != null ? `<div>現金短溢 <b style="color:${Math.abs(cashDiff) > 50 ? 'var(--red)' : 'var(--text-mid)'}">${cashDiff >= 0 ? '+' : ''}${Math.round(cashDiff)}</b></div>` : ''}
+    `;
+  }
+
+  // ── 若當天已經填過，載入既有資料以便修改 ──
+  function loadExistingDay() {
+    const date = document.getElementById('f-date').value;
+    const existing = reportRows.find(r => r.date === date);
+    const fields = ['morning_customers','morning_revenue','evening_customers','evening_revenue','line_pay','uncollected','pot_count','cash_counted','cash_undeposited','uber_amount','foodpanda_amount','labor_hours'];
+    fields.forEach(f => {
+      document.getElementById(`f-${f.replace(/_/g, '-')}`).value = existing ? (existing[f] ?? '') : '';
+    });
+    updatePreview();
+  }
+
+  async function loadAndRender() {
+    if (!currentStoreId) return;
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth();
+    const start = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+    const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
+    document.getElementById('month-label').textContent = `${y} 年 ${m + 1} 月`;
+
+    [reportRows, expenseRows] = await Promise.all([
+      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`),
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`)
+    ]);
+    if (!Array.isArray(reportRows)) reportRows = [];
+    if (!Array.isArray(expenseRows)) expenseRows = [];
+    renderStats();
+    renderHistory();
+  }
+
+  function renderStats() {
+    const totalRev = reportRows.reduce((s, r) => s + calcTotal(r), 0);
+    const totalExp = expenseRows.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+    const effs = reportRows.map(calcEfficiency).filter(e => e != null);
+    const avgEff = effs.length ? effs.reduce((a, b) => a + b, 0) / effs.length : null;
+    document.getElementById('stat-revenue').textContent = fmt(totalRev);
+    document.getElementById('stat-expense').textContent = fmt(totalExp);
+    document.getElementById('stat-net').textContent = fmt(totalRev - totalExp);
+    document.getElementById('stat-efficiency').textContent = avgEff != null ? avgEff.toFixed(1) : '—';
+    document.getElementById('stat-days').textContent = `${reportRows.length} 天`;
+  }
+
+  // ── 支出列表輸入（可新增多筆）──
+  function addExpRow() {
+    const id = ++expRowCount;
+    const el = document.getElementById('exp-rows');
+    const row = document.createElement('div');
+    row.className = 'exp-row';
+    row.id = `exprow-${id}`;
+    row.innerHTML = `
+      <input class="f-desc" placeholder="品項" />
+      <input class="f-amt" type="number" placeholder="支出金額" />
+      <input class="f-ship" type="number" placeholder="運費支出" />
+      <button onclick="document.getElementById('exprow-${id}').remove()">✕</button>
+    `;
+    el.appendChild(row);
+  }
+
+  // ── 送出今日日報表（同一天同一店會覆蓋更新）──
+  async function submitDailyReport() {
+    if (!currentStoreId) return;
+    const date = document.getElementById('f-date').value;
+    if (!date) { alert('請選擇日期'); return; }
+
+    const report = {
+      store_id: currentStoreId,
+      date,
+      morning_customers: num('f-morning-customers'),
+      morning_revenue: num('f-morning-revenue'),
+      evening_customers: num('f-evening-customers'),
+      evening_revenue: num('f-evening-revenue'),
+      line_pay: num('f-line-pay'),
+      uncollected: num('f-uncollected'),
+      pot_count: num('f-pot-count'),
+      cash_counted: num('f-cash-counted'),
+      cash_undeposited: num('f-cash-undeposited'),
+      uber_amount: num('f-uber'),
+      foodpanda_amount: num('f-foodpanda'),
+      labor_hours: num('f-labor-hours')
+    };
+
+    const expInputs = Array.from(document.querySelectorAll('#exp-rows .exp-row')).map(row => ({
+      description: row.querySelector('.f-desc').value.trim(),
+      amount: row.querySelector('.f-amt').value,
+      shipping_amount: row.querySelector('.f-ship').value
+    })).filter(e => e.amount && Number(e.amount) > 0);
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '送出中…';
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_daily_report?on_conflict=store_id,date`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(report)
+      });
+      if (expInputs.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/store_daily_expenses`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify(expInputs.map(e => ({ store_id: currentStoreId, date, description: e.description || null, amount: Number(e.amount), shipping_amount: e.shipping_amount ? Number(e.shipping_amount) : null })))
+        });
+      }
+      document.getElementById('exp-rows').innerHTML = '';
+      expRowCount = 0;
+      addExpRow();
+      await loadAndRender();
+      alert('日報表已送出');
+    } catch {
+      alert('送出失敗，請再試一次');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '送出今日日報表';
+    }
+  }
+
+  // ── 歷史紀錄（按日期分組）──
+  function renderHistory() {
+    const el = document.getElementById('history-list');
+    if (reportRows.length === 0 && expenseRows.length === 0) {
+      el.innerHTML = '<div class="empty">這個月還沒有日報表紀錄</div>';
+      return;
+    }
+    const dates = [...new Set([...reportRows.map(r => r.date), ...expenseRows.map(e => e.date)])].sort((a, b) => b.localeCompare(a));
+    el.innerHTML = dates.map(date => {
+      const r = reportRows.find(x => x.date === date);
+      const exps = expenseRows.filter(e => e.date === date);
+      const total = r ? calcTotal(r) : 0;
+      const expTotal = exps.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+      const net = total - expTotal;
+      const isOpen = openDayKey === date;
+      return `<div class="day-row">
+        <div class="day-row-top" onclick="toggleDay('${date}')">
+          <span class="day-date">${date}</span>
+          <span class="day-figure">整日營收總額 <b style="color:var(--green)">${fmt(total)}</b></span>
+          <span class="day-figure">支出 <b style="color:var(--red)">${fmt(expTotal)}</b></span>
+          <span class="day-net" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">淨 ${fmt(net)}</span>
+        </div>
+        <div class="day-detail ${isOpen ? 'open' : ''}">
+          ${r ? `<div class="detail-grid">
+            <div><span>早班客數／營收</span><b>${r.morning_customers ?? '—'} / ${fmt(r.morning_revenue)}</b></div>
+            <div><span>晚班客數／營收</span><b>${r.evening_customers ?? '—'} / ${fmt(r.evening_revenue)}</b></div>
+            <div><span>line pay</span><b>${fmt(r.line_pay)}</b></div>
+            <div><span>UBER／熊貓</span><b>${fmt(r.uber_amount)} / ${fmt(r.foodpanda_amount)}</b></div>
+            <div><span>當日未收款</span><b>${fmt(r.uncollected)}</b></div>
+            <div><span>現場營收合計</span><b>${fmt(calcOnsite(r))}</b></div>
+            <div><span>實存現金</span><b>${fmt(r.cash_counted)}</b></div>
+            <div><span>未存（零錢）</span><b>${fmt(r.cash_undeposited)}</b></div>
+            <div><span>整日鍋數</span><b>${r.pot_count ?? '—'}</b></div>
+            <div><span>時數／人效值</span><b>${r.labor_hours ?? '—'} / ${calcEfficiency(r) != null ? calcEfficiency(r).toFixed(1) : '—'}</b></div>
+            <div><div class="row-actions"><button onclick="editDay('${date}')">✏️ 修改</button><button onclick="deleteReport('${r.id}')">🗑 刪除本日</button></div></div>
+          </div>` : ''}
+          ${exps.map(e => `<div class="exp-detail-row">
+            <span>${esc(e.description || '雜項支出')}</span>
+            <span class="exp-detail-amt">${fmt(Number(e.amount || 0) + Number(e.shipping_amount || 0))}${e.shipping_amount ? `（含運費 $${e.shipping_amount}）` : ''}</span>
+            <div class="row-actions"><button onclick="deleteExpense('${e.id}')">🗑</button></div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function toggleDay(date) {
+    openDayKey = openDayKey === date ? null : date;
+    renderHistory();
+  }
+
+  function editDay(date) {
+    document.getElementById('f-date').value = date;
+    loadExistingDay();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function deleteReport(id) {
+    if (!confirm('確定要刪除這一天的日報表嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_daily_report?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAndRender();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  async function deleteExpense(id) {
+    if (!confirm('確定要刪除這筆支出嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_daily_expenses?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAndRender();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+</script>
+</body>
+</html>
