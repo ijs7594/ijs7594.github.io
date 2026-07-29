@@ -242,6 +242,10 @@
         <div class="stat-value blue" id="stat-efficiency">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">平均每鍋營收</div>
+        <div class="stat-value brown" id="stat-per-pot">—</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">已登載天數</div>
         <div class="stat-value" id="stat-days">—</div>
       </div>
@@ -390,6 +394,11 @@
     if (!hours) return null;
     return calcTotal(r) / hours;
   }
+  function calcPerPot(r) {
+    const pots = Number(r.pot_count);
+    if (!pots) return null;
+    return calcTotal(r) / pots;
+  }
 
   function updatePreview() {
     const draft = {
@@ -401,20 +410,43 @@
       uncollected: document.getElementById('f-uncollected').value,
       labor_hours: document.getElementById('f-labor-hours').value
     };
+    draft.pot_count = document.getElementById('f-pot-count').value;
     const dailyCustomers = (Number(document.getElementById('f-morning-customers').value) || 0) + (Number(document.getElementById('f-evening-customers').value) || 0);
     const onsite = calcOnsite(draft);
     const total = calcTotal(draft);
     const eff = calcEfficiency(draft);
+    const perPot = calcPerPot(draft);
     const cashCounted = document.getElementById('f-cash-counted').value;
     const cashDiff = cashCounted !== '' ? Number(cashCounted) - ((Number(draft.morning_revenue)||0) + (Number(draft.evening_revenue)||0)) : null;
+    const perPotFlag = perPot != null ? perPotAnomalyColor(perPot) : 'var(--brown-main)';
 
     document.getElementById('live-preview').innerHTML = `
       <div>日客數 <b>${dailyCustomers}</b></div>
       <div>現場營收合計 <b>${fmt(onsite)}</b></div>
       <div>整日營收總額 <b style="color:var(--green)">${fmt(total)}</b></div>
       <div>人效值 <b style="color:var(--blue)">${eff != null ? eff.toFixed(1) : '—'}</b></div>
+      <div>每鍋平均營收 <b style="color:${perPotFlag}">${perPot != null ? Math.round(perPot).toLocaleString() : '—'}</b>${perPot != null ? perPotHint(perPot) : ''}</div>
       ${cashDiff != null ? `<div>現金短溢 <b style="color:${Math.abs(cashDiff) > 50 ? 'var(--red)' : 'var(--text-mid)'}">${cashDiff >= 0 ? '+' : ''}${Math.round(cashDiff)}</b></div>` : ''}
     `;
+  }
+
+  // ── 每鍋平均營收異常判斷（跟這間店本月平均比，偏離超過 15% 視為異常）──
+  function monthAvgPerPot() {
+    const vals = reportRows.map(calcPerPot).filter(v => v != null);
+    if (vals.length === 0) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+  function perPotAnomalyColor(perPot) {
+    const avg = monthAvgPerPot();
+    if (avg == null) return 'var(--brown-main)';
+    return Math.abs(perPot - avg) / avg > 0.15 ? 'var(--red)' : 'var(--brown-main)';
+  }
+  function perPotHint(perPot) {
+    const avg = monthAvgPerPot();
+    if (avg == null) return '';
+    const diffPct = Math.round((perPot - avg) / avg * 100);
+    if (Math.abs(diffPct) <= 15) return '';
+    return ` <span style="font-size:11px;color:var(--red)">⚠️ 比本月平均${diffPct > 0 ? '高' : '低'} ${Math.abs(diffPct)}%</span>`;
   }
 
   // ── 若當天已經填過，載入既有資料以便修改 ──
@@ -451,10 +483,12 @@
     const totalExp = expenseRows.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
     const effs = reportRows.map(calcEfficiency).filter(e => e != null);
     const avgEff = effs.length ? effs.reduce((a, b) => a + b, 0) / effs.length : null;
+    const avgPerPot = monthAvgPerPot();
     document.getElementById('stat-revenue').textContent = fmt(totalRev);
     document.getElementById('stat-expense').textContent = fmt(totalExp);
     document.getElementById('stat-net').textContent = fmt(totalRev - totalExp);
     document.getElementById('stat-efficiency').textContent = avgEff != null ? avgEff.toFixed(1) : '—';
+    document.getElementById('stat-per-pot').textContent = avgPerPot != null ? Math.round(avgPerPot).toLocaleString() : '—';
     document.getElementById('stat-days').textContent = `${reportRows.length} 天`;
   }
 
@@ -547,12 +581,14 @@
       const total = r ? calcTotal(r) : 0;
       const expTotal = exps.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
       const net = total - expTotal;
+      const perPot = r ? calcPerPot(r) : null;
       const isOpen = openDayKey === date;
       return `<div class="day-row">
         <div class="day-row-top" onclick="toggleDay('${date}')">
           <span class="day-date">${date}</span>
           <span class="day-figure">整日營收總額 <b style="color:var(--green)">${fmt(total)}</b></span>
           <span class="day-figure">支出 <b style="color:var(--red)">${fmt(expTotal)}</b></span>
+          ${perPot != null ? `<span class="day-figure">每鍋 <b style="color:${perPotAnomalyColor(perPot)}">${Math.round(perPot).toLocaleString()}</b>${perPotHint(perPot)}</span>` : ''}
           <span class="day-net" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">淨 ${fmt(net)}</span>
         </div>
         <div class="day-detail ${isOpen ? 'open' : ''}">
@@ -565,7 +601,7 @@
             <div><span>現場營收合計</span><b>${fmt(calcOnsite(r))}</b></div>
             <div><span>實存現金</span><b>${fmt(r.cash_counted)}</b></div>
             <div><span>未存（零錢）</span><b>${fmt(r.cash_undeposited)}</b></div>
-            <div><span>整日鍋數</span><b>${r.pot_count ?? '—'}</b></div>
+            <div><span>整日鍋數／每鍋平均</span><b>${r.pot_count ?? '—'} / ${calcPerPot(r) != null ? Math.round(calcPerPot(r)).toLocaleString() : '—'}</b></div>
             <div><span>時數／人效值</span><b>${r.labor_hours ?? '—'} / ${calcEfficiency(r) != null ? calcEfficiency(r).toFixed(1) : '—'}</b></div>
             <div><div class="row-actions"><button onclick="editDay('${date}')">✏️ 修改</button><button onclick="deleteReport('${r.id}')">🗑 刪除本日</button></div></div>
           </div>` : ''}
