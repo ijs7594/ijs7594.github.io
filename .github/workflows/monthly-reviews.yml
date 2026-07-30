@@ -1,0 +1,22 @@
+name: 每月評論月報
+
+on:
+  schedule:
+    - cron: "13 1 1 * *"   # 每月 1 號 01:13 UTC = 台灣時間早上 09:13
+  workflow_dispatch: {}     # 也可以在 GitHub 網頁手動點一次來測試
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 撈評論並寄信
+        env:
+          GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          REPORT_TO_EMAIL: ${{ secrets.REPORT_TO_EMAIL }}
+        run: python scripts/monthly_reviews.py
