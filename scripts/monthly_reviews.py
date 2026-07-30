@@ -115,6 +115,7 @@ def collect_store_data():
             "count": count,
             "delta_rating": delta_rating,
             "delta_count": delta_count,
+            "_has_history": last is not None,
             "reviews": [
                 {
                     "rating": rv.get("rating"),
@@ -128,24 +129,30 @@ def collect_store_data():
 
 
 def build_prompt(collected):
-    lines = ["以下是貴焿古早味麵線羹本月各分店的 Google 評論資料，請幫忙寫月報。\n"]
+    lines = ["以下是今年貴焿古早味麵線羹本月各分店的 Google 評論資料，請幫忙寫月報。\n"]
     for c in collected:
         name = c["store"]["name"]
         if c.get("error"):
             lines.append(f"【{name}】{c['error']}\n")
             continue
+        no_new_reviews = c["delta_count"] == 0 and c["_has_history"]
         delta_r = f"{c['delta_rating']:+}" if c["delta_rating"] is not None else "無上月資料"
         delta_c = f"{c['delta_count']:+}" if c["delta_count"] is not None else ""
         lines.append(f"【{name}】目前 {c['rating']} 分（{delta_r}），共 {c['count']} 則（{delta_c}）")
+        if no_new_reviews:
+            lines.append("  本月則數沒有增加，代表這個月沒有新評論，不要引用下面列的舊評論內容當作本月回饋依據。")
         for rv in c["reviews"]:
             lines.append(f"  - [{rv['rating']}星 {rv['time']}] {rv['text'][:200]}")
         lines.append("")
     lines.append(
         "請用繁體中文輸出兩個部分，用 <manager> 跟 <exec> 這兩個 XML 標籤包起來：\n"
         "1. <manager> 標籤內：每家店各一句話，給該店店長看的具體本月回饋，"
-        "根據評論內容指出這個月最該讚美或最該改善的一件事，語氣直接不要客套。\n"
+        "根據評論內容指出這個月最該讚美或最該改善的一件事，語氣直接不要客套。"
+        "如果該店本月沒有新評論（我有特別註明的），這句話就只講「本月無新評論」，"
+        "不要翻舊帳去引用之前的評論內容或問題，除非我有另外要求做舊帳回顧。\n"
         "2. <exec> 標籤內：給執行長跟督導看的整體趨勢摘要（3-5 句），"
-        "點出哪幾家分數在退步、哪幾家在進步、有沒有共通的問題模式（例如好幾家都出現的同一種抱怨）。\n"
+        "只根據本月真的有新增的評論來判斷退步/進步和共通問題模式，"
+        "沒有新評論的店不用列入這段討論。\n"
         "不要輸出任何其他文字。"
     )
     return "\n".join(lines)
@@ -195,7 +202,7 @@ def build_email_html(collected, ai_text):
 
     return f"""
     <div style="font-family:-apple-system,sans-serif;max-width:640px;margin:0 auto;color:#3a2a1c;">
-      <h2 style="color:#7a3b1e;">貴焿 {date.today().strftime('%Y年%m月')} 評論月報</h2>
+      <h2 style="color:#7a3b1e;">今年貴焿 {date.today().strftime('%Y年%m月')} 評論月報</h2>
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
         <tr style="background:#f4e9dc;text-align:left;">
           <th style="padding:6px;">店</th><th style="padding:6px;">評分</th>
@@ -213,9 +220,9 @@ def build_email_html(collected, ai_text):
 
 def send_email(html):
     body = {
-        "from": "貴焿月報 <onboarding@resend.dev>",
+        "from": "今年貴焿月報 <onboarding@resend.dev>",
         "to": [REPORT_TO],
-        "subject": f"貴焿 {date.today().strftime('%Y年%m月')} 評論月報",
+        "subject": f"今年貴焿 {date.today().strftime('%Y年%m月')} 評論月報",
         "html": html,
     }
     http_json(
