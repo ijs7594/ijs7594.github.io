@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>展店紀錄 · 漢柏分身</title>
+  <title>展店紀錄 · 今年貴焿助理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -344,7 +344,7 @@
   <div class="sidebar-brand">
     <div class="avatar-sq">🌱</div>
     <div class="brand-text">
-      <div class="brand-name">漢柏分身</div>
+      <div class="brand-name">今年貴焿助理</div>
       <div class="brand-sub">貴焿共好系統</div>
     </div>
   </div>
@@ -574,7 +574,7 @@
     <label>地址</label>
     <input id="new-store-addr" placeholder="選填" />
     <label>狀態</label>
-    <select id="new-store-status">
+    <select id="new-store-status" onchange="onNewStoreStatusChange()">
       <option>籌備中</option><option>營運中</option><option>已結束</option>
     </select>
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:10px;">
@@ -818,6 +818,14 @@
       </div>
       <div class="detail-addr">${esc(s.address) || '未填地址'}${s.opened_date ? ` · 開幕 ${esc(s.opened_date)}` : ''}</div>
       <div class="milestone-section" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-mid);">
+        <label style="display:flex;align-items:center;gap:6px;">
+          營運狀態
+          <select onchange="toggleStoreSetting('status', this.value)" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;">
+            <option ${s.status === '籌備中' ? 'selected' : ''}>籌備中</option>
+            <option ${s.status === '營運中' ? 'selected' : ''}>營運中</option>
+            <option ${s.status === '已結束' ? 'selected' : ''}>已結束</option>
+          </select>
+        </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
           <input type="checkbox" ${s.is_legacy_store ? 'checked' : ''} onchange="toggleStoreSetting('is_legacy_store', this.checked)" /> 既有店家（暫不追蹤工程紀錄）
         </label>
@@ -1578,11 +1586,16 @@
   }
 
   // ── Add store ──
+  function onNewStoreStatusChange() {
+    const status = document.getElementById('new-store-status').value;
+    document.getElementById('new-store-legacy').checked = (status === '營運中');
+  }
   function openAddStoreModal() { document.getElementById('add-store-modal').classList.add('open'); }
   function closeAddStoreModal() {
     document.getElementById('add-store-modal').classList.remove('open');
     document.getElementById('new-store-name').value = '';
     document.getElementById('new-store-addr').value = '';
+    document.getElementById('new-store-status').value = '籌備中';
     document.getElementById('new-store-legacy').checked = false;
     document.getElementById('new-store-shift-split').checked = true;
   }
