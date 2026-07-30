@@ -20,7 +20,9 @@ REPORT_TO = os.environ.get("REPORT_TO_EMAIL") or "ijs7594@gmail.com"
 
 def http_json(url, method="GET", headers=None, body=None):
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, headers=headers or {}, method=method)
+    all_headers = {"User-Agent": "Mozilla/5.0 (compatible; guijiao-monthly-report/1.0)"}
+    all_headers.update(headers or {})
+    req = urllib.request.Request(url, data=data, headers=all_headers, method=method)
     try:
         with urllib.request.urlopen(req) as r:
             raw = r.read()
