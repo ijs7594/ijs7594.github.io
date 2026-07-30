@@ -15,7 +15,6 @@
       --sand:         #D4A574;
       --cream:        #F5EDE0;
       --warm-white:   #FAF7F2;
-      --card-bg:      #FFFFFF;
       --text-dark:    #2C1A0E;
       --text-mid:     #6B4C35;
       --text-light:   #9E7B60;
@@ -72,10 +71,9 @@
 
     /* ── Hero ── */
     .chronicle-hero {
-      padding: 60px 48px 48px;
+      padding: 56px 48px 44px;
       border-bottom: 1px solid rgba(201,136,58,0.2);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
     .chronicle-hero::before {
       content: '';
@@ -85,109 +83,122 @@
     }
     .hero-eyebrow {
       font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
-      color: var(--amber); text-transform: uppercase; margin-bottom: 16px;
+      color: var(--amber); text-transform: uppercase; margin-bottom: 14px;
     }
     .hero-brand {
-      font-size: 32px; font-weight: 800; color: var(--cream);
+      font-size: 30px; font-weight: 800; color: var(--cream);
       letter-spacing: 0.04em; line-height: 1.2; margin-bottom: 6px;
     }
     .hero-sub {
-      font-size: 14px; color: rgba(212,165,116,0.7); font-weight: 500;
-      letter-spacing: 0.12em; margin-bottom: 32px;
+      font-size: 13px; color: rgba(212,165,116,0.6); font-weight: 500;
+      letter-spacing: 0.12em; margin-bottom: 28px;
     }
     .hero-motto {
       display: inline-flex; align-items: center; gap: 12px;
-      font-size: 13px; color: rgba(245,237,224,0.5);
+      font-size: 12px; color: rgba(245,237,224,0.4);
       font-style: italic; letter-spacing: 0.06em;
     }
-    .hero-motto::before { content: ''; display: block; width: 28px; height: 1px; background: var(--amber-dim); }
+    .hero-motto::before { content: ''; display: block; width: 24px; height: 1px; background: var(--amber-dim); }
 
-    /* ── Timeline ── */
-    .timeline-wrap { padding: 0 48px 80px; }
-
-    .timeline-year-block { margin-top: 56px; }
+    /* ── Timeline wrap ── */
+    .timeline-wrap { padding: 40px 48px 80px; }
 
     .year-heading {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
-      color: var(--amber); text-transform: uppercase; margin-bottom: 32px;
-      display: flex; align-items: center; gap: 16px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.22em;
+      color: var(--amber); text-transform: uppercase; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 14px;
     }
     .year-heading::after { content: ''; flex: 1; height: 1px; background: rgba(201,136,58,0.2); }
 
-    .month-block { margin-bottom: 40px; }
-
-    .month-heading {
-      font-size: 20px; font-weight: 700; color: var(--cream);
-      margin-bottom: 24px; padding-left: 28px;
-      position: relative; letter-spacing: 0.06em;
+    /* ── Accordion ── */
+    .month-accordion {
+      border: 1px solid rgba(201,136,58,0.12);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
     }
-    .month-heading::before {
-      content: '';
-      position: absolute; left: 0; top: 50%;
-      transform: translateY(-50%);
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--amber);
-      box-shadow: 0 0 0 3px rgba(201,136,58,0.2);
-    }
+    .month-accordion.open { border-color: rgba(201,136,58,0.3); }
 
-    .entries { display: flex; flex-direction: column; gap: 0; padding-left: 28px; border-left: 1px solid var(--amber-dim); }
+    .month-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 22px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.02);
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .month-toggle:hover { background: rgba(255,255,255,0.04); }
+    .month-accordion.open .month-toggle { background: rgba(201,136,58,0.06); }
+
+    .month-toggle-left { display: flex; align-items: center; gap: 14px; }
+    .month-diamond { color: var(--amber); font-size: 9px; }
+    .month-name { font-size: 16px; font-weight: 700; color: var(--cream); letter-spacing: 0.06em; }
+    .month-count { font-size: 11px; color: rgba(212,165,116,0.5); }
+    .month-arrow {
+      font-size: 11px; color: var(--amber);
+      transition: transform 0.25s ease;
+    }
+    .month-accordion.open .month-arrow { transform: rotate(180deg); }
+
+    /* Entries (collapsible) */
+    .month-entries {
+      display: none;
+      border-top: 1px solid rgba(201,136,58,0.1);
+    }
+    .month-accordion.open .month-entries { display: block; }
 
     .entry {
-      padding: 20px 0 20px 28px;
+      padding: 18px 22px 18px 44px;
       position: relative;
       border-bottom: 1px solid rgba(255,255,255,0.04);
     }
     .entry:last-child { border-bottom: none; }
     .entry::before {
       content: '◆';
-      position: absolute; left: -9px;
-      font-size: 10px; color: var(--amber);
-      background: var(--brown-dark);
-      padding: 2px 0;
-      line-height: 1;
-      top: 22px;
+      position: absolute; left: 22px; top: 20px;
+      font-size: 9px; color: rgba(201,136,58,0.5);
     }
-
     .entry-title {
-      font-size: 15px; font-weight: 700; color: var(--cream);
-      margin-bottom: 6px; letter-spacing: 0.03em;
+      font-size: 14px; font-weight: 700; color: var(--cream);
+      margin-bottom: 5px; letter-spacing: 0.02em;
     }
     .entry-desc {
-      font-size: 13px; color: rgba(212,165,116,0.75);
-      line-height: 1.7; max-width: 560px;
+      font-size: 12px; color: rgba(212,165,116,0.7);
+      line-height: 1.75; max-width: 540px;
     }
     .entry-tag {
-      display: inline-block; margin-top: 10px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-      color: rgba(201,136,58,0.8); border: 1px solid rgba(201,136,58,0.3);
+      display: inline-block; margin-top: 9px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+      color: rgba(201,136,58,0.75); border: 1px solid rgba(201,136,58,0.25);
       border-radius: 20px; padding: 2px 10px; text-transform: uppercase;
     }
 
-    /* Foundation block */
+    /* Foundation */
     .foundation-block {
-      margin-top: 56px; padding: 32px;
-      border: 1px solid rgba(201,136,58,0.15);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.02);
+      margin-top: 40px; padding: 28px;
+      border: 1px solid rgba(201,136,58,0.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.015);
     }
     .foundation-label {
       font-size: 10px; letter-spacing: 0.18em; color: var(--amber);
-      text-transform: uppercase; font-weight: 700; margin-bottom: 20px;
+      text-transform: uppercase; font-weight: 700; margin-bottom: 18px;
     }
     .foundation-items { display: flex; flex-direction: column; gap: 14px; }
     .foundation-item { display: flex; align-items: flex-start; gap: 14px; }
-    .foundation-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .foundation-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
     .foundation-text strong { font-size: 13px; color: var(--cream); font-weight: 600; display: block; margin-bottom: 2px; }
     .foundation-text span { font-size: 12px; color: rgba(212,165,116,0.6); line-height: 1.6; }
 
-    /* Footer motto */
+    /* Footer */
     .chronicle-footer {
-      margin-top: 60px; padding: 40px 0;
-      border-top: 1px solid rgba(201,136,58,0.15);
+      margin-top: 50px; padding: 36px 0;
+      border-top: 1px solid rgba(201,136,58,0.12);
       text-align: center;
     }
-    .footer-motto { font-size: 14px; color: rgba(245,237,224,0.3); font-style: italic; letter-spacing: 0.1em; }
-    .footer-brand { font-size: 11px; color: rgba(245,237,224,0.15); margin-top: 8px; letter-spacing: 0.15em; }
+    .footer-motto { font-size: 13px; color: rgba(245,237,224,0.28); font-style: italic; letter-spacing: 0.1em; }
+    .footer-brand { font-size: 10px; color: rgba(245,237,224,0.12); margin-top: 8px; letter-spacing: 0.15em; }
 
     /* ── Mobile ── */
     .mobile-nav {
@@ -208,9 +219,12 @@
       .sidebar { display: none; }
       .main { padding-bottom: 80px; }
       .mobile-nav { display: flex; }
-      .chronicle-hero { padding: 36px 24px 32px; }
-      .hero-brand { font-size: 24px; }
-      .timeline-wrap { padding: 0 24px 60px; }
+      .chronicle-hero { padding: 32px 22px 28px; }
+      .hero-brand { font-size: 22px; }
+      .timeline-wrap { padding: 28px 16px 60px; }
+      .month-toggle { padding: 14px 16px; }
+      .entry { padding: 16px 16px 16px 36px; }
+      .entry::before { left: 16px; }
     }
   </style>
 </head>
@@ -276,7 +290,6 @@
 </aside>
 
 <main class="main">
-  <!-- Hero -->
   <div class="chronicle-hero">
     <div class="hero-eyebrow">建制里程碑 · Chronicle</div>
     <div class="hero-brand">貴焿古早味麵線羹</div>
@@ -284,57 +297,54 @@
     <div class="hero-motto">使人和睦的人有福了。</div>
   </div>
 
-  <!-- Timeline -->
   <div class="timeline-wrap">
+    <div class="year-heading">2026</div>
 
-    <div class="timeline-year-block">
-      <div class="year-heading">2026</div>
-
-      <div class="month-block">
-        <div class="month-heading">7月</div>
-        <div class="entries">
-
-          <div class="entry">
-            <div class="entry-title">工期甘特圖上線</div>
-            <div class="entry-desc">所有廠商的施工時間，第一次可以在同一張圖上看見。<br>上下半月的工期空白與衝突，一眼辨識。</div>
-            <span class="entry-tag">事件與工程</span>
-          </div>
-
-          <div class="entry">
-            <div class="entry-title">廠商就緒看板</div>
-            <div class="entry-desc">系統會主動告訴你：現在可以打電話給哪家廠商了。<br>不再靠記憶，不再漏約，不再在條件未到時讓廠商白跑。</div>
-            <span class="entry-tag">事件與工程</span>
-          </div>
-
-          <div class="entry">
-            <div class="entry-title">展店六大里程碑系統</div>
-            <div class="entry-desc">合約、平面圖、拆除、水電粗胚、木工、地板——<br>六個節點管理每家廠商的進場前置條件。</div>
-            <span class="entry-tag">事件與工程</span>
-          </div>
-
-          <div class="entry">
-            <div class="entry-title">督導評分趨勢儀表板</div>
-            <div class="entry-desc">督導拜訪的服務品質，第一次有了可追蹤的數字。<br>趨勢折線圖＋店別排行，讓管理看得見方向。</div>
-            <span class="entry-tag">督導管理</span>
-          </div>
-
-          <div class="entry">
-            <div class="entry-title">全站手機介面優化</div>
-            <div class="entry-desc">十一個頁面加入底部導覽列。<br>現場用手機操作不再卡頓，側欄不再佔掉一半螢幕。</div>
-            <span class="entry-tag">系統體驗</span>
-          </div>
-
-          <div class="entry">
-            <div class="entry-title">驗收鉤稽系統</div>
-            <div class="entry-desc">五金驗收與一般驗收分類管理，<br>每一項目有來源標記、數量、金額與驗收狀態。</div>
-            <span class="entry-tag">展店管理</span>
-          </div>
-
+    <!-- 7月 -->
+    <div class="month-accordion" data-year="2026" data-month="7">
+      <div class="month-toggle" onclick="toggleMonth(this.parentElement)">
+        <div class="month-toggle-left">
+          <span class="month-diamond">◆</span>
+          <span class="month-name">7月</span>
+          <span class="month-count">6 項建制</span>
+        </div>
+        <span class="month-arrow">▼</span>
+      </div>
+      <div class="month-entries">
+        <div class="entry">
+          <div class="entry-title">工期甘特圖上線</div>
+          <div class="entry-desc">所有廠商的施工時間，第一次可以在同一張圖上看見。<br>日期比例精準定位，工期空白與衝突一眼辨識。</div>
+          <span class="entry-tag">事件與工程</span>
+        </div>
+        <div class="entry">
+          <div class="entry-title">廠商就緒看板</div>
+          <div class="entry-desc">系統主動告訴你：現在可以打電話給哪家廠商了。<br>不再靠記憶，不再漏約，不再讓廠商在條件未到時白跑。</div>
+          <span class="entry-tag">事件與工程</span>
+        </div>
+        <div class="entry">
+          <div class="entry-title">展店六大里程碑系統</div>
+          <div class="entry-desc">合約、平面圖、拆除、水電粗胚、木工、地板——<br>六個節點管理每家廠商的進場前置條件。</div>
+          <span class="entry-tag">事件與工程</span>
+        </div>
+        <div class="entry">
+          <div class="entry-title">督導評分趨勢儀表板</div>
+          <div class="entry-desc">督導拜訪的服務品質，第一次有了可追蹤的數字。<br>趨勢折線圖＋店別排行，讓管理看得見方向。</div>
+          <span class="entry-tag">督導管理</span>
+        </div>
+        <div class="entry">
+          <div class="entry-title">全站手機介面優化</div>
+          <div class="entry-desc">十一個頁面加入底部導覽列。<br>現場用手機操作不再卡頓，側欄不再佔掉一半螢幕。</div>
+          <span class="entry-tag">系統體驗</span>
+        </div>
+        <div class="entry">
+          <div class="entry-title">驗收鉤稽系統</div>
+          <div class="entry-desc">五金驗收與一般驗收分類管理，<br>每一項目有來源標記、數量、金額與驗收狀態。</div>
+          <span class="entry-tag">展店管理</span>
         </div>
       </div>
     </div>
 
-    <!-- Foundation -->
+    <!-- 系統基礎 -->
     <div class="foundation-block">
       <div class="foundation-label">系統基礎建設</div>
       <div class="foundation-items">
@@ -362,12 +372,10 @@
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="chronicle-footer">
       <div class="footer-motto">「使人和睦的人有福了。」— 馬太福音 5:9</div>
       <div class="footer-brand">貴焿古早味麵線羹 · 管理 AI 化建制歷程</div>
     </div>
-
   </div>
 </main>
 
@@ -379,5 +387,18 @@
   <a class="mobile-nav-item active" href="chronicle.html"><span class="mn-icon">📜</span><span>建制</span></a>
 </nav>
 
+<script>
+  function toggleMonth(accordion) {
+    accordion.classList.toggle('open');
+  }
+
+  // 自動展開當月
+  document.addEventListener('DOMContentLoaded', () => {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth() + 1;
+    const current = document.querySelector(`.month-accordion[data-year="${y}"][data-month="${m}"]`);
+    if (current) current.classList.add('open');
+  });
+</script>
 </body>
 </html>
