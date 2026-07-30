@@ -169,10 +169,12 @@ def ask_claude(prompt):
         },
         body={
             "model": "claude-sonnet-5",
-            "max_tokens": 2000,
+            "max_tokens": 8000,
             "messages": [{"role": "user", "content": prompt}],
         },
     )
+    if res.get("stop_reason") == "max_tokens":
+        print("警告：Claude 回覆被 max_tokens 截斷了", file=sys.stderr)
     return "".join(b["text"] for b in res["content"] if b.get("type") == "text")
 
 
@@ -180,7 +182,7 @@ def extract_tag(text, tag):
     start = text.find(f"<{tag}>")
     end = text.find(f"</{tag}>")
     if start == -1 or end == -1:
-        return text
+        return "（AI 回覆格式跑掉了，這段沒有抓到內容）"
     return text[start + len(tag) + 2:end].strip()
 
 
