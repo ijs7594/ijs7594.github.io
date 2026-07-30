@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>應收應付與毛利 · 漢柏分身</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --red:         #C0392B;
+      --blue:        #5B8FD4;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Password Gate ── */
+    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .gate-box h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
+    .gate-box p { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+    .gate-box input:focus { border-color: var(--caramel); }
+    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gate-box button:hover { background: var(--brown-mid); }
+    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .section-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .section-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
+    .section-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .card h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+
+    /* ── 期間選擇 ── */
+    .period-picker { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .period-picker select { border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .period-half-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 12px; color: var(--text-mid); cursor: pointer; }
+    .period-half-btn.active { background: var(--brown-main); color: white; border-color: var(--brown-main); }
+
+    /* ── 毛利結算卡片 ── */
+    .margin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .margin-cell { background: var(--warm-white); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .margin-cell.editable { background: #fff; }
+    .margin-label { font-size: 11px; color: var(--text-light); margin-bottom: 6px; }
+    .margin-value { font-size: 18px; font-weight: 800; color: var(--text-dark); }
+    .margin-cell input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 15px; font-weight: 700; font-family: inherit; outline: none; margin-top: 2px; }
+    .margin-highlight { background: linear-gradient(135deg, var(--caramel), var(--brown-main)); color: white; border-radius: 12px; padding: 18px 20px; text-align: center; margin-bottom: 16px; }
+    .margin-highlight .margin-label { color: rgba(255,255,255,0.8); }
+    .margin-highlight .margin-value { font-size: 32px; color: white; }
+    .save-inv-btn { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* ── Forms ── */
+    .form-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .form-row input, .form-row select { border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); }
+    .form-row button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .f-name { width: 140px; }
+    .f-phone { width: 130px; }
+    .f-amt { width: 110px; }
+    .f-flex { flex: 1; min-width: 120px; }
+
+    /* ── Tables ── */
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table th { text-align: left; padding: 8px 10px; background: var(--cream); color: var(--text-mid); font-weight: 700; font-size: 12px; }
+    table.data-table td { padding: 8px 10px; border-top: 1px solid var(--border); }
+    table.data-table tr.paid-row { opacity: 0.55; }
+    .status-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+    .badge-yes { background: rgba(76,175,125,0.12); color: var(--green); }
+    .badge-no { background: #FDECEC; color: var(--red); cursor: pointer; }
+    .row-actions button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 4px 9px; font-size: 11px; cursor: pointer; margin-right: 4px; }
+    .total-row td { font-weight: 700; background: var(--cream); }
+    .empty { text-align: center; padding: 30px 20px; color: var(--text-light); }
+
+    /* ── Range query ── */
+    .range-query { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .range-query input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
+    .range-result { font-size: 13px; color: var(--text-mid); }
+    .range-result b { color: var(--red); font-size: 16px; }
+
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      justify-content: space-around; align-items: center;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2>🔒 應收應付與毛利</h2>
+    <p>輸入密碼查看財務資料</p>
+    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
+    <button onclick="checkPw()">進入</button>
+    <div class="gate-error" id="pw-error"></div>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div class="brand-text">
+      <div class="brand-name">漢柏分身</div>
+      <div class="brand-sub">貴焿共好系統</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item" href="daily-report.html">
+      <span class="nav-icon">📆</span>
+      <div><div class="nav-text">日報表</div><div class="nav-sub">營收／支出</div></div>
+    </a>
+    <a class="nav-item active" href="ledger.html">
+      <span class="nav-icon">📒</span>
+      <div><div class="nav-text">應收應付</div><div class="nav-sub">毛利結算</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📒</span>
+    <div>
+      <div class="topbar-title">應收應付與毛利</div>
+      <div class="topbar-sub">未收款登記、廠商進貨貨款、半月盤點自動算毛利率</div>
+    </div>
+    <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
+  </div>
+
+  <div class="content">
+    <div class="section-tabs">
+      <div class="section-tab active" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
+      <div class="section-tab" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
+      <div class="section-tab" data-tab="receivable" onclick="switchSection('receivable')">📋 未收款登記</div>
+    </div>
+
+    <!-- ══ 毛利結算 ══ -->
+    <div id="section-margin">
+      <div class="card">
+        <h3>選擇結算期間</h3>
+        <div class="period-picker">
+          <select id="period-year"></select>
+          <select id="period-month"></select>
+          <div class="period-half-btn active" data-half="上旬" onclick="setHalf('上旬')">上旬（1-15）</div>
+          <div class="period-half-btn" data-half="下旬" onclick="setHalf('下旬')">下旬（16-月底）</div>
+        </div>
+      </div>
+
+      <div class="margin-highlight">
+        <div class="margin-label">本期毛利率</div>
+        <div class="margin-value" id="margin-rate">—</div>
+      </div>
+
+      <div class="card">
+        <div class="margin-grid">
+          <div class="margin-cell">
+            <div class="margin-label">期初庫存（自動帶入）</div>
+            <div class="margin-value" id="m-begin">—</div>
+          </div>
+          <div class="margin-cell editable">
+            <div class="margin-label">期末庫存（本期盤點金額）</div>
+            <input type="number" id="m-end-input" placeholder="輸入盤點金額" />
+            <button class="save-inv-btn" onclick="saveInventory()" style="margin-top:8px;">💾 儲存盤點</button>
+          </div>
+          <div class="margin-cell">
+            <div class="margin-label">本期進貨（廠商加總）</div>
+            <div class="margin-value" id="m-purchase">—</div>
+          </div>
+          <div class="margin-cell">
+            <div class="margin-label">本期耗用成本</div>
+            <div class="margin-value" id="m-usage">—</div>
+          </div>
+          <div class="margin-cell">
+            <div class="margin-label">本期營收（整日營收總額）</div>
+            <div class="margin-value" id="m-revenue">—</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-light);">公式：期初庫存＋本期進貨－期末庫存＝本期耗用成本；毛利率＝(本期營收－本期耗用成本)÷本期營收</div>
+      </div>
+    </div>
+
+    <!-- ══ 廠商進貨／貨款 ══ -->
+    <div id="section-vendor" style="display:none;">
+      <div class="card">
+        <h3>選擇結算期間</h3>
+        <div class="period-picker">
+          <select id="vperiod-year"></select>
+          <select id="vperiod-month"></select>
+          <div class="period-half-btn active" data-vhalf="上旬" onclick="setVHalf('上旬')">上旬（1-15）</div>
+          <div class="period-half-btn" data-vhalf="下旬" onclick="setVHalf('下旬')">下旬（16-月底）</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🚚 新增廠商進貨</h3>
+        <div class="form-row">
+          <input id="v-name" class="f-name" placeholder="廠商名稱" />
+          <input id="v-amount" class="f-amt" type="number" placeholder="金額" />
+          <select id="v-method">
+            <option>匯款</option>
+            <option>貨到付款</option>
+          </select>
+          <button onclick="addVendorPayment()">新增</button>
+        </div>
+        <div id="vendor-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ══ 未收款登記 ══ -->
+    <div id="section-receivable" style="display:none;">
+      <div class="card">
+        <h3>📋 新增未收款委託</h3>
+        <div class="form-row">
+          <input type="date" id="r-date" />
+          <input id="r-unit" class="f-flex" placeholder="單位（機關／團體）" />
+          <input id="r-phone" class="f-phone" placeholder="電話" />
+          <input id="r-contact" class="f-name" placeholder="聯絡人" />
+          <input id="r-amount" class="f-amt" type="number" placeholder="金額" />
+          <button onclick="addReceivable()">新增</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔍 查詢指定日期區間支出加總</h3>
+        <div class="range-query">
+          <input type="date" id="range-start" />
+          <span>～</span>
+          <input type="date" id="range-end" />
+          <button onclick="queryRange()" style="background:var(--brown-main);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">查詢</button>
+        </div>
+        <div class="range-result" id="range-result"></div>
+      </div>
+
+      <div class="card">
+        <h3>未收款清單（未收餘額：<span id="receivable-balance" style="color:var(--red)">—</span>）</h3>
+        <div id="receivable-table-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
+  <a class="mobile-nav-item" href="daily-report.html"><span class="mn-icon">📆</span><span>日報表</span></a>
+  <a class="mobile-nav-item active" href="ledger.html"><span class="mn-icon">📒</span><span>應收應付</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+</nav>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const PASSWORD = '1688';
+
+  function checkPw() {
+    const val = document.getElementById('pw-input').value;
+    if (val === PASSWORD) {
+      sessionStorage.setItem('finance_auth', '1');
+      document.getElementById('gate').style.display = 'none';
+      init();
+    } else {
+      document.getElementById('pw-error').textContent = '密碼錯誤';
+    }
+  }
+  if (sessionStorage.getItem('finance_auth') === '1') {
+    document.getElementById('gate').style.display = 'none';
+  }
+
+  let stores = [];
+  let currentStoreId = null;
+  let currentSection = 'margin';
+
+  // margin period state
+  let mYear = new Date().getFullYear();
+  let mMonth = new Date().getMonth() + 1;
+  let mHalf = new Date().getDate() <= 15 ? '上旬' : '下旬';
+  // vendor period state (independent picker, same default)
+  let vYear = mYear, vMonth = mMonth, vHalf = mHalf;
+
+  let inventoryCounts = [];
+  let vendorPayments = [];
+  let receivables = [];
+  let dailyReports = [];
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmt(n) {
+    return n == null || isNaN(n) ? '—' : `$${Math.round(n).toLocaleString()}`;
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function init() {
+    const y = new Date().getFullYear();
+    const yearOptions = [];
+    for (let i = y - 1; i <= y + 1; i++) yearOptions.push(i);
+    ['period-year', 'vperiod-year'].forEach(id => {
+      document.getElementById(id).innerHTML = yearOptions.map(y2 => `<option value="${y2}">${y2}</option>`).join('');
+      document.getElementById(id).value = y;
+    });
+    ['period-month', 'vperiod-month'].forEach(id => {
+      document.getElementById(id).innerHTML = Array.from({length:12}, (_,i)=>i+1).map(mo => `<option value="${mo}">${mo} 月</option>`).join('');
+      document.getElementById(id).value = mMonth;
+    });
+    document.getElementById('period-year').onchange = () => { mYear = Number(document.getElementById('period-year').value); loadMargin(); };
+    document.getElementById('period-month').onchange = () => { mMonth = Number(document.getElementById('period-month').value); loadMargin(); };
+    document.getElementById('vperiod-year').onchange = () => { vYear = Number(document.getElementById('vperiod-year').value); loadVendor(); };
+    document.getElementById('vperiod-month').onchange = () => { vMonth = Number(document.getElementById('vperiod-month').value); loadVendor(); };
+    document.getElementById('r-date').value = new Date().toISOString().split('T')[0];
+
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    currentStoreId = stores[0]?.id || null;
+    await loadAll();
+  }
+  if (sessionStorage.getItem('finance_auth') === '1') init();
+
+  function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    loadAll();
+  }
+
+  function switchSection(tab) {
+    currentSection = tab;
+    document.querySelectorAll('.section-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    document.getElementById('section-margin').style.display = tab === 'margin' ? 'block' : 'none';
+    document.getElementById('section-vendor').style.display = tab === 'vendor' ? 'block' : 'none';
+    document.getElementById('section-receivable').style.display = tab === 'receivable' ? 'block' : 'none';
+  }
+
+  function setHalf(half) {
+    mHalf = half;
+    document.querySelectorAll('[data-half]').forEach(el => el.classList.toggle('active', el.dataset.half === half));
+    loadMargin();
+  }
+  function setVHalf(half) {
+    vHalf = half;
+    document.querySelectorAll('[data-vhalf]').forEach(el => el.classList.toggle('active', el.dataset.vhalf === half));
+    loadVendor();
+  }
+
+  // ── 期間換算 ──
+  function lastDayOfMonth(y, m) { return new Date(y, m, 0).getDate(); }
+  function periodRange(y, m, half) {
+    if (half === '上旬') return { start: `${y}-${pad2(m)}-01`, end: `${y}-${pad2(m)}-15` };
+    return { start: `${y}-${pad2(m)}-16`, end: `${y}-${pad2(m)}-${pad2(lastDayOfMonth(y, m))}` };
+  }
+  function periodEndDate(y, m, half) {
+    return periodRange(y, m, half).end;
+  }
+  function previousPeriod(y, m, half) {
+    if (half === '下旬') return { y, m, half: '上旬' };
+    const py = m === 1 ? y - 1 : y;
+    const pm = m === 1 ? 12 : m - 1;
+    return { y: py, m: pm, half: '下旬' };
+  }
+
+  async function loadAll() {
+    if (!currentStoreId) return;
+    [inventoryCounts, vendorPayments, receivables] = await Promise.all([
+      dbGet('store_inventory_counts', `store_id=eq.${currentStoreId}&order=period_end_date.asc`),
+      dbGet('store_vendor_payments', `store_id=eq.${currentStoreId}&order=period_end_date.desc`),
+      dbGet('store_receivables', `store_id=eq.${currentStoreId}&order=date.desc`)
+    ]);
+    if (!Array.isArray(inventoryCounts)) inventoryCounts = [];
+    if (!Array.isArray(vendorPayments)) vendorPayments = [];
+    if (!Array.isArray(receivables)) receivables = [];
+    await loadMargin();
+    renderVendorTable();
+    renderReceivableTable();
+  }
+
+  // ── 盤點與毛利率 ──
+  async function loadMargin() {
+    if (!currentStoreId) return;
+    const range = periodRange(mYear, mMonth, mHalf);
+    const endKey = periodEndDate(mYear, mMonth, mHalf);
+    const prev = previousPeriod(mYear, mMonth, mHalf);
+    const prevKey = periodEndDate(prev.y, prev.m, prev.half);
+
+    const beginCount = inventoryCounts.find(c => c.period_end_date === prevKey);
+    const endCount = inventoryCounts.find(c => c.period_end_date === endKey);
+    const purchaseTotal = vendorPayments.filter(v => v.period_end_date === endKey).reduce((s, v) => s + Number(v.amount || 0), 0);
+
+    dailyReports = await dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${range.start}&date=lte.${range.end}`);
+    if (!Array.isArray(dailyReports)) dailyReports = [];
+    const revenueTotal = dailyReports.reduce((s, r) => {
+      const onsite = (Number(r.morning_revenue)||0) + (Number(r.evening_revenue)||0) + (Number(r.line_pay)||0);
+      const total = onsite + (Number(r.uber_amount)||0) + (Number(r.foodpanda_amount)||0) + (Number(r.uncollected)||0);
+      return s + total;
+    }, 0);
+
+    document.getElementById('m-begin').textContent = beginCount ? fmt(beginCount.inventory_value) : '（尚無上一期盤點）';
+    document.getElementById('m-end-input').value = endCount ? endCount.inventory_value : '';
+    document.getElementById('m-purchase').textContent = fmt(purchaseTotal);
+    document.getElementById('m-revenue').textContent = fmt(revenueTotal);
+
+    if (beginCount && endCount) {
+      const usage = Number(beginCount.inventory_value) + purchaseTotal - Number(endCount.inventory_value);
+      document.getElementById('m-usage').textContent = fmt(usage);
+      const rate = revenueTotal > 0 ? (revenueTotal - usage) / revenueTotal * 100 : null;
+      document.getElementById('margin-rate').textContent = rate != null ? `${rate.toFixed(1)}%` : '—';
+    } else {
+      document.getElementById('m-usage').textContent = '—（需要期初與期末庫存都填了才能算）';
+      document.getElementById('margin-rate').textContent = '—';
+    }
+  }
+
+  async function saveInventory() {
+    const val = document.getElementById('m-end-input').value;
+    if (val === '') { alert('請輸入盤點金額'); return; }
+    const endKey = periodEndDate(mYear, mMonth, mHalf);
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_inventory_counts?on_conflict=store_id,period_end_date`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, period_end_date: endKey, inventory_value: Number(val) })
+      });
+      await loadAll();
+      alert('盤點金額已儲存');
+    } catch { alert('儲存失敗，請再試一次'); }
+  }
+
+  // ── 廠商進貨／貨款 ──
+  async function loadVendor() {
+    renderVendorTable();
+  }
+
+  function renderVendorTable() {
+    const endKey = periodEndDate(vYear, vMonth, vHalf);
+    const list = vendorPayments.filter(v => v.period_end_date === endKey);
+    const el = document.getElementById('vendor-table-wrap');
+    if (list.length === 0) {
+      el.innerHTML = '<div class="empty">這個期間還沒有廠商進貨紀錄</div>';
+      return;
+    }
+    const total = list.reduce((s, v) => s + Number(v.amount || 0), 0);
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>廠商</th><th>金額</th><th>付款方式</th><th>已付款</th><th></th></tr></thead>
+      <tbody>
+        ${list.map(v => `<tr class="${v.paid ? 'paid-row' : ''}">
+          <td>${esc(v.vendor_name)}</td>
+          <td>${fmt(v.amount)}</td>
+          <td>${esc(v.payment_method)}</td>
+          <td><span class="status-badge ${v.paid ? 'badge-yes' : 'badge-no'}" onclick="toggleVendorPaid('${v.id}', ${!v.paid})">${v.paid ? '✅ 已付' : '未付'}</span></td>
+          <td class="row-actions"><button onclick="deleteVendorPayment('${v.id}')">🗑</button></td>
+        </tr>`).join('')}
+        <tr class="total-row"><td>整期加總</td><td>${fmt(total)}</td><td colspan="3"></td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  async function addVendorPayment() {
+    const vendor_name = document.getElementById('v-name').value.trim();
+    const amount = document.getElementById('v-amount').value;
+    const payment_method = document.getElementById('v-method').value;
+    if (!vendor_name || !amount) { alert('請填廠商名稱與金額'); return; }
+    const period_end_date = periodEndDate(vYear, vMonth, vHalf);
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_payments`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, vendor_name, amount: Number(amount), payment_method, period_end_date })
+      });
+      document.getElementById('v-name').value = '';
+      document.getElementById('v-amount').value = '';
+      await loadAll();
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  async function toggleVendorPaid(id, paid) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_payments?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ paid })
+      });
+      await loadAll();
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function deleteVendorPayment(id) {
+    if (!confirm('確定要刪除這筆進貨紀錄嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_payments?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAll();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 未收款登記 ──
+  function renderReceivableTable() {
+    const el = document.getElementById('receivable-table-wrap');
+    const balance = receivables.filter(r => !r.collected).reduce((s, r) => s + Number(r.amount || 0), 0);
+    document.getElementById('receivable-balance').textContent = fmt(balance);
+    if (receivables.length === 0) {
+      el.innerHTML = '<div class="empty">還沒有未收款紀錄</div>';
+      return;
+    }
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>日期</th><th>單位</th><th>聯絡人</th><th>電話</th><th>金額</th><th>入賬</th><th></th></tr></thead>
+      <tbody>
+        ${receivables.map(r => `<tr class="${r.collected ? 'paid-row' : ''}">
+          <td>${r.date}</td>
+          <td>${esc(r.unit_name)}</td>
+          <td>${esc(r.contact_person || '—')}</td>
+          <td>${esc(r.phone || '—')}</td>
+          <td>${fmt(r.amount)}</td>
+          <td><span class="status-badge ${r.collected ? 'badge-yes' : 'badge-no'}" onclick="toggleReceivableCollected('${r.id}', ${!r.collected})">${r.collected ? '✅ 已收' : '未收'}</span></td>
+          <td class="row-actions"><button onclick="deleteReceivable('${r.id}')">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function addReceivable() {
+    const date = document.getElementById('r-date').value;
+    const unit_name = document.getElementById('r-unit').value.trim();
+    const phone = document.getElementById('r-phone').value.trim();
+    const contact_person = document.getElementById('r-contact').value.trim();
+    const amount = document.getElementById('r-amount').value;
+    if (!date || !unit_name || !amount) { alert('請至少填日期、單位、金額'); return; }
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, date, unit_name, phone: phone || null, contact_person: contact_person || null, amount: Number(amount) })
+      });
+      document.getElementById('r-unit').value = '';
+      document.getElementById('r-phone').value = '';
+      document.getElementById('r-contact').value = '';
+      document.getElementById('r-amount').value = '';
+      await loadAll();
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  async function toggleReceivableCollected(id, collected) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ collected, collected_date: collected ? new Date().toISOString().split('T')[0] : null })
+      });
+      await loadAll();
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function deleteReceivable(id) {
+    if (!confirm('確定要刪除這筆未收款紀錄嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAll();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 查詢指定日期區間支出加總 ──
+  async function queryRange() {
+    const start = document.getElementById('range-start').value;
+    const end = document.getElementById('range-end').value;
+    if (!start || !end) { alert('請選擇起訖日期'); return; }
+    const expenses = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`);
+    const list = Array.isArray(expenses) ? expenses : [];
+    const total = list.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+    document.getElementById('range-result').innerHTML = `${start} ～ ${end}，共 ${list.length} 筆，支出加總 <b>${fmt(total)}</b>`;
+  }
+</script>
+</body>
+</html>
