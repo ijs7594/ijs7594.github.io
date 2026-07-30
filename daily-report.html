@@ -265,12 +265,12 @@
       </div>
 
       <div class="field-group">
-        <div class="field-group-label">早班 / 晚班</div>
+        <div class="field-group-label" id="shift-group-label">早班 / 晚班</div>
         <div class="field-row">
-          <div class="field"><label>早班客數</label><input type="number" id="f-morning-customers" oninput="updatePreview()" /></div>
-          <div class="field"><label>早班營收</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
-          <div class="field"><label>晚班客數</label><input type="number" id="f-evening-customers" oninput="updatePreview()" /></div>
-          <div class="field"><label>晚班營收</label><input type="number" id="f-evening-revenue" oninput="updatePreview()" /></div>
+          <div class="field"><label id="label-morning-customers">早班客數</label><input type="number" id="f-morning-customers" oninput="updatePreview()" /></div>
+          <div class="field"><label id="label-morning-revenue">早班營收</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
+          <div class="field" id="field-evening-customers"><label>晚班客數</label><input type="number" id="f-evening-customers" oninput="updatePreview()" /></div>
+          <div class="field" id="field-evening-revenue"><label>晚班營收</label><input type="number" id="f-evening-revenue" oninput="updatePreview()" /></div>
         </div>
       </div>
 
@@ -372,13 +372,34 @@
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
     currentStoreId = stores[0]?.id || null;
+    applyShiftDisplay();
     await loadAndRender();
   }
   if (sessionStorage.getItem('finance_auth') === '1') init();
 
   function onStoreChange() {
     currentStoreId = document.getElementById('store-select').value;
+    applyShiftDisplay();
     loadAndRender();
+  }
+
+  // ── 早晚班顯示：依店家設定切換單一班別／早晚班兩組欄位 ──
+  function currentStoreHasShiftSplit() {
+    const s = stores.find(x => x.id === currentStoreId);
+    return s ? (s.has_shift_split !== false) : true;
+  }
+
+  function applyShiftDisplay() {
+    const split = currentStoreHasShiftSplit();
+    document.getElementById('shift-group-label').textContent = split ? '早班 / 晚班' : '當日客數與營收';
+    document.getElementById('label-morning-customers').textContent = split ? '早班客數' : '客數';
+    document.getElementById('label-morning-revenue').textContent = split ? '早班營收' : '營收';
+    document.getElementById('field-evening-customers').style.display = split ? '' : 'none';
+    document.getElementById('field-evening-revenue').style.display = split ? '' : 'none';
+    if (!split) {
+      document.getElementById('f-evening-customers').value = '';
+      document.getElementById('f-evening-revenue').value = '';
+    }
   }
 
   function changeMonth(delta) {
@@ -597,8 +618,10 @@
         </div>
         <div class="day-detail ${isOpen ? 'open' : ''}">
           ${r ? `<div class="detail-grid">
+            ${currentStoreHasShiftSplit() ? `
             <div><span>早班客數／營收</span><b>${r.morning_customers ?? '—'} / ${fmt(r.morning_revenue)}</b></div>
-            <div><span>晚班客數／營收</span><b>${r.evening_customers ?? '—'} / ${fmt(r.evening_revenue)}</b></div>
+            <div><span>晚班客數／營收</span><b>${r.evening_customers ?? '—'} / ${fmt(r.evening_revenue)}</b></div>` : `
+            <div><span>客數／營收</span><b>${r.morning_customers ?? '—'} / ${fmt(r.morning_revenue)}</b></div>`}
             <div><span>line pay</span><b>${fmt(r.line_pay)}</b></div>
             <div><span>UBER／熊貓</span><b>${fmt(r.uber_amount)} / ${fmt(r.foodpanda_amount)}</b></div>
             <div><span>當日未收款</span><b>${fmt(r.uncollected)}</b></div>

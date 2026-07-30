@@ -577,6 +577,12 @@
     <select id="new-store-status">
       <option>籌備中</option><option>營運中</option><option>已結束</option>
     </select>
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:10px;">
+      <input type="checkbox" id="new-store-legacy" style="width:auto;" /> 既有店家（暫不追蹤工程紀錄）
+    </label>
+    <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px;">
+      <input type="checkbox" id="new-store-shift-split" checked style="width:auto;" /> 有分早晚班
+    </label>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeAddStoreModal()">取消</button>
       <button class="modal-confirm" onclick="submitNewStore()">建立</button>
@@ -743,9 +749,13 @@
     document.getElementById('list-view').style.display = 'none';
     document.getElementById('detail-view').style.display = 'block';
     document.getElementById('add-store-btn').style.display = 'none';
-    switchTab('vendors');
+    const s = stores.find(x => x.id === id);
+    const isLegacy = s && s.is_legacy_store;
+    const vendorsTabBtn = document.querySelector('.detail-tab[data-tab="vendors"]');
+    if (vendorsTabBtn) vendorsTabBtn.style.display = isLegacy ? 'none' : '';
+    switchTab(isLegacy ? 'checklist' : 'vendors');
     renderDetail();
-    checkMilestones();
+    if (!isLegacy) checkMilestones();
   }
 
   // ── 里程碑經驗值（驗收/工程全部完成時，一次性大量加分）──
@@ -807,10 +817,19 @@
         <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
       </div>
       <div class="detail-addr">${esc(s.address) || '未填地址'}${s.opened_date ? ` · 開幕 ${esc(s.opened_date)}` : ''}</div>
+      <div class="milestone-section" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-mid);">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" ${s.is_legacy_store ? 'checked' : ''} onchange="toggleStoreSetting('is_legacy_store', this.checked)" /> 既有店家（暫不追蹤工程紀錄）
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" ${s.has_shift_split !== false ? 'checked' : ''} onchange="toggleStoreSetting('has_shift_split', this.checked)" /> 日報表分早晚班
+        </label>
+      </div>
+      ${s.is_legacy_store ? '' : `
       <div class="milestone-section">
         <div class="milestone-label">🗂 展店里程碑（點選切換）</div>
         <div class="milestone-grid" id="milestone-grid"></div>
-      </div>
+      </div>`}
     `;
     renderMilestones();
   }
@@ -1564,21 +1583,38 @@
     document.getElementById('add-store-modal').classList.remove('open');
     document.getElementById('new-store-name').value = '';
     document.getElementById('new-store-addr').value = '';
+    document.getElementById('new-store-legacy').checked = false;
+    document.getElementById('new-store-shift-split').checked = true;
   }
   async function submitNewStore() {
     const name = document.getElementById('new-store-name').value.trim();
     if (!name) return;
     const address = document.getElementById('new-store-addr').value.trim();
     const status = document.getElementById('new-store-status').value;
+    const is_legacy_store = document.getElementById('new-store-legacy').checked;
+    const has_shift_split = document.getElementById('new-store-shift-split').checked;
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/stores`, {
         method: 'POST',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-        body: JSON.stringify({ name, address, status })
+        body: JSON.stringify({ name, address, status, is_legacy_store, has_shift_split })
       });
       closeAddStoreModal();
       await loadAll();
     } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  // ── 店家設定（既有店家精簡介面／早晚班開關）──
+  async function toggleStoreSetting(field, value) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/stores?id=eq.${currentStoreId}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ [field]: value })
+      });
+      await loadAll();
+      if (currentStoreId) openStore(currentStoreId);
+    } catch { alert('更新失敗，請再試一次'); }
   }
 </script>
 </body>
