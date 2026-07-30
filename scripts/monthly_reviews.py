@@ -158,7 +158,7 @@ def ask_claude(prompt):
             "messages": [{"role": "user", "content": prompt}],
         },
     )
-    return res["content"][0]["text"]
+    return "".join(b["text"] for b in res["content"] if b.get("type") == "text")
 
 
 def extract_tag(text, tag):
