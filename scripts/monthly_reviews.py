@@ -4,6 +4,8 @@
 """
 import json
 import os
+import sys
+import urllib.error
 import urllib.request
 from datetime import date
 
@@ -19,9 +21,13 @@ REPORT_TO = os.environ.get("REPORT_TO_EMAIL") or "ijs7594@gmail.com"
 def http_json(url, method="GET", headers=None, body=None):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, headers=headers or {}, method=method)
-    with urllib.request.urlopen(req) as r:
-        raw = r.read()
-        return json.loads(raw) if raw else None
+    try:
+        with urllib.request.urlopen(req) as r:
+            raw = r.read()
+            return json.loads(raw) if raw else None
+    except urllib.error.HTTPError as e:
+        print(f"HTTP {e.code} calling {url}: {e.read().decode(errors='replace')}", file=sys.stderr)
+        raise
 
 
 def supa_headers():
