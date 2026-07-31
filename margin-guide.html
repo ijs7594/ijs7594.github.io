@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>毛利率異常自我排查 · 今年貴焿助理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --paper:     #FAF3E9;
+    --paper-2:   #F3E7D6;
+    --ink:       #2B1D12;
+    --ink-soft:  #6B5642;
+    --rule:      #E3D2BA;
+    --accent:    #B5622E;
+    --accent-2:  #8C4A22;
+    --flag-high: #8A6D2F;
+    --flag-high-bg: #F1E6C8;
+    --flag-low:  #92402B;
+    --flag-low-bg:  #F5DED6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:     #1E1710;
+      --paper-2:   #271E14;
+      --ink:       #F3E9DC;
+      --ink-soft:  #C2AE96;
+      --rule:      #4A3B2A;
+      --accent:    #E0935B;
+      --accent-2:  #F0AD7A;
+      --flag-high: #D9B565;
+      --flag-high-bg: #362D18;
+      --flag-low:  #E0836B;
+      --flag-low-bg:  #3A241D;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: clamp(24px, 4.5vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+
+  .sub {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin: 0 0 36px;
+    max-width: 46ch;
+  }
+
+  .rule {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 36px 0;
+  }
+
+  h2 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+  }
+
+  p { margin: 0 0 14px; font-size: 15.5px; }
+  p:last-child { margin-bottom: 0; }
+
+  .formula-card {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+  }
+
+  .formula {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    color: var(--accent-2);
+    font-weight: 600;
+    overflow-x: auto;
+    white-space: nowrap;
+    margin-bottom: 12px;
+  }
+
+  .formula .op { color: var(--ink-soft); font-weight: 400; padding: 0 2px; }
+
+  .formula-note {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .big-statement {
+    font-size: clamp(19px, 3.4vw, 23px);
+    font-weight: 800;
+    color: var(--accent-2);
+    line-height: 1.6;
+    text-wrap: balance;
+    margin: 0 0 20px;
+  }
+
+  details.formula-detail {
+    margin-top: 22px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 4px 20px;
+  }
+  details.formula-detail summary {
+    cursor: pointer;
+    padding: 12px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  details.formula-detail summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  details.formula-detail[open] summary { color: var(--ink); }
+  .formula-detail .formula-card {
+    margin-top: 4px;
+    margin-bottom: 18px;
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  .formula-detail .formula { font-size: 13.5px; }
+
+  .analogy {
+    font-size: 15.5px;
+    padding-left: 16px;
+    border-left: 3px solid var(--rule);
+    color: var(--ink-soft);
+  }
+  .analogy strong { color: var(--ink); }
+
+  .diag-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  @media (max-width: 560px) {
+    .diag-grid { grid-template-columns: 1fr; }
+  }
+
+  .diag-card {
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid var(--rule);
+  }
+  .diag-card.high { background: var(--flag-high-bg); border-color: var(--flag-high); }
+  .diag-card.low  { background: var(--flag-low-bg);  border-color: var(--flag-low); }
+
+  .diag-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .diag-card.high .diag-label { color: var(--flag-high); }
+  .diag-card.low  .diag-label { color: var(--flag-low); }
+
+  .diag-card p { font-size: 14.5px; margin-bottom: 0; }
+
+  ol.steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+  }
+  ol.steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule);
+    font-size: 15.5px;
+  }
+  ol.steps li:first-child { border-top: none; }
+  ol.steps li::before {
+    content: counter(step);
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .closing {
+    margin-top: 36px;
+    padding: 20px 22px;
+    background: var(--paper-2);
+    border-radius: 10px;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  .closing strong { color: var(--ink); }
+
+  footer {
+    margin-top: 44px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">今年貴焿助理 · 店長參考</div>
+  <h1>毛利率異常，怎麼自己先排查</h1>
+  <p class="sub">看到毛利率跟平常差很多的時候，照這個順序想一遍，很多時候不用等總部幫你抓出問題。</p>
+
+  <hr class="rule" />
+
+  <h2>先記住這件事</h2>
+  <p class="big-statement">東西買進來，只要還沒用掉，就不會變成本。</p>
+  <p class="analogy">
+    進貨就像把錢存進撲滿，成本是<strong>你這個月真的花掉的錢</strong>。月底存了一大筆錢進撲滿但沒花，月底打開撲滿一數，錢還在裡面——你的花費不會因為多存錢就變多。<br />
+    只要買進來的東西還沒用掉、有確實盤進期末庫存，就不會被算成這個月的成本。<strong>月底叫貨叫得多，不等於成本會變高。</strong>
+  </p>
+
+  <details class="formula-detail">
+    <summary>想知道系統怎麼算的，點這裡看</summary>
+    <div class="formula-card">
+      <div class="formula">本期耗用成本 <span class="op">＝</span> 期初庫存 <span class="op">＋</span> 本期進貨 <span class="op">－</span> 期末庫存</div>
+      <div class="formula">毛利率 <span class="op">＝</span> (本期營收 <span class="op">－</span> 本期耗用成本) <span class="op">÷</span> 本期營收</div>
+      <p class="formula-note">進貨是「加」的，期末庫存是「減」的——這是唯一要記住的重點。</p>
+    </div>
+  </details>
+
+  <hr class="rule" />
+
+  <h2>毛利率異常，分兩種方向檢查</h2>
+  <div class="diag-grid">
+    <div class="diag-card high">
+      <div class="diag-label">異常變好看（太高）</div>
+      <p>先查期末庫存是不是算多了——重複算到、或有一筆該扣的進貨忘了扣。</p>
+    </div>
+    <div class="diag-card low">
+      <div class="diag-label">異常變難看（太低）</div>
+      <p>先查期末庫存是不是算少了——某些品項漏盤，或有一筆進貨忘了登記。</p>
+    </div>
+  </div>
+
+  <hr class="rule" />
+
+  <h2>發現異常時，照這個順序做</h2>
+  <ol class="steps">
+    <li>自己重新盤一次，不要因為是別人盤的就假設一定沒問題——任何人都可能算錯、漏算。</li>
+    <li>兩次數字很接近 → 代表盤點本身沒問題，這時候才去找別的原因（短少、記錯、單位算錯）。</li>
+    <li>兩次數字差很多 → 問題就出在盤點不夠仔細，先把這個處理好，不用急著猜其他原因。</li>
+  </ol>
+
+  <div class="closing">
+    這不是考核，是給你一套自己就能用的工具——遇到異常先照這個順序想一遍，你自己就能抓到問題，不用每次都等總部發現。
+  </div>
+
+  <footer>貴焿古早味麵線羹 · 今年貴焿助理</footer>
+</div>
+</body>
+</html>
