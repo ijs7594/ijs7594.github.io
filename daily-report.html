@@ -140,6 +140,31 @@
     .exp-badge.cost { background: #EEF2FF; color: #4338CA; }
     .exp-badge.var  { background: #FEF3C7; color: #B45309; }
 
+    /* ── 未收款登記 ── */
+    .rcv-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .rcv-row input { border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .rcv-row .rcv-unit { flex: 1; min-width: 140px; }
+    .rcv-row .rcv-phone { width: 110px; }
+    .rcv-row .rcv-contact { width: 100px; }
+    .rcv-row .rcv-amount { width: 100px; }
+    .rcv-row button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 9px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .rcv-note { font-size: 12px; color: var(--text-light); }
+    .rcv-note b { color: var(--text-dark); }
+
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table th { text-align: left; padding: 8px 10px; background: var(--cream); color: var(--text-mid); font-weight: 700; font-size: 12px; }
+    table.data-table td { padding: 8px 10px; border-top: 1px solid var(--border); }
+    table.data-table tr.paid-row { opacity: 0.55; }
+    .status-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+    .badge-yes { background: rgba(76,175,125,0.12); color: var(--green); }
+    .badge-no { background: #FDECEC; color: var(--red); }
+
+    .range-query { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .range-query input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
+    .range-query button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+    .range-result { font-size: 13px; color: var(--text-mid); }
+    .range-result b { color: var(--red); font-size: 16px; }
+
     /* ── Mobile ── */
     .mobile-nav {
       display: none;
@@ -276,8 +301,20 @@
           <div class="field"><label>line pay</label><input type="number" id="f-line-pay" oninput="updatePreview()" /></div>
           <div class="field"><label>UBER金額</label><input type="number" id="f-uber" oninput="updatePreview()" /></div>
           <div class="field"><label>熊貓金額</label><input type="number" id="f-foodpanda" oninput="updatePreview()" /></div>
-          <div class="field"><label>當日未收款</label><input type="number" id="f-uncollected" oninput="updatePreview()" /></div>
         </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-group-label">未收款登記（機關／團體訂購，還沒收到錢，可新增多筆）</div>
+        <div class="rcv-row">
+          <input class="rcv-unit" id="rcv-unit" placeholder="單位（機關／團體）" />
+          <input class="rcv-phone" id="rcv-phone" placeholder="電話" />
+          <input class="rcv-contact" id="rcv-contact" placeholder="聯絡人" />
+          <input class="rcv-amount" id="rcv-amount" type="number" placeholder="金額" />
+          <button onclick="addTodayReceivable()">新增</button>
+        </div>
+        <div id="today-receivable-list"></div>
+        <div class="rcv-note">今日未收款合計：<b id="today-receivable-total">$0</b>（會自動算進整日營收總額，不用另外填）</div>
       </div>
 
       <div class="field-group">
@@ -301,6 +338,22 @@
       <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
       <button class="submit-btn" id="submit-btn" onclick="submitDailyReport()">送出今日日報表</button>
+    </div>
+
+    <div class="history-card" style="margin-bottom:20px;">
+      <h3>🔍 查詢指定日期區間支出加總</h3>
+      <div class="range-query">
+        <input type="date" id="range-start" />
+        <span>～</span>
+        <input type="date" id="range-end" />
+        <button onclick="queryRange()">查詢</button>
+      </div>
+      <div class="range-result" id="range-result"></div>
+    </div>
+
+    <div class="history-card" style="margin-bottom:20px;">
+      <h3>未收款清單（未收餘額：<span id="receivable-balance" style="color:var(--red)">—</span>）</h3>
+      <div id="receivable-table-wrap"></div>
     </div>
 
     <div class="history-card">
@@ -335,6 +388,7 @@
   let stores = [];
   let reportRows = [];
   let expenseRows = [];
+  let receivables = [];
   let currentStoreId = null;
   let currentMonth = new Date();
   let costRowCount = 0;
@@ -411,7 +465,7 @@
       line_pay: document.getElementById('f-line-pay').value,
       uber_amount: document.getElementById('f-uber').value,
       foodpanda_amount: document.getElementById('f-foodpanda').value,
-      uncollected: document.getElementById('f-uncollected').value,
+      uncollected: todayReceivablesTotal(),
       labor_hours: document.getElementById('f-labor-hours').value
     };
     draft.pot_count = document.getElementById('f-pot-count').value;
@@ -457,11 +511,125 @@
   function loadExistingDay() {
     const date = document.getElementById('f-date').value;
     const existing = reportRows.find(r => r.date === date);
-    const fields = ['morning_customers','morning_revenue','line_pay','uncollected','pot_count','cash_counted','cash_undeposited','uber_amount','foodpanda_amount','labor_hours'];
+    const fields = ['morning_customers','morning_revenue','line_pay','pot_count','cash_counted','cash_undeposited','uber_amount','foodpanda_amount','labor_hours'];
     fields.forEach(f => {
       document.getElementById(`f-${f.replace(/_/g, '-')}`).value = existing ? (existing[f] ?? '') : '';
     });
+    renderTodayReceivables();
     updatePreview();
+  }
+
+  // ── 未收款登記（今日新增用，掛在日報表當天日期下）──
+  function todayReceivablesTotal() {
+    const date = document.getElementById('f-date').value;
+    return receivables.filter(r => r.date === date).reduce((s, r) => s + Number(r.amount || 0), 0);
+  }
+
+  function renderTodayReceivables() {
+    const date = document.getElementById('f-date').value;
+    const list = receivables.filter(r => r.date === date);
+    const el = document.getElementById('today-receivable-list');
+    el.innerHTML = list.map(r => `
+      <div class="exp-row" style="margin-bottom:6px;">
+        <span style="flex:1;font-size:13px;">${esc(r.unit_name)}${r.contact_person ? '（' + esc(r.contact_person) + '）' : ''}</span>
+        <span style="font-size:13px;font-weight:700;">${fmt(r.amount)}</span>
+        <button onclick="deleteTodayReceivable('${r.id}')">✕</button>
+      </div>
+    `).join('');
+    document.getElementById('today-receivable-total').textContent = fmt(todayReceivablesTotal());
+  }
+
+  async function addTodayReceivable() {
+    const date = document.getElementById('f-date').value;
+    if (!date) { alert('請先選日期'); return; }
+    const unit_name = document.getElementById('rcv-unit').value.trim();
+    const phone = document.getElementById('rcv-phone').value.trim();
+    const contact_person = document.getElementById('rcv-contact').value.trim();
+    const amount = document.getElementById('rcv-amount').value;
+    if (!unit_name || !amount) { alert('請至少填單位、金額'); return; }
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, date, unit_name, phone: phone || null, contact_person: contact_person || null, amount: Number(amount) })
+      });
+      document.getElementById('rcv-unit').value = '';
+      document.getElementById('rcv-phone').value = '';
+      document.getElementById('rcv-contact').value = '';
+      document.getElementById('rcv-amount').value = '';
+      await loadAndRender();
+      updatePreview();
+    } catch { alert('新增失敗，請再試一次'); }
+  }
+
+  async function deleteTodayReceivable(id) {
+    if (!confirm('確定要刪除這筆未收款紀錄嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAndRender();
+      updatePreview();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 未收款清單（所有未結清的，跨日期）──
+  function renderReceivableTable() {
+    const el = document.getElementById('receivable-table-wrap');
+    const balance = receivables.filter(r => !r.collected).reduce((s, r) => s + Number(r.amount || 0), 0);
+    document.getElementById('receivable-balance').textContent = fmt(balance);
+    if (receivables.length === 0) {
+      el.innerHTML = '<div class="empty">還沒有未收款紀錄</div>';
+      return;
+    }
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>日期</th><th>單位</th><th>聯絡人</th><th>電話</th><th>金額</th><th>入賬</th><th></th></tr></thead>
+      <tbody>
+        ${receivables.map(r => `<tr class="${r.collected ? 'paid-row' : ''}">
+          <td>${r.date}</td>
+          <td>${esc(r.unit_name)}</td>
+          <td>${esc(r.contact_person || '—')}</td>
+          <td>${esc(r.phone || '—')}</td>
+          <td>${fmt(r.amount)}</td>
+          <td><span class="status-badge ${r.collected ? 'badge-yes' : 'badge-no'}" onclick="toggleReceivableCollected('${r.id}', ${!r.collected})">${r.collected ? '✅ 已收' : '未收'}</span></td>
+          <td class="row-actions"><button onclick="deleteReceivable('${r.id}')">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function toggleReceivableCollected(id, collected) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ collected, collected_date: collected ? new Date().toISOString().split('T')[0] : null })
+      });
+      await loadAndRender();
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function deleteReceivable(id) {
+    if (!confirm('確定要刪除這筆未收款紀錄嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAndRender();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 查詢指定日期區間支出加總 ──
+  async function queryRange() {
+    const start = document.getElementById('range-start').value;
+    const end = document.getElementById('range-end').value;
+    if (!start || !end) { alert('請選擇起訖日期'); return; }
+    const expenses = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`);
+    const list = Array.isArray(expenses) ? expenses : [];
+    const total = list.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+    document.getElementById('range-result').innerHTML = `${start} ～ ${end}，共 ${list.length} 筆，支出加總 <b>${fmt(total)}</b>`;
   }
 
   async function loadAndRender() {
@@ -472,14 +640,18 @@
     const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
     document.getElementById('month-label').textContent = `${y} 年 ${m + 1} 月`;
 
-    [reportRows, expenseRows] = await Promise.all([
+    [reportRows, expenseRows, receivables] = await Promise.all([
       dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`),
-      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`)
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`),
+      dbGet('store_receivables', `store_id=eq.${currentStoreId}&order=date.desc`)
     ]);
     if (!Array.isArray(reportRows)) reportRows = [];
     if (!Array.isArray(expenseRows)) expenseRows = [];
+    if (!Array.isArray(receivables)) receivables = [];
     renderStats();
     renderHistory();
+    renderTodayReceivables();
+    renderReceivableTable();
   }
 
   function renderStats() {
@@ -553,7 +725,7 @@
       evening_customers: null,
       evening_revenue: null,
       line_pay: num('f-line-pay'),
-      uncollected: num('f-uncollected'),
+      uncollected: todayReceivablesTotal(),
       pot_count: num('f-pot-count'),
       cash_counted: num('f-cash-counted'),
       cash_undeposited: num('f-cash-undeposited'),
