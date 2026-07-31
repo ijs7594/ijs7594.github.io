@@ -573,5 +573,18 @@
   <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
   <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
 </nav>
+
+<script>
+  if (new URLSearchParams(location.search).get('from') === 'staff') {
+    document.querySelector('.nav-list').innerHTML = `
+      <a class="nav-item" href="staff.html">
+        <span class="nav-icon">←</span>
+        <div><div class="nav-text">返回夥伴互動入口</div></div>
+      </a>`;
+    document.querySelector('.mobile-nav').innerHTML = `
+      <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>`;
+  }
+</script>
+
 </body>
 </html>
