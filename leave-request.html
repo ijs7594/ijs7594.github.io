@@ -252,6 +252,73 @@
       border-radius: 8px; font-size: 12px; color: var(--red);
     }
 
+    /* ── Manager AI view ── */
+    .mgr-status-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+    .mgr-stat {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; text-align: center;
+    }
+    .mgr-stat-num { font-size: 26px; font-weight: 800; color: var(--caramel); }
+    .mgr-stat-lbl { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+
+    .ai-btn {
+      width: 100%; padding: 14px;
+      border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--brown-dark), #5C3317);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .ai-btn:hover { opacity: 0.88; }
+    .ai-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .confirm-btn {
+      width: 100%; padding: 14px;
+      border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #3D7A5A, #4CAF7D);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s; display: none;
+    }
+    .confirm-btn:hover { opacity: 0.88; }
+
+    /* Proposed schedule mini-table */
+    .proposed-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; display: none;
+    }
+    .proposed-hdr {
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .proposed-hdr-title { font-size: 13px; font-weight: 700; }
+    .proposed-hdr-note { font-size: 11px; color: var(--text-light); }
+
+    .proposed-scroll { overflow-x: auto; }
+    table.ptable { border-collapse: collapse; font-size: 11px; }
+    table.ptable th, table.ptable td { border: 0.5px solid var(--border); white-space: nowrap; }
+    table.ptable .pname {
+      position: sticky; left: 0; background: var(--cream); z-index: 1;
+      padding: 6px 10px; font-size: 11px; font-weight: 700; min-width: 60px;
+    }
+    table.ptable thead th.pname { font-size: 10px; color: var(--text-light); background: var(--cream); }
+    table.ptable thead th.pday {
+      min-width: 28px; width: 28px; padding: 5px 0; text-align: center;
+      font-size: 10px; color: var(--text-mid); background: var(--cream);
+    }
+    table.ptable thead th.pday.we { color: var(--caramel); }
+    table.ptable tbody td.pday {
+      width: 28px; min-width: 28px; height: 36px; text-align: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .ps-A { background: #4A90E2; color:#fff; }
+    .ps-B { background: #5BAF82; color:#fff; }
+    .ps-C { background: #9B59B6; color:#fff; }
+    .ps-D { background: #C17B4E; color:#fff; }
+    .ps-E { background: #E07B3A; color:#fff; }
+    .ps-rest { background: #ECECEC; color:#999; }
+    .ps-empty { color: #DDD; }
+
     /* ── Mobile ── */
     .mobile-nav {
       display: none; position: fixed; bottom: 0; left: 0; right: 0;
@@ -395,25 +462,36 @@
     </div>
 
     <!-- Manager mode -->
-    <div id="manager-view">
-      <div class="manager-summary">
-        <div class="manager-sum-hdr">
-          <div class="manager-sum-title" id="mgr-title"></div>
-          <button class="refresh-btn" onclick="loadManagerView()">⟳ 刷新</button>
-        </div>
-        <div id="conflict-area"></div>
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>夥伴</th>
-              <th>指定平日</th>
-              <th>指定假日</th>
-              <th>特休</th>
-            </tr>
-          </thead>
-          <tbody id="mgr-tbody"></tbody>
-        </table>
+    <div id="manager-view" style="display:flex;flex-direction:column;gap:14px;">
+
+      <!-- Status -->
+      <div class="mgr-status-grid">
+        <div class="mgr-stat"><div class="mgr-stat-num" id="s-submitted">—</div><div class="mgr-stat-lbl">已送出</div></div>
+        <div class="mgr-stat"><div class="mgr-stat-num" id="s-missing">—</div><div class="mgr-stat-lbl">未填寫</div></div>
+        <div class="mgr-stat"><div class="mgr-stat-num" id="s-conflicts">—</div><div class="mgr-stat-lbl">衝假組數</div></div>
       </div>
+
+      <!-- Conflict warning -->
+      <div id="conflict-area"></div>
+
+      <!-- AI generate -->
+      <button class="ai-btn" id="ai-btn" onclick="generateSchedule()">✨ AI 自動統整排班草稿</button>
+
+      <!-- Proposed schedule -->
+      <div class="proposed-card" id="proposed-card">
+        <div class="proposed-hdr">
+          <div class="proposed-hdr-title">排班草稿 · 依申請自動生成</div>
+          <div class="proposed-hdr-note">● = 休　其餘依慣用班別填入</div>
+        </div>
+        <div class="proposed-scroll">
+          <table class="ptable" id="ptable"></table>
+        </div>
+      </div>
+
+      <!-- Confirm push -->
+      <button class="confirm-btn" id="confirm-btn" onclick="pushSchedule()">✅ 核准並推送到排班表</button>
+      <div style="font-size:11px;color:var(--text-light);text-align:center;" id="push-msg"></div>
+
     </div>
 
   </div>
@@ -638,57 +716,135 @@
     }, 4000);
   }
 
+  // 每人慣用班別（依歷史排班）
+  const PRIMARY_SHIFT = {
+    '陳雅婷': 'E', '尤愛稜': 'B', '彭淑美': 'A',
+    '莊鳳怡': 'A', '涂家蓁': 'C', '陳柏岑': 'C'
+  };
+
+  let mgrAllRows = [];   // 原始申請資料
+  let proposedGrid = {}; // emp|dateStr → shift code
+
   // ── Manager view ──
   async function loadManagerView() {
     const ym = `${reqYear}-${String(reqMonth).padStart(2,'0')}`;
-    document.getElementById('mgr-title').textContent = `${reqYear} 年 ${reqMonth} 月 · 申請統整`;
+    mgrAllRows = await apiFetch(
+      `/rest/v1/leave_requests?store_name=eq.${encodeURIComponent(STORE_NAME)}&request_month=eq.${ym}&select=employee_name,leave_date,leave_type`
+    ) || [];
 
-    const rows = await apiFetch(
-      `/rest/v1/leave_requests?store_name=eq.${encodeURIComponent(STORE_NAME)}&request_month=eq.${ym}&select=employee_name,leave_date,leave_type&order=employee_name`
-    );
-
-    if (!rows) {
-      document.getElementById('mgr-tbody').innerHTML = '<tr><td colspan="4" style="color:var(--text-light);text-align:center;padding:20px;">無法載入資料</td></tr>';
-      return;
-    }
-
-    // Group by employee
-    const byEmp = {};
-    EMPLOYEES.forEach(e => byEmp[e] = { weekday:[], weekend:[], special:[] });
-    rows.forEach(r => {
-      if (byEmp[r.employee_name]) {
-        byEmp[r.employee_name][r.leave_type]?.push(r.leave_date);
-      }
-    });
+    // Status: who submitted
+    const submitted = new Set(mgrAllRows.map(r => r.employee_name));
+    document.getElementById('s-submitted').textContent = submitted.size;
+    document.getElementById('s-missing').textContent = EMPLOYEES.length - submitted.size;
 
     // Conflict detection
     const dateCounts = {};
-    rows.forEach(r => {
+    mgrAllRows.forEach(r => {
       if (!dateCounts[r.leave_date]) dateCounts[r.leave_date] = [];
       dateCounts[r.leave_date].push(r.employee_name);
     });
     const conflicts = Object.entries(dateCounts).filter(([,names]) => names.length >= 2);
+    document.getElementById('s-conflicts').textContent = conflicts.length;
+
     const conflictArea = document.getElementById('conflict-area');
     if (conflicts.length) {
-      conflictArea.innerHTML = `<div class="conflict-banner">⚠ 衝假提醒：${conflicts.map(([d,names])=>`${d.slice(5)} (${names.join('、')})`).join('；')}</div>`;
+      conflictArea.innerHTML = `<div class="conflict-banner">⚠ 衝假：${conflicts.map(([d,names])=>`${d.slice(5).replace('-','/')} (${names.join('·')})`).join('　')}</div>`;
     } else {
       conflictArea.innerHTML = '';
     }
 
-    const fmtDate = d => d.slice(5).replace('-','/');
-    const chips = (arr, type) => arr.map(d => `<span class="date-chip ${type}">${fmtDate(d)}</span>`).join('');
+    // Reset proposed
+    document.getElementById('proposed-card').style.display = 'none';
+    document.getElementById('confirm-btn').style.display = 'none';
+    document.getElementById('push-msg').textContent = '';
+  }
 
-    const tbody = document.getElementById('mgr-tbody');
-    tbody.innerHTML = EMPLOYEES.map(emp => {
-      const d = byEmp[emp];
-      const hasAny = d.weekday.length || d.weekend.length || d.special.length;
-      return `<tr>
-        <td style="font-weight:600;">${emp}</td>
-        <td>${chips(d.weekday,'weekday') || '<span style="color:var(--text-light);font-size:11px;">未填</span>'}</td>
-        <td>${chips(d.weekend,'weekend') || '<span style="color:var(--text-light);font-size:11px;">未填</span>'}</td>
-        <td>${chips(d.special,'special') || '—'}</td>
-      </tr>`;
-    }).join('');
+  // ── AI 統整 ──
+  function generateSchedule() {
+    const y = reqYear, m = reqMonth;
+    const days = new Date(y, m, 0).getDate();
+
+    // Build leave map
+    const leaveMap = {}; // emp|dateStr → true
+    mgrAllRows.forEach(r => { leaveMap[r.employee_name + '|' + r.leave_date] = true; });
+
+    // Generate grid
+    proposedGrid = {};
+    EMPLOYEES.forEach(emp => {
+      for (let d = 1; d <= days; d++) {
+        const dStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if (leaveMap[emp + '|' + dStr]) {
+          proposedGrid[emp + '|' + dStr] = '●';
+        } else {
+          proposedGrid[emp + '|' + dStr] = PRIMARY_SHIFT[emp] || 'A';
+        }
+      }
+    });
+
+    renderProposedTable(y, m, days);
+    document.getElementById('proposed-card').style.display = 'block';
+    document.getElementById('confirm-btn').style.display = 'block';
+    document.getElementById('ai-btn').textContent = '↻ 重新統整';
+  }
+
+  function renderProposedTable(y, m, days) {
+    const table = document.getElementById('ptable');
+    let html = '<thead><tr><th class="pname">姓名</th>';
+    for (let d = 1; d <= days; d++) {
+      const wd = new Date(y, m - 1, d).getDay();
+      const isWe = wd === 0 || wd === 6;
+      html += `<th class="pday${isWe?' we':''}">${d}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+
+    EMPLOYEES.forEach(emp => {
+      html += `<tr><td class="pname">${emp}</td>`;
+      for (let d = 1; d <= days; d++) {
+        const dStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const code = proposedGrid[emp + '|' + dStr] || '';
+        let cls = 'pday ';
+        if (code === '●') cls += 'ps-rest';
+        else if (code) cls += 'ps-' + code;
+        else cls += 'ps-empty';
+        html += `<td class="${cls}">${code || '·'}</td>`;
+      }
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  // ── Push to schedule ──
+  async function pushSchedule() {
+    const btn = document.getElementById('confirm-btn');
+    btn.disabled = true;
+    btn.textContent = '推送中…';
+    document.getElementById('push-msg').textContent = '';
+
+    const entries = Object.entries(proposedGrid).map(([key, code]) => {
+      const [emp, dateStr] = key.split('|');
+      return { store_name: STORE_NAME, employee_name: emp, shift_date: dateStr, shift_code: code };
+    });
+
+    // Delete existing entries for this month first
+    const ym = `${reqYear}-${String(reqMonth).padStart(2,'0')}`;
+    await apiFetch(
+      `/rest/v1/schedule_entries?store_name=eq.${encodeURIComponent(STORE_NAME)}&shift_date=gte.${ym}-01&shift_date=lte.${ym}-31`,
+      { method: 'DELETE', prefer: 'return=minimal' }
+    );
+
+    // Insert in batches of 100
+    for (let i = 0; i < entries.length; i += 100) {
+      await apiFetch('/rest/v1/schedule_entries', {
+        method: 'POST',
+        prefer: 'return=minimal',
+        body: JSON.stringify(entries.slice(i, i + 100))
+      });
+    }
+
+    btn.textContent = '✅ 核准並推送到排班表';
+    btn.disabled = false;
+    document.getElementById('push-msg').textContent = `排班表已更新！→ 前往 schedule.html 查看`;
   }
 
   // ── API ──
