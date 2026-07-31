@@ -7,7 +7,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import date, datetime, timezone
 
 SUPABASE_URL = "https://zsowgiobylacwabjjvub.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw"
@@ -91,6 +91,10 @@ def place_details(place_id):
     )
 
 
+def parse_iso(ts):
+    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+
+
 def collect_store_data():
     collected = []
     for s in get_stores():
@@ -107,6 +111,23 @@ def collect_store_data():
         last = get_last_snapshot(s["id"])
         delta_rating = round(rating - last["rating"], 2) if last and last.get("rating") is not None else None
         delta_count = count - last["user_rating_count"] if last and last.get("user_rating_count") is not None else None
+        cutoff = parse_iso(last["created_at"]) if last else None
+        all_reviews = [
+            {
+                "rating": rv.get("rating"),
+                "text": (rv.get("text") or {}).get("text", ""),
+                "time": rv.get("relativePublishTimeDescription"),
+                "publish_time": rv.get("publishTime"),
+            }
+            for rv in details.get("reviews", [])
+        ]
+        if cutoff is not None:
+            new_reviews = [
+                rv for rv in all_reviews
+                if rv["publish_time"] and parse_iso(rv["publish_time"]) > cutoff
+            ]
+        else:
+            new_reviews = all_reviews
         save_snapshot(s["id"], top["id"], rating, count)
         collected.append({
             "store": s,
@@ -116,14 +137,7 @@ def collect_store_data():
             "delta_rating": delta_rating,
             "delta_count": delta_count,
             "_has_history": last is not None,
-            "reviews": [
-                {
-                    "rating": rv.get("rating"),
-                    "text": (rv.get("text") or {}).get("text", ""),
-                    "time": rv.get("relativePublishTimeDescription"),
-                }
-                for rv in details.get("reviews", [])
-            ],
+            "reviews": new_reviews,
         })
     return collected
 
@@ -135,12 +149,12 @@ def build_prompt(collected):
         if c.get("error"):
             lines.append(f"【{name}】{c['error']}\n")
             continue
-        no_new_reviews = c["delta_count"] == 0 and c["_has_history"]
+        no_new_reviews = c["_has_history"] and len(c["reviews"]) == 0
         delta_r = f"{c['delta_rating']:+}" if c["delta_rating"] is not None else "無上月資料"
         delta_c = f"{c['delta_count']:+}" if c["delta_count"] is not None else ""
         lines.append(f"【{name}】目前 {c['rating']} 分（{delta_r}），共 {c['count']} 則（{delta_c}）")
         if no_new_reviews:
-            lines.append("  本月則數沒有增加，代表這個月沒有新評論，不要引用下面列的舊評論內容當作本月回饋依據。")
+            lines.append("  本月沒有真正新發布的評論（Google 顯示的都是上次回報之前的舊評論），不要杜撰或引用舊評論內容當作本月回饋依據。")
         for rv in c["reviews"]:
             lines.append(f"  - [{rv['rating']}星 {rv['time']}] {rv['text'][:200]}")
         lines.append("")
