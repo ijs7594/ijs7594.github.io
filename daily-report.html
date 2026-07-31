@@ -133,6 +133,13 @@
     .row-actions button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
     .empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
 
+    .exp-category-label { font-size: 11px; font-weight: 700; color: var(--brown-main); margin: 14px 0 8px; }
+    .exp-row .f-preset { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); }
+    .exp-row .f-custom { flex: 1; min-width: 120px; display: none; border: 1px solid var(--caramel); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+    .exp-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-right: 4px; vertical-align: middle; }
+    .exp-badge.cost { background: #EEF2FF; color: #4338CA; }
+    .exp-badge.var  { background: #FEF3C7; color: #B45309; }
+
     /* ── Mobile ── */
     .mobile-nav {
       display: none;
@@ -256,12 +263,10 @@
       </div>
 
       <div class="field-group">
-        <div class="field-group-label" id="shift-group-label">早班 / 晚班</div>
+        <div class="field-group-label">客數 & 日營收</div>
         <div class="field-row">
-          <div class="field"><label id="label-morning-customers">早班客數</label><input type="number" id="f-morning-customers" oninput="updatePreview()" /></div>
-          <div class="field"><label id="label-morning-revenue">早班營收</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
-          <div class="field" id="field-evening-customers"><label>晚班客數</label><input type="number" id="f-evening-customers" oninput="updatePreview()" /></div>
-          <div class="field" id="field-evening-revenue"><label>晚班營收</label><input type="number" id="f-evening-revenue" oninput="updatePreview()" /></div>
+          <div class="field"><label>客數</label><input type="number" id="f-morning-customers" oninput="updatePreview()" /></div>
+          <div class="field"><label>日營收（現場現金）</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
         </div>
       </div>
 
@@ -287,9 +292,13 @@
 
       <div class="live-preview" id="live-preview"></div>
 
-      <div class="field-group-label">雜項支出（品項／金額／運費，可新增多筆）</div>
-      <div class="exp-rows" id="exp-rows"></div>
-      <button class="add-exp-row-btn" onclick="addExpRow()">+ 新增一筆支出</button>
+      <div class="exp-category-label">📌 費用（水電、房租、薪資等固定支出）</div>
+      <div class="exp-rows" id="cost-rows"></div>
+      <button class="add-exp-row-btn" onclick="addCostRow('cost')">+ 新增費用</button>
+
+      <div class="exp-category-label" style="margin-top:18px">📦 變動成本（食材、耗材等）</div>
+      <div class="exp-rows" id="variable-rows"></div>
+      <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
       <button class="submit-btn" id="submit-btn" onclick="submitDailyReport()">送出今日日報表</button>
     </div>
@@ -318,8 +327,14 @@
   let expenseRows = [];
   let currentStoreId = null;
   let currentMonth = new Date();
-  let expRowCount = 0;
+  let costRowCount = 0;
   let openDayKey = null;
+
+  const COST_PRESETS = {
+    cost:     ['水電費', '房租', '薪資/獎金', '設備維修', '保險費', '外送平台月費', '其他費用'],
+    variable: ['麵線', '大腸', '蚵仔', '魚漿/食材', '高湯原料', '蔬菜', '蛋', '包裝耗材', '清潔用品', '醬料醋料', '其他食材']
+  };
+  const CATEGORY_LABEL = { cost: '費用', variable: '變動成本' };
 
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -341,41 +356,19 @@
 
   async function init() {
     document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-    addExpRow();
     updatePreview();
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
     currentStoreId = stores[0]?.id || null;
-    applyShiftDisplay();
     await loadAndRender();
   }
   init();
 
   function onStoreChange() {
     currentStoreId = document.getElementById('store-select').value;
-    applyShiftDisplay();
     loadAndRender();
-  }
-
-  // ── 早晚班顯示：依店家設定切換單一班別／早晚班兩組欄位 ──
-  function currentStoreHasShiftSplit() {
-    const s = stores.find(x => x.id === currentStoreId);
-    return s ? (s.has_shift_split !== false) : true;
-  }
-
-  function applyShiftDisplay() {
-    const split = currentStoreHasShiftSplit();
-    document.getElementById('shift-group-label').textContent = split ? '早班 / 晚班' : '當日客數與營收';
-    document.getElementById('label-morning-customers').textContent = split ? '早班客數' : '客數';
-    document.getElementById('label-morning-revenue').textContent = split ? '早班營收' : '營收';
-    document.getElementById('field-evening-customers').style.display = split ? '' : 'none';
-    document.getElementById('field-evening-revenue').style.display = split ? '' : 'none';
-    if (!split) {
-      document.getElementById('f-evening-customers').value = '';
-      document.getElementById('f-evening-revenue').value = '';
-    }
   }
 
   function changeMonth(delta) {
@@ -404,7 +397,7 @@
   function updatePreview() {
     const draft = {
       morning_revenue: document.getElementById('f-morning-revenue').value,
-      evening_revenue: document.getElementById('f-evening-revenue').value,
+      evening_revenue: 0,
       line_pay: document.getElementById('f-line-pay').value,
       uber_amount: document.getElementById('f-uber').value,
       foodpanda_amount: document.getElementById('f-foodpanda').value,
@@ -412,13 +405,13 @@
       labor_hours: document.getElementById('f-labor-hours').value
     };
     draft.pot_count = document.getElementById('f-pot-count').value;
-    const dailyCustomers = (Number(document.getElementById('f-morning-customers').value) || 0) + (Number(document.getElementById('f-evening-customers').value) || 0);
+    const dailyCustomers = Number(document.getElementById('f-morning-customers').value) || 0;
     const onsite = calcOnsite(draft);
     const total = calcTotal(draft);
     const eff = calcEfficiency(draft);
     const perPot = calcPerPot(draft);
     const cashCounted = document.getElementById('f-cash-counted').value;
-    const cashDiff = cashCounted !== '' ? Number(cashCounted) - ((Number(draft.morning_revenue)||0) + (Number(draft.evening_revenue)||0)) : null;
+    const cashDiff = cashCounted !== '' ? Number(cashCounted) - (Number(draft.morning_revenue)||0) : null;
     const perPotFlag = perPot != null ? perPotAnomalyColor(perPot) : 'var(--brown-main)';
 
     document.getElementById('live-preview').innerHTML = `
@@ -454,7 +447,7 @@
   function loadExistingDay() {
     const date = document.getElementById('f-date').value;
     const existing = reportRows.find(r => r.date === date);
-    const fields = ['morning_customers','morning_revenue','evening_customers','evening_revenue','line_pay','uncollected','pot_count','cash_counted','cash_undeposited','uber_amount','foodpanda_amount','labor_hours'];
+    const fields = ['morning_customers','morning_revenue','line_pay','uncollected','pot_count','cash_counted','cash_undeposited','uber_amount','foodpanda_amount','labor_hours'];
     fields.forEach(f => {
       document.getElementById(`f-${f.replace(/_/g, '-')}`).value = existing ? (existing[f] ?? '') : '';
     });
@@ -493,20 +486,47 @@
     document.getElementById('stat-days').textContent = `${reportRows.length} 天`;
   }
 
-  // ── 支出列表輸入（可新增多筆）──
-  function addExpRow() {
-    const id = ++expRowCount;
-    const el = document.getElementById('exp-rows');
+  // ── 分類支出列表輸入 ──
+  function addCostRow(category) {
+    const id = `${category}-${++costRowCount}`;
+    const presets = COST_PRESETS[category];
+    const opts = presets.map(p => `<option value="${p}">${p}</option>`).join('') + '<option value="__custom">自訂…</option>';
+    const el = document.getElementById(`${category}-rows`);
     const row = document.createElement('div');
     row.className = 'exp-row';
-    row.id = `exprow-${id}`;
+    row.id = id;
+    const hasShipping = category === 'variable';
     row.innerHTML = `
-      <input class="f-desc" placeholder="品項" />
-      <input class="f-amt" type="number" placeholder="支出金額" />
-      <input class="f-ship" type="number" placeholder="運費支出" />
-      <button onclick="document.getElementById('exprow-${id}').remove()">✕</button>
+      <select class="f-preset" onchange="onPresetChange(this,'${id}')">${opts}</select>
+      <input class="f-custom" placeholder="請輸入項目" />
+      <input class="f-amt" type="number" placeholder="金額" />
+      ${hasShipping ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
+      <button onclick="document.getElementById('${id}').remove()">✕</button>
     `;
     el.appendChild(row);
+  }
+
+  function onPresetChange(select, rowId) {
+    const row = document.getElementById(rowId);
+    const customInput = row.querySelector('.f-custom');
+    const isCustom = select.value === '__custom';
+    customInput.style.display = isCustom ? '' : 'none';
+    if (isCustom) customInput.focus();
+  }
+
+  function collectExpenses(category) {
+    return Array.from(document.querySelectorAll(`#${category}-rows .exp-row`)).map(row => {
+      const preset = row.querySelector('.f-preset').value;
+      const custom = row.querySelector('.f-custom').value.trim();
+      const desc = preset === '__custom' ? custom : preset;
+      const amount = row.querySelector('.f-amt').value;
+      const shipEl = row.querySelector('.f-ship');
+      return { desc, amount, shipping: shipEl ? shipEl.value : '' };
+    }).filter(e => e.amount && Number(e.amount) > 0).map(e => ({
+      description: `【${CATEGORY_LABEL[category]}】${e.desc || '未命名'}`,
+      amount: Number(e.amount),
+      shipping_amount: e.shipping ? Number(e.shipping) : null
+    }));
   }
 
   // ── 送出今日日報表（同一天同一店會覆蓋更新）──
@@ -520,8 +540,8 @@
       date,
       morning_customers: num('f-morning-customers'),
       morning_revenue: num('f-morning-revenue'),
-      evening_customers: num('f-evening-customers'),
-      evening_revenue: num('f-evening-revenue'),
+      evening_customers: null,
+      evening_revenue: null,
       line_pay: num('f-line-pay'),
       uncollected: num('f-uncollected'),
       pot_count: num('f-pot-count'),
@@ -532,11 +552,8 @@
       labor_hours: num('f-labor-hours')
     };
 
-    const expInputs = Array.from(document.querySelectorAll('#exp-rows .exp-row')).map(row => ({
-      description: row.querySelector('.f-desc').value.trim(),
-      amount: row.querySelector('.f-amt').value,
-      shipping_amount: row.querySelector('.f-ship').value
-    })).filter(e => e.amount && Number(e.amount) > 0);
+    const expInputs = [...collectExpenses('cost'), ...collectExpenses('variable')]
+      .map(e => ({ store_id: currentStoreId, date, ...e }));
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
@@ -552,12 +569,11 @@
         await fetch(`${SUPABASE_URL}/rest/v1/store_daily_expenses`, {
           method: 'POST',
           headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-          body: JSON.stringify(expInputs.map(e => ({ store_id: currentStoreId, date, description: e.description || null, amount: Number(e.amount), shipping_amount: e.shipping_amount ? Number(e.shipping_amount) : null })))
+          body: JSON.stringify(expInputs)
         });
       }
-      document.getElementById('exp-rows').innerHTML = '';
-      expRowCount = 0;
-      addExpRow();
+      document.getElementById('cost-rows').innerHTML = '';
+      document.getElementById('variable-rows').innerHTML = '';
       await loadAndRender();
       alert('日報表已送出');
     } catch {
@@ -594,10 +610,7 @@
         </div>
         <div class="day-detail ${isOpen ? 'open' : ''}">
           ${r ? `<div class="detail-grid">
-            ${currentStoreHasShiftSplit() ? `
-            <div><span>早班客數／營收</span><b>${r.morning_customers ?? '—'} / ${fmt(r.morning_revenue)}</b></div>
-            <div><span>晚班客數／營收</span><b>${r.evening_customers ?? '—'} / ${fmt(r.evening_revenue)}</b></div>` : `
-            <div><span>客數／營收</span><b>${r.morning_customers ?? '—'} / ${fmt(r.morning_revenue)}</b></div>`}
+            <div><span>客數／日營收</span><b>${r.morning_customers ?? '—'} / ${fmt(r.morning_revenue)}</b></div>
             <div><span>line pay</span><b>${fmt(r.line_pay)}</b></div>
             <div><span>UBER／熊貓</span><b>${fmt(r.uber_amount)} / ${fmt(r.foodpanda_amount)}</b></div>
             <div><span>當日未收款</span><b>${fmt(r.uncollected)}</b></div>
@@ -608,11 +621,16 @@
             <div><span>時數／人效值</span><b>${r.labor_hours ?? '—'} / ${calcEfficiency(r) != null ? calcEfficiency(r).toFixed(1) : '—'}</b></div>
             <div><div class="row-actions"><button onclick="editDay('${date}')">✏️ 修改</button><button onclick="deleteReport('${r.id}')">🗑 刪除本日</button></div></div>
           </div>` : ''}
-          ${exps.map(e => `<div class="exp-detail-row">
-            <span>${esc(e.description || '雜項支出')}</span>
-            <span class="exp-detail-amt">${fmt(Number(e.amount || 0) + Number(e.shipping_amount || 0))}${e.shipping_amount ? `（含運費 $${e.shipping_amount}）` : ''}</span>
-            <div class="row-actions"><button onclick="deleteExpense('${e.id}')">🗑</button></div>
-          </div>`).join('')}
+          ${exps.map(e => {
+            const m = (e.description || '').match(/^【(費用|變動成本)】(.+)$/);
+            const badge = m ? `<span class="exp-badge ${m[1] === '費用' ? 'cost' : 'var'}">${m[1]}</span>` : '';
+            const name = m ? m[2] : esc(e.description || '雜項支出');
+            return `<div class="exp-detail-row">
+              <span>${badge}${name}</span>
+              <span class="exp-detail-amt">${fmt(Number(e.amount || 0) + Number(e.shipping_amount || 0))}${e.shipping_amount ? `（含運費 $${e.shipping_amount}）` : ''}</span>
+              <div class="row-actions"><button onclick="deleteExpense('${e.id}')">🗑</button></div>
+            </div>`;
+          }).join('')}
         </div>
       </div>`;
     }).join('');
