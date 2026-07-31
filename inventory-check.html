@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>上下旬盤點 · 今年貴焿</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --brown:    #2C1A0E;
+      --caramel:  #C17B4E;
+      --cream:    #F5EDE0;
+      --bg:       #F2EDE7;
+      --card:     #FFFFFF;
+      --border:   rgba(0,0,0,0.08);
+      --text:     #1A1A1A;
+      --sub:      #888;
+      --green:    #2D9E6B;
+      --green-bg: #E8F7EF;
+      --red:      #C0392B;
+      --red-bg:   #FEF0EE;
+      --amber:    #B45309;
+      --amber-bg: #FEF3C7;
+      --blue:     #3B82F6;
+      --blue-bg:  #EFF6FF;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      max-width: 520px;
+      margin: 0 auto;
+      padding-bottom: 48px;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--brown);
+      padding: 40px 20px 20px;
+    }
+    .header-back {
+      display: flex; align-items: center; gap: 6px;
+      text-decoration: none; color: rgba(255,255,255,0.55);
+      font-size: 13px; margin-bottom: 12px;
+    }
+    .header-title { font-size: 20px; font-weight: 800; color: #fff; }
+    .header-sub   { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+
+    /* ── Selector Bar ── */
+    .selector-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex; gap: 8px;
+      position: sticky; top: 0; z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .selector-bar select {
+      flex: 1; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      outline: none; background: var(--bg); color: var(--text);
+    }
+    .selector-bar select:focus { border-color: var(--caramel); }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; font-size: 12px; color: var(--sub);
+    }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+    }
+    .status-badge.draft     { background: var(--amber-bg); color: var(--amber); }
+    .status-badge.confirmed { background: var(--green-bg); color: var(--green); }
+
+    /* ── Sections ── */
+    .section { margin: 0 14px 14px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--sub);
+      letter-spacing: 1px; padding: 0 2px 8px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* ── P&L rows ── */
+    .pl-row {
+      display: flex; align-items: center;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px; gap: 8px;
+    }
+    .pl-row:last-child { border-bottom: none; }
+    .pl-label { flex: 1; color: var(--text); }
+    .pl-label small { display: block; font-size: 11px; color: var(--sub); margin-top: 1px; }
+    .pl-value {
+      font-weight: 700; font-variant-numeric: tabular-nums;
+      color: var(--text); text-align: right; min-width: 90px;
+    }
+    .pl-pct {
+      font-size: 12px; color: var(--sub);
+      min-width: 48px; text-align: right; font-variant-numeric: tabular-nums;
+    }
+
+    .pl-row.total .pl-label { font-weight: 700; color: var(--caramel); }
+    .pl-row.total .pl-value { color: var(--caramel); font-size: 16px; }
+    .pl-row.total .pl-pct   { font-weight: 700; color: var(--caramel); }
+
+    .pl-row.profit .pl-value { color: var(--green); font-size: 16px; }
+    .pl-row.profit .pl-pct   { color: var(--green); font-weight: 700; }
+
+    .pl-row.cost .pl-value { color: var(--red); }
+    .pl-row.cost .pl-pct   { color: var(--red); }
+
+    .pl-row.indent .pl-label { padding-left: 12px; color: var(--sub); font-size: 12px; }
+    .pl-row.indent .pl-value { font-size: 12px; font-weight: 400; color: var(--sub); }
+
+    .pl-divider { height: 1px; background: var(--cream); margin: 2px 16px; }
+
+    /* ── Inventory Input ── */
+    .inv-input-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .inv-input-row:last-child { border-bottom: none; }
+    .inv-label { flex: 1; font-size: 13px; color: var(--text); }
+    .inv-label small { display: block; font-size: 11px; color: var(--sub); margin-top: 1px; }
+    .inv-input {
+      width: 130px; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-size: 14px; font-family: inherit;
+      outline: none; text-align: right; background: var(--bg); color: var(--text);
+    }
+    .inv-input:focus { border-color: var(--caramel); background: #fff; }
+    .inv-input:disabled { background: var(--cream); color: var(--sub); }
+
+    /* ── Revenue Breakdown ── */
+    .rev-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .rev-row:last-child { border-bottom: none; }
+    .rev-label { color: var(--sub); }
+    .rev-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .rev-pct { color: var(--sub); font-size: 11px; margin-left: 4px; }
+
+    /* ── Fill Count ── */
+    .fill-info { padding: 8px 16px; font-size: 11px; color: var(--sub); }
+
+    /* ── Notes ── */
+    .notes-wrap { padding: 12px 16px; }
+    .notes-input {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-size: 13px; font-family: inherit;
+      outline: none; resize: vertical; min-height: 64px;
+      background: var(--bg); color: var(--text);
+    }
+    .notes-input:focus { border-color: var(--caramel); background: #fff; }
+
+    /* ── Buttons ── */
+    .btn-confirm {
+      display: block; width: calc(100% - 28px);
+      margin: 0 14px; padding: 15px;
+      background: var(--caramel); color: white; border: none;
+      border-radius: 14px; font-size: 15px; font-weight: 800;
+      font-family: inherit; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(193,123,78,0.3);
+      transition: background 0.15s;
+    }
+    .btn-confirm:hover { background: #A86840; }
+    .btn-confirm:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+    .btn-reopen {
+      display: block; width: calc(100% - 28px);
+      margin: 8px 14px 0; padding: 12px;
+      background: transparent; color: var(--sub);
+      border: 1px solid var(--border); border-radius: 14px;
+      font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+
+    /* ── Empty ── */
+    .empty-state {
+      text-align: center; padding: 36px 20px;
+      color: var(--sub); font-size: 13px; line-height: 1.8;
+    }
+    .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--brown); color: white;
+      padding: 12px 24px; border-radius: 24px;
+      font-size: 13px; font-weight: 600;
+      transition: transform 0.3s; z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <a class="header-back" href="index.html">‹ 返回管理後台</a>
+  <div class="header-title">上下旬盤點</div>
+  <div class="header-sub">期末庫存盤點 · 本期毛利核算</div>
+</div>
+
+<div class="selector-bar">
+  <select id="store-select" onchange="onSelChange()"></select>
+  <select id="period-select" onchange="onSelChange()"></select>
+</div>
+
+<div class="status-bar">
+  <span id="fill-count" class="fill-count">載入中…</span>
+  <span class="status-badge draft" id="status-badge">🟡 未鎖定</span>
+</div>
+
+<!-- 收入摘要 -->
+<div class="section">
+  <div class="section-label">本期收入明細</div>
+  <div class="card" id="rev-card">
+    <div class="empty-state"><div class="icon">📊</div>請選擇店鋪與期別</div>
+  </div>
+</div>
+
+<!-- 庫存輸入 + 成本核算 -->
+<div class="section">
+  <div class="section-label">庫存盤點 & 成本核算</div>
+  <div class="card">
+    <div class="inv-input-row">
+      <div class="inv-label">
+        期初庫存
+        <small>上期盤點結轉（自動帶入）</small>
+      </div>
+      <input class="inv-input" type="number" id="opening-inv" placeholder="0" disabled />
+    </div>
+    <div class="inv-input-row">
+      <div class="inv-label">
+        本期進貨
+        <small>日報變動成本自動加總</small>
+      </div>
+      <input class="inv-input" type="number" id="purchases" placeholder="0" disabled />
+    </div>
+    <div class="inv-input-row">
+      <div class="inv-label">
+        期末庫存
+        <small>盤點後填入實際庫存金額</small>
+      </div>
+      <input class="inv-input" type="number" id="closing-inv" placeholder="請填入" oninput="updatePL()" />
+    </div>
+  </div>
+</div>
+
+<!-- P&L -->
+<div class="section" id="pl-section" style="display:none">
+  <div class="section-label">本期損益</div>
+  <div class="card" id="pl-card"></div>
+</div>
+
+<!-- 備註 -->
+<div class="section">
+  <div class="section-label">備註</div>
+  <div class="card">
+    <div class="notes-wrap">
+      <textarea class="notes-input" id="notes" placeholder="盤點時的特殊狀況、食材耗損說明…"></textarea>
+    </div>
+  </div>
+</div>
+
+<button class="btn-confirm" id="btn-confirm" onclick="saveCheck()" disabled>確認並鎖定本期盤點</button>
+<button class="btn-reopen" id="btn-reopen" onclick="reopenCheck()" style="display:none">重新開啟修改</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  let stores = [];
+  let currentStoreId = null;
+  let revData = { cash: 0, linepay: 0, uber: 0, foodpanda: 0, uncollected: 0, days: 0, fixed: 0 };
+  let existingId = null;
+  let isConfirmed = false;
+
+  const fmt  = n => '$' + Math.round(n || 0).toLocaleString('zh-TW');
+  const pct  = (n, total) => total > 0 ? (n / total * 100).toFixed(1) + '%' : '—';
+
+  async function dbGet(table, q = '') {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${q ? '?' + q : ''}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    return res.ok ? res.json() : [];
+  }
+
+  async function dbUpsert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=store_id,period_key`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation,resolution=merge-duplicates'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  async function dbPatch(table, id, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  /* 產生最近 6 個期別選項（上旬/下旬） */
+  function buildPeriodOptions() {
+    const opts = [];
+    const now = new Date();
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear(), m = d.getMonth() + 1;
+      const ym = `${y}-${String(m).padStart(2,'0')}`;
+      const lastDay = new Date(y, m, 0).getDate();
+      opts.push({
+        key:   `${ym}-lower`,
+        label: `${y}年${m}月下旬（16日～${lastDay}日）`,
+        start: `${ym}-16`,
+        end:   `${ym}-${String(lastDay).padStart(2,'0')}`
+      });
+      opts.push({
+        key:   `${ym}-upper`,
+        label: `${y}年${m}月上旬（1日～15日）`,
+        start: `${ym}-01`,
+        end:   `${ym}-15`
+      });
+    }
+    return opts;
+  }
+
+  function getPrevPeriodKey(key) {
+    const [y, m, half] = key.split('-');
+    if (half === 'lower') return `${y}-${m}-upper`;
+    const prev = new Date(Number(y), Number(m) - 2, 1);
+    const py = prev.getFullYear(), pm = prev.getMonth() + 1;
+    return `${py}-${String(pm).padStart(2,'0')}-lower`;
+  }
+
+  async function init() {
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+
+    const storeSel = document.getElementById('store-select');
+    storeSel.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    currentStoreId = stores[0]?.id || null;
+
+    const periods = buildPeriodOptions();
+    const periodSel = document.getElementById('period-select');
+    periodSel.innerHTML = periods.map(p => `<option value="${p.key}">${p.label}</option>`).join('');
+
+    if (currentStoreId) await loadData();
+  }
+
+  function getCurrentPeriod() {
+    const periods = buildPeriodOptions();
+    const key = document.getElementById('period-select').value;
+    return periods.find(p => p.key === key) || periods[0];
+  }
+
+  async function onSelChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    await loadData();
+  }
+
+  async function loadData() {
+    if (!currentStoreId) return;
+    const period = getCurrentPeriod();
+    const prevKey = getPrevPeriodKey(period.key);
+
+    const [reports, expenses, existing, prevCheck] = await Promise.all([
+      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${period.start}&date=lte.${period.end}`),
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${period.start}&date=lte.${period.end}`),
+      dbGet('inventory_check', `store_id=eq.${currentStoreId}&period_key=eq.${period.key}`),
+      dbGet('inventory_check', `store_id=eq.${currentStoreId}&period_key=eq.${prevKey}`)
+    ]);
+
+    const days = new Set((reports||[]).map(r=>r.date)).size;
+    revData = {
+      cash:        (reports||[]).reduce((s,r)=>s+(Number(r.morning_revenue)||0),0),
+      linepay:     (reports||[]).reduce((s,r)=>s+(Number(r.line_pay)||0),0),
+      uber:        (reports||[]).reduce((s,r)=>s+(Number(r.uber_amount)||0),0),
+      foodpanda:   (reports||[]).reduce((s,r)=>s+(Number(r.foodpanda_amount)||0),0),
+      uncollected: (reports||[]).reduce((s,r)=>s+(Number(r.uncollected)||0),0),
+      purchases:   (expenses||[]).filter(e=>(e.description||'').startsWith('【變動成本】'))
+                                  .reduce((s,e)=>s+(Number(e.amount)||0),0),
+      fixed:       (expenses||[]).filter(e=>(e.description||'').startsWith('【費用】'))
+                                  .reduce((s,e)=>s+(Number(e.amount)||0),0),
+      days
+    };
+
+    document.getElementById('fill-count').textContent = `已填 ${days} 天日報`;
+    document.getElementById('purchases').value = revData.purchases || '';
+
+    // 期初庫存 = 前一期的期末庫存
+    const openingInv = (prevCheck && prevCheck.length > 0) ? (prevCheck[0].closing_inventory || 0) : 0;
+    document.getElementById('opening-inv').value = openingInv || '';
+
+    renderRevCard();
+
+    // 載入既有紀錄
+    existingId = null; isConfirmed = false;
+    if (existing && existing.length > 0) {
+      const rec = existing[0];
+      existingId = rec.id;
+      isConfirmed = rec.status === 'confirmed';
+      document.getElementById('closing-inv').value = rec.closing_inventory ?? '';
+      document.getElementById('notes').value       = rec.notes ?? '';
+    } else {
+      document.getElementById('closing-inv').value = '';
+      document.getElementById('notes').value       = '';
+    }
+
+    setLocked(isConfirmed);
+    updatePL();
+  }
+
+  function renderRevCard() {
+    const total = revData.cash + revData.linepay + revData.uber + revData.foodpanda + revData.uncollected;
+    if (revData.days === 0) {
+      document.getElementById('rev-card').innerHTML =
+        `<div class="empty-state"><div class="icon">📋</div>本期尚無日報資料</div>`;
+      return;
+    }
+    const row = (label, val) => `
+      <div class="rev-row">
+        <span class="rev-label">${label}</span>
+        <span class="rev-val">${fmt(val)}<span class="rev-pct">${pct(val,total)}</span></span>
+      </div>`;
+    document.getElementById('rev-card').innerHTML =
+      row('現場現金', revData.cash) +
+      row('LINE Pay（估）', revData.linepay) +
+      row('Uber Eats（估）', revData.uber) +
+      row('熊貓（估）', revData.foodpanda) +
+      (revData.uncollected > 0 ? row('當日未收款', revData.uncollected) : '') +
+      `<div class="rev-row" style="border-top:2px solid var(--cream);margin-top:2px">
+        <span class="rev-label" style="font-weight:700;color:var(--caramel)">本期總收入</span>
+        <span class="rev-val" style="color:var(--caramel);font-size:15px">${fmt(total)}</span>
+      </div>`;
+  }
+
+  function updatePL() {
+    const opening  = Number(document.getElementById('opening-inv').value) || 0;
+    const purchases = revData.purchases;
+    const closing  = Number(document.getElementById('closing-inv').value);
+    const hasClosing = document.getElementById('closing-inv').value.trim() !== '';
+
+    document.getElementById('pl-section').style.display = hasClosing ? '' : 'none';
+    document.getElementById('btn-confirm').disabled = !hasClosing || revData.days === 0;
+
+    if (!hasClosing) return;
+
+    const cogs  = opening + purchases - closing;
+    const total = revData.cash + revData.linepay + revData.uber + revData.foodpanda + revData.uncollected;
+    const gross = total - cogs;
+    const fixed = revData.fixed;
+    const netProfit = gross - fixed;
+
+    const cogsColor  = cogs / total > 0.52 ? 'var(--red)' : 'var(--text)';
+    const grossColor = gross >= 0 ? 'var(--green)' : 'var(--red)';
+
+    document.getElementById('pl-card').innerHTML = `
+      <div class="pl-row total">
+        <span class="pl-label">本期總收入</span>
+        <span class="pl-value">${fmt(total)}</span>
+        <span class="pl-pct">100%</span>
+      </div>
+      <div class="pl-divider"></div>
+      <div class="pl-row indent">
+        <span class="pl-label">期初庫存</span>
+        <span class="pl-value">${fmt(opening)}</span>
+        <span class="pl-pct"></span>
+      </div>
+      <div class="pl-row indent">
+        <span class="pl-label">+ 本期進貨</span>
+        <span class="pl-value">${fmt(purchases)}</span>
+        <span class="pl-pct"></span>
+      </div>
+      <div class="pl-row indent">
+        <span class="pl-label">− 期末庫存</span>
+        <span class="pl-value">${fmt(closing)}</span>
+        <span class="pl-pct"></span>
+      </div>
+      <div class="pl-row cost" style="color:${cogsColor}">
+        <span class="pl-label" style="color:${cogsColor}">本期食材成本</span>
+        <span class="pl-value" style="color:${cogsColor}">${fmt(cogs)}</span>
+        <span class="pl-pct" style="color:${cogsColor}">${pct(cogs,total)}</span>
+      </div>
+      <div class="pl-divider"></div>
+      <div class="pl-row profit" style="color:${grossColor}">
+        <span class="pl-label" style="font-weight:700;color:${grossColor}">食材毛利</span>
+        <span class="pl-value" style="color:${grossColor}">${fmt(gross)}</span>
+        <span class="pl-pct" style="color:${grossColor}">${pct(gross,total)}</span>
+      </div>
+      ${fixed > 0 ? `
+      <div class="pl-row indent">
+        <span class="pl-label">− 固定費用</span>
+        <span class="pl-value">${fmt(fixed)}</span>
+        <span class="pl-pct">${pct(fixed,total)}</span>
+      </div>
+      <div class="pl-divider"></div>
+      <div class="pl-row" style="border-bottom:none">
+        <span class="pl-label" style="font-weight:700">本期淨利（估）</span>
+        <span class="pl-value" style="color:${netProfit>=0?'var(--green)':'var(--red)'};font-size:16px">${fmt(netProfit)}</span>
+        <span class="pl-pct" style="color:${netProfit>=0?'var(--green)':'var(--red)'};font-weight:700">${pct(netProfit,total)}</span>
+      </div>` : ''}
+    `;
+  }
+
+  function setLocked(locked) {
+    const badge   = document.getElementById('status-badge');
+    const confirm = document.getElementById('btn-confirm');
+    const reopen  = document.getElementById('btn-reopen');
+
+    badge.className   = 'status-badge ' + (locked ? 'confirmed' : 'draft');
+    badge.textContent = locked ? '✅ 已鎖定' : '🟡 未鎖定';
+    confirm.style.display = locked ? 'none' : 'block';
+    reopen.style.display  = locked ? 'block' : 'none';
+    document.getElementById('closing-inv').disabled = locked;
+    document.getElementById('notes').disabled       = locked;
+  }
+
+  async function saveCheck() {
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = true; btn.textContent = '儲存中…';
+
+    const period   = getCurrentPeriod();
+    const opening  = Number(document.getElementById('opening-inv').value) || 0;
+    const closing  = Number(document.getElementById('closing-inv').value) || 0;
+    const purchases = revData.purchases;
+    const cogs     = opening + purchases - closing;
+    const total    = revData.cash + revData.linepay + revData.uber + revData.foodpanda + revData.uncollected;
+    const gross    = total - cogs;
+
+    const payload = {
+      store_id:          currentStoreId,
+      period_key:        period.key,
+      period_label:      period.label,
+      period_start:      period.start,
+      period_end:        period.end,
+      opening_inventory: opening,
+      purchases:         purchases,
+      closing_inventory: closing,
+      total_revenue:     total,
+      cogs,
+      gross_profit:      gross,
+      gross_margin:      total > 0 ? +(gross / total * 100).toFixed(2) : 0,
+      status:            'confirmed',
+      confirmed_at:      new Date().toISOString(),
+      notes:             document.getElementById('notes').value.trim() || null
+    };
+
+    const result = await dbUpsert('inventory_check', payload);
+    if (result) {
+      existingId = result[0]?.id || existingId;
+      isConfirmed = true;
+      setLocked(true);
+      showToast('✅ 本期盤點已鎖定');
+    } else {
+      showToast('❌ 儲存失敗，請重試');
+      btn.disabled = false;
+      btn.textContent = '確認並鎖定本期盤點';
+    }
+  }
+
+  async function reopenCheck() {
+    if (!existingId) return;
+    if (!confirm('確定重新開啟本期盤點？')) return;
+    await dbPatch('inventory_check', existingId, { status: 'draft', confirmed_at: null });
+    isConfirmed = false;
+    setLocked(false);
+    document.getElementById('btn-confirm').textContent = '確認並鎖定本期盤點';
+    showToast('已重新開啟，可修改');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  init();
+</script>
+</body>
+</html>
