@@ -65,12 +65,12 @@
   .gantt-row{display:grid; grid-template-columns:150px 1fr; align-items:center; min-height:30px; border-bottom:1px solid var(--border);}
   .gantt-row:last-child{border-bottom:none;}
   .gantt-label{padding:4px 10px 4px 0; color:var(--text-dark); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .gantt-track{position:relative; display:grid; grid-template-columns:repeat(64, 1fr); height:22px; background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/64));}
+  .gantt-track{position:relative; display:grid; grid-template-columns:repeat(32, 1fr); height:22px; background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/32));}
   .gantt-bar{grid-row:1; border-radius:5px; height:16px; align-self:center; font-size:9.5px; color:#fff; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; padding:0 3px;}
   .gantt-bar.crit{outline:2px solid var(--red); outline-offset:1px;}
   .gantt-bar.float-tail{background:transparent !important; border:1.5px dashed var(--new); color:var(--new); height:12px;}
   .gantt-axis{display:grid; grid-template-columns:150px 1fr; margin-bottom:4px;}
-  .gantt-axis-track{display:grid; grid-template-columns:repeat(64, 1fr); font-size:10px; color:var(--text-light);}
+  .gantt-axis-track{display:grid; grid-template-columns:repeat(32, 1fr); font-size:10px; color:var(--text-light);}
   .gantt-axis-track span{border-left:1px solid var(--border); padding-left:2px;}
 
   .wbs-table-wrap{overflow-x:auto;}
@@ -153,7 +153,7 @@ flowchart TD
   </section>
 
   <section>
-    <h2>建議工期甘特圖（相對天數，第1天＝簽約日；照富國店實際日期還原，不是憑感覺排的）</h2>
+    <h2>建議工期甘特圖（只看第一個月：簽約到軟性開幕）</h2>
     <div class="diagram-card">
       <div class="gantt-wrap">
         <div class="gantt">
@@ -188,9 +188,6 @@ flowchart TD
           <div class="gantt-row"><div class="gantt-label">全功率同時試車（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:29/31; background:#C0524A;">29-30</div></div></div>
           <div class="gantt-row"><div class="gantt-label">備料＋正式營運前驗收（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:30/32; background:#C0524A;">30-31</div></div></div>
           <div class="gantt-row"><div class="gantt-label">🌤️ 軟性開幕／試營運起</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:31/32; background:#2C1A0E;">31</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">試營運期（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:31/58; background:#2F7BB8;">軟性開幕後約26天</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">開幕促銷週（每人3碗$29）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:58/63; background:#E0A458;">軟性開幕後約1個月</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">🎉 正式開幕</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:58/59; background:#2C1A0E;">約1個月後</div></div></div>
         </div>
       </div>
     </div>
@@ -199,13 +196,19 @@ flowchart TD
       <span><i style="background:#2F7BB8"></i>本版新增（藍色）</span>
       <span style="border:1.5px dashed var(--new); background:transparent; padding:1px 6px; border-radius:4px; color:var(--new)">浮時 N 天＝可以晚開始這麼多天，仍不影響軟性開幕日</span>
     </div>
-    <p class="sub" style="margin-top:10px;">拆除到軟性開幕原本規劃約 18-19 天，但真實案例多了 5 天延誤（玻璃臨時重新設計、淘寶設備晚到、等水電協助裝家具），所以軟性開幕落在 Day 31（簽約後第 31 天，跟真實日期 7/8 拆除、8/1 試營運對得起來）。過了軟性開幕之後，「第幾天」對人來說已經沒有感覺了，所以後面改用「軟性開幕後約幾週／幾個月」來標示。</p>
+    <p class="sub" style="margin-top:10px;">拆除到軟性開幕原本規劃約 18-19 天，但真實案例多了 5 天延誤（玻璃臨時重新設計、淘寶設備晚到、等水電協助裝家具），所以軟性開幕落在 Day 31（簽約後第 31 天，跟真實日期 7/8 拆除、8/1 試營運對得起來）。</p>
+
+    <div class="callout" style="margin-top:16px;">
+      <h3 style="color:var(--brown-main);">📅 軟性開幕之後（不用再按天看）</h3>
+      <p>過了軟性開幕，「第幾天」對人來說已經沒有感覺了，接下來這樣走就好：</p>
+      <p><b>軟性開幕</b> → <b>試營運約 26 天</b>（真實抓出問題、調整動線） → <b>開幕促銷週約 5 天</b>（每人3碗特價活動） → <b>正式開幕</b>，整段大約再 1 個月。</p>
+    </div>
   </section>
   <script>
     (function(){
       const axis = document.getElementById('gantt-axis');
       let html = '';
-      for(let d=1; d<=64; d++){ html += `<span>${d % 5 === 1 ? d : ''}</span>`; }
+      for(let d=1; d<=32; d++){ html += `<span>${d % 5 === 1 ? d : ''}</span>`; }
       axis.innerHTML = html;
     })();
   </script>
