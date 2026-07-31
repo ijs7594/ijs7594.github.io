@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>排假申請 · 今年貴焿助理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --warm-white:  #FAF7F2;
+      --cream:       #F5EDE0;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --blue:        #4A90E2;
+      --red:         #E05555;
+      --clr-weekday: #4A90E2;
+      --clr-weekend: #E07B3A;
+      --clr-special: #5BAF82;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: var(--brown-dark);
+      display: flex; flex-direction: column; padding: 20px 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--caramel), #8B5E3C);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: white; font-weight: 700;
+    }
+    .brand-text h2 { font-size: 13px; font-weight: 700; color: #fff; }
+    .brand-text span { font-size: 11px; color: var(--sand); }
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; transition: background 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.active { background: rgba(193,123,78,0.25); border-left: 3px solid var(--caramel); padding-left: 13px; }
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+    .nav-text { font-size: 12px; color: #fff; }
+    .nav-sub  { font-size: 10px; color: var(--text-light); }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; background: var(--warm-white); }
+    .main-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--warm-white); z-index: 10;
+    }
+    .main-header h1 { font-size: 18px; font-weight: 700; }
+    .main-header .sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+    .content { padding: 20px 24px; max-width: 760px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Mode Tabs ── */
+    .mode-tabs {
+      display: flex; gap: 8px;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px;
+    }
+    .mode-tab {
+      flex: 1; padding: 9px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--text-light); background: transparent; transition: all 0.15s;
+    }
+    .mode-tab.active { background: var(--brown-dark); color: #fff; }
+
+    /* ── Rules Card ── */
+    .rules-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 18px;
+    }
+    .rules-title { font-size: 11px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; margin-bottom: 8px; }
+    .rules-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .rules-list li { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+    .rules-list li::before { content: "·  "; color: var(--caramel); }
+
+    /* ── Deadline Banner ── */
+    .deadline-banner {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .deadline-label { font-size: 12px; color: var(--text-light); }
+    .deadline-val { font-size: 14px; font-weight: 700; color: var(--caramel); }
+    .deadline-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .deadline-status.open  { background: rgba(76,175,125,0.12); color: var(--green); border: 1px solid rgba(76,175,125,0.3); }
+    .deadline-status.closed { background: rgba(224,85,85,0.1); color: var(--red); border: 1px solid rgba(224,85,85,0.25); }
+
+    /* ── Employee Select ── */
+    .emp-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .emp-btn {
+      padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: white; font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--text-mid); transition: all 0.15s;
+    }
+    .emp-btn.active { background: var(--brown-dark); color: #fff; border-color: var(--brown-dark); }
+    .emp-btn:hover:not(.active) { border-color: var(--caramel); color: var(--caramel); }
+
+    /* ── Quota Bar ── */
+    .quota-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+    }
+    .quota-item { display: flex; align-items: center; gap: 8px; }
+    .quota-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .quota-text { font-size: 12px; color: var(--text-mid); }
+    .quota-count { font-weight: 700; color: var(--text-dark); }
+
+    /* ── Calendar ── */
+    .cal-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+    }
+    .cal-title { font-size: 15px; font-weight: 700; }
+    .cal-hint { font-size: 11px; color: var(--text-light); }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 0;
+    }
+    .cal-weekday-hdr {
+      text-align: center; padding: 8px 0;
+      font-size: 11px; font-weight: 700; color: var(--text-light);
+      border-bottom: 1px solid var(--border);
+    }
+    .cal-weekday-hdr.sun, .cal-weekday-hdr.sat { color: var(--caramel); }
+
+    .cal-day {
+      border: 0.5px solid var(--border);
+      min-height: 52px; padding: 6px;
+      display: flex; flex-direction: column; gap: 3px;
+      cursor: pointer; transition: background 0.1s;
+      position: relative;
+    }
+    .cal-day:hover { background: var(--cream); }
+    .cal-day.empty { background: transparent; cursor: default; }
+    .cal-day.today { background: rgba(193,123,78,0.06); }
+    .cal-day.past  { opacity: 0.4; cursor: not-allowed; }
+    .cal-day-num { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+    .cal-day.weekend .cal-day-num { color: var(--caramel); }
+    .cal-day.sun .cal-day-num { color: var(--red); }
+
+    .day-badge {
+      font-size: 9px; font-weight: 700; padding: 1px 5px;
+      border-radius: 4px; color: #fff; width: fit-content;
+    }
+    .day-badge.weekday { background: var(--clr-weekday); }
+    .day-badge.weekend { background: var(--clr-weekend); }
+    .day-badge.special { background: var(--clr-special); }
+
+    /* ── Type Selector Popup ── */
+    #type-popup {
+      position: fixed; z-index: 200;
+      background: white; border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      padding: 12px; display: none; flex-direction: column; gap: 6px; min-width: 160px;
+    }
+    .type-popup-title { font-size: 10px; color: var(--text-light); font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+    .type-btn {
+      padding: 9px 12px; border-radius: 8px; border: none;
+      font-size: 12px; font-weight: 700; cursor: pointer; text-align: left;
+      color: #fff; transition: opacity 0.1s;
+    }
+    .type-btn:hover { opacity: 0.85; }
+    .type-btn.weekday { background: var(--clr-weekday); }
+    .type-btn.weekend { background: var(--clr-weekend); }
+    .type-btn.special { background: var(--clr-special); }
+    .type-btn.remove  { background: #eee; color: var(--text-mid); }
+
+    /* ── Submit ── */
+    .submit-row { display: flex; align-items: center; gap: 12px; }
+    .submit-btn {
+      padding: 12px 28px; border-radius: 10px; border: none;
+      background: var(--brown-dark); color: #fff;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .submit-btn:hover { background: var(--brown-mid, #5C3317); }
+    .submit-msg { font-size: 12px; color: var(--text-light); }
+
+    /* ── Manager View ── */
+    #manager-view { display: none; }
+    .manager-summary {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .manager-sum-hdr {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .manager-sum-title { font-size: 14px; font-weight: 700; }
+    .refresh-btn {
+      padding: 5px 12px; border-radius: 7px;
+      border: 1px solid var(--border); background: white;
+      font-size: 11px; color: var(--text-mid); cursor: pointer;
+    }
+
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table th {
+      text-align: left; padding: 10px 16px;
+      font-size: 11px; font-weight: 700; color: var(--text-light);
+      background: var(--cream); border-bottom: 1px solid var(--border);
+    }
+    .summary-table td {
+      padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+    .date-chip {
+      display: inline-block; margin: 2px;
+      padding: 2px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; color: #fff;
+    }
+    .date-chip.weekday { background: var(--clr-weekday); }
+    .date-chip.weekend { background: var(--clr-weekend); }
+    .date-chip.special { background: var(--clr-special); }
+
+    .conflict-banner {
+      margin: 14px 18px; padding: 10px 14px;
+      background: rgba(224,85,85,0.08); border: 1px solid rgba(224,85,85,0.2);
+      border-radius: 8px; font-size: 12px; color: var(--red);
+    }
+
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px; justify-content: space-around; align-items: center;
+      z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { overflow-y: auto; }
+      .content { padding: 14px 14px 80px; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">焿</div>
+    <div class="brand-text">
+      <h2>共好中樞</h2>
+      <span>今年貴焿助理系統</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">○</span>
+      <div><div class="nav-text">貴焿共好系統</div><div class="nav-sub">管理中樞</div></div>
+    </a>
+    <a class="nav-item" href="schedule.html">
+      <span class="nav-icon">📅</span>
+      <div><div class="nav-text">排班表</div><div class="nav-sub">光遠店</div></div>
+    </a>
+    <a class="nav-item active" href="leave-request.html">
+      <span class="nav-icon">🙏</span>
+      <div><div class="nav-text">排假申請</div><div class="nav-sub">填寫 · 統整</div></div>
+    </a>
+    <a class="nav-item" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="personal.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">個人管理</div><div class="nav-sub">漢柏的空間</div></div>
+    </a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="main-header">
+    <div>
+      <h1>🙏 排假申請</h1>
+      <div class="sub">光遠店 · 感謝夥伴們互相成就</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Mode tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-emp" onclick="switchMode('employee')">📝 我要申請</button>
+      <button class="mode-tab" id="tab-mgr" onclick="switchMode('manager')">📋 店長總覽</button>
+    </div>
+
+    <!-- Rules -->
+    <div class="rules-card">
+      <div class="rules-title">申請規則</div>
+      <ul class="rules-list">
+        <li>正職人員每月排休 8 天，最多指定 2 個平日、2 個假日（六），其餘自由安排</li>
+        <li>特休以平日為主，以不衝突指定休假為主</li>
+        <li>同日兩人同時指定，無法協調者以抽籤決定</li>
+        <li>截止後請勿更改，如有特殊情況請提前與店長溝通</li>
+      </ul>
+    </div>
+
+    <!-- Deadline -->
+    <div class="deadline-banner">
+      <div>
+        <div class="deadline-label">申請截止時間</div>
+        <div class="deadline-val" id="deadline-display"></div>
+      </div>
+      <div class="deadline-status" id="deadline-status"></div>
+    </div>
+
+    <!-- Employee mode -->
+    <div id="employee-view">
+      <!-- Select employee -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:1px;margin-bottom:8px;">選擇你的名字</div>
+        <div class="emp-select-row" id="emp-btns"></div>
+      </div>
+
+      <!-- Quota -->
+      <div class="quota-bar" id="quota-bar" style="display:none;">
+        <div class="quota-item">
+          <div class="quota-dot" style="background:var(--clr-weekday)"></div>
+          <div class="quota-text">指定平日 <span class="quota-count" id="q-weekday">0</span>/2</div>
+        </div>
+        <div class="quota-item">
+          <div class="quota-dot" style="background:var(--clr-weekend)"></div>
+          <div class="quota-text">指定假日 <span class="quota-count" id="q-weekend">0</span>/2</div>
+        </div>
+        <div class="quota-item">
+          <div class="quota-dot" style="background:var(--clr-special)"></div>
+          <div class="quota-text">特休 <span class="quota-count" id="q-special">0</span> 天</div>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text-light);">點日期選班別</div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="cal-card" id="cal-card" style="display:none;">
+        <div class="cal-header">
+          <div class="cal-title" id="cal-title"></div>
+          <div class="cal-hint">申請下個月的排假</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-row" id="submit-row" style="display:none;">
+        <button class="submit-btn" onclick="submitRequest()">送出申請</button>
+        <div class="submit-msg" id="submit-msg">友善提醒：送出後請感謝協助你的夥伴 🙏</div>
+      </div>
+    </div>
+
+    <!-- Manager mode -->
+    <div id="manager-view">
+      <div class="manager-summary">
+        <div class="manager-sum-hdr">
+          <div class="manager-sum-title" id="mgr-title"></div>
+          <button class="refresh-btn" onclick="loadManagerView()">⟳ 刷新</button>
+        </div>
+        <div id="conflict-area"></div>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>夥伴</th>
+              <th>指定平日</th>
+              <th>指定假日</th>
+              <th>特休</th>
+            </tr>
+          </thead>
+          <tbody id="mgr-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Type popup -->
+<div id="type-popup">
+  <div class="type-popup-title">這天休什麼？</div>
+  <button class="type-btn weekday" onclick="setDayType('weekday')">平日指定休</button>
+  <button class="type-btn weekend" onclick="setDayType('weekend')">假日指定休（六）</button>
+  <button class="type-btn special" onclick="setDayType('special')">特休</button>
+  <button class="type-btn remove"  onclick="setDayType(null)">移除</button>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="schedule.html"><span class="mn-icon">📅</span><span>排班</span></a>
+  <a class="mobile-nav-item active" href="leave-request.html"><span class="mn-icon">🙏</span><span>排假</span></a>
+  <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+</nav>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const STORE_NAME   = '光遠店';
+  const EMPLOYEES    = ['陳雅婷','尤愛稜','彭淑美','莊鳳怡','涂家蓁','陳柏岑'];
+  const WD_NAMES     = ['日','一','二','三','四','五','六'];
+
+  const today = new Date();
+  const deadlineDay = 22;
+
+  // Request is for NEXT month
+  let reqYear  = today.getMonth() === 11 ? today.getFullYear() + 1 : today.getFullYear();
+  let reqMonth = today.getMonth() === 11 ? 1 : today.getMonth() + 2;
+
+  let currentEmp = null;
+  let empData = {}; // date string → type ('weekday'|'weekend'|'special')
+  let activeDay = null;
+  let currentMode = 'employee';
+
+  // ── Deadline ──
+  function setupDeadline() {
+    const deadlineDate = new Date(today.getFullYear(), today.getMonth(), deadlineDay, 18, 0, 0);
+    const mm = String(today.getMonth() + 1).padStart(2,'0');
+    const dd = String(deadlineDay).padStart(2,'0');
+    document.getElementById('deadline-display').textContent = `${today.getFullYear()} 年 ${mm} 月 ${dd} 日 18:00`;
+    const isOpen = today < deadlineDate;
+    const st = document.getElementById('deadline-status');
+    st.textContent = isOpen ? '開放申請中' : '已截止';
+    st.className = 'deadline-status ' + (isOpen ? 'open' : 'closed');
+  }
+
+  // ── Mode switch ──
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tab-emp').classList.toggle('active', mode === 'employee');
+    document.getElementById('tab-mgr').classList.toggle('active', mode === 'manager');
+    document.getElementById('employee-view').style.display = mode === 'employee' ? 'contents' : 'none';
+    document.getElementById('manager-view').style.display  = mode === 'manager'  ? 'block' : 'none';
+    if (mode === 'manager') loadManagerView();
+  }
+
+  // ── Employee buttons ──
+  function renderEmpBtns() {
+    const row = document.getElementById('emp-btns');
+    row.innerHTML = EMPLOYEES.map(e =>
+      `<button class="emp-btn${currentEmp===e?' active':''}" onclick="selectEmp('${e}')">${e}</button>`
+    ).join('');
+  }
+
+  function selectEmp(name) {
+    currentEmp = name;
+    renderEmpBtns();
+    loadEmpData();
+  }
+
+  async function loadEmpData() {
+    const ym = `${reqYear}-${String(reqMonth).padStart(2,'0')}`;
+    const from = `${ym}-01`;
+    const last = new Date(reqYear, reqMonth, 0).getDate();
+    const to   = `${ym}-${String(last).padStart(2,'0')}`;
+
+    const rows = await apiFetch(
+      `/rest/v1/leave_requests?store_name=eq.${encodeURIComponent(STORE_NAME)}&employee_name=eq.${encodeURIComponent(currentEmp)}&leave_date=gte.${from}&leave_date=lte.${to}&select=leave_date,leave_type`
+    );
+    empData = {};
+    if (rows) rows.forEach(r => { empData[r.leave_date] = r.leave_type; });
+
+    document.getElementById('quota-bar').style.display = 'flex';
+    document.getElementById('cal-card').style.display  = 'block';
+    document.getElementById('submit-row').style.display = 'flex';
+    renderCalendar();
+    updateQuota();
+  }
+
+  // ── Calendar ──
+  function renderCalendar() {
+    const y = reqYear, m = reqMonth;
+    document.getElementById('cal-title').textContent = `${y} 年 ${m} 月`;
+    const firstDay = new Date(y, m - 1, 1).getDay();
+    const days     = new Date(y, m, 0).getDate();
+    const grid     = document.getElementById('cal-grid');
+
+    // Weekday headers
+    let html = WD_NAMES.map((d, i) =>
+      `<div class="cal-weekday-hdr${i===0?' sun':i===6?' sat':''}">${d}</div>`
+    ).join('');
+
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+    for (let d = 1; d <= days; d++) {
+      const date  = new Date(y, m - 1, d);
+      const wd    = date.getDay();
+      const dStr  = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const type  = empData[dStr];
+      const isWe  = wd === 6;
+      const isSun = wd === 0;
+      const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      let cls = 'cal-day';
+      if (isWe)  cls += ' weekend';
+      if (isSun) cls += ' sun';
+      if (isPast) cls += ' past';
+
+      let badge = '';
+      if (type === 'weekday') badge = '<div class="day-badge weekday">平日</div>';
+      else if (type === 'weekend') badge = '<div class="day-badge weekend">假日</div>';
+      else if (type === 'special') badge = '<div class="day-badge special">特休</div>';
+
+      const clickFn = isPast ? '' : `onclick="openTypePopup(event,'${dStr}')"`;
+      html += `<div class="${cls}" ${clickFn}>
+        <div class="cal-day-num">${d}</div>
+        ${badge}
+      </div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  function updateQuota() {
+    const vals = Object.values(empData);
+    document.getElementById('q-weekday').textContent = vals.filter(v => v==='weekday').length;
+    document.getElementById('q-weekend').textContent = vals.filter(v => v==='weekend').length;
+    document.getElementById('q-special').textContent = vals.filter(v => v==='special').length;
+  }
+
+  // ── Type popup ──
+  function openTypePopup(e, dStr) {
+    if (!currentEmp) return;
+    e.stopPropagation();
+    activeDay = dStr;
+    const pop = document.getElementById('type-popup');
+    pop.style.display = 'flex';
+    const rect = e.currentTarget.getBoundingClientRect();
+    let top  = rect.bottom + 4;
+    let left = rect.left;
+    if (left + 170 > window.innerWidth) left = window.innerWidth - 175;
+    if (top + 180 > window.innerHeight) top = rect.top - 185;
+    pop.style.top = top + 'px'; pop.style.left = left + 'px';
+  }
+
+  function setDayType(type) {
+    if (!activeDay) return;
+    // Quota check
+    if (type === 'weekday') {
+      const cnt = Object.values(empData).filter(v=>v==='weekday').length;
+      if (cnt >= 2 && empData[activeDay] !== 'weekday') { alert('指定平日最多 2 天'); closeTypePopup(); return; }
+    }
+    if (type === 'weekend') {
+      const cnt = Object.values(empData).filter(v=>v==='weekend').length;
+      if (cnt >= 2 && empData[activeDay] !== 'weekend') { alert('指定假日最多 2 天'); closeTypePopup(); return; }
+    }
+    if (type === null) delete empData[activeDay];
+    else empData[activeDay] = type;
+    renderCalendar();
+    updateQuota();
+    closeTypePopup();
+  }
+
+  function closeTypePopup() {
+    document.getElementById('type-popup').style.display = 'none';
+    activeDay = null;
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#type-popup') && !e.target.closest('.cal-day')) closeTypePopup();
+  });
+
+  // ── Submit ──
+  async function submitRequest() {
+    if (!currentEmp) { alert('請先選擇名字'); return; }
+    if (!Object.keys(empData).length) { alert('請先選擇想休的日期'); return; }
+
+    const ym = `${reqYear}-${String(reqMonth).padStart(2,'0')}`;
+    const from = `${ym}-01`;
+    const last = new Date(reqYear, reqMonth, 0).getDate();
+    const to   = `${ym}-${String(last).padStart(2,'0')}`;
+
+    // Delete old then insert new
+    await apiFetch(
+      `/rest/v1/leave_requests?store_name=eq.${encodeURIComponent(STORE_NAME)}&employee_name=eq.${encodeURIComponent(currentEmp)}&leave_date=gte.${from}&leave_date=lte.${to}`,
+      { method: 'DELETE', prefer: 'return=minimal' }
+    );
+
+    const rows = Object.entries(empData).map(([date, type]) => ({
+      store_name: STORE_NAME, employee_name: currentEmp,
+      leave_date: date, leave_type: type,
+      request_month: ym
+    }));
+
+    if (rows.length) {
+      await apiFetch('/rest/v1/leave_requests', {
+        method: 'POST',
+        prefer: 'return=minimal',
+        body: JSON.stringify(rows)
+      });
+    }
+
+    document.getElementById('submit-msg').textContent = '✅ 申請已送出！感謝你的提前安排 🙏';
+    setTimeout(() => {
+      document.getElementById('submit-msg').textContent = '友善提醒：送出後請感謝協助你的夥伴 🙏';
+    }, 4000);
+  }
+
+  // ── Manager view ──
+  async function loadManagerView() {
+    const ym = `${reqYear}-${String(reqMonth).padStart(2,'0')}`;
+    document.getElementById('mgr-title').textContent = `${reqYear} 年 ${reqMonth} 月 · 申請統整`;
+
+    const rows = await apiFetch(
+      `/rest/v1/leave_requests?store_name=eq.${encodeURIComponent(STORE_NAME)}&request_month=eq.${ym}&select=employee_name,leave_date,leave_type&order=employee_name`
+    );
+
+    if (!rows) {
+      document.getElementById('mgr-tbody').innerHTML = '<tr><td colspan="4" style="color:var(--text-light);text-align:center;padding:20px;">無法載入資料</td></tr>';
+      return;
+    }
+
+    // Group by employee
+    const byEmp = {};
+    EMPLOYEES.forEach(e => byEmp[e] = { weekday:[], weekend:[], special:[] });
+    rows.forEach(r => {
+      if (byEmp[r.employee_name]) {
+        byEmp[r.employee_name][r.leave_type]?.push(r.leave_date);
+      }
+    });
+
+    // Conflict detection
+    const dateCounts = {};
+    rows.forEach(r => {
+      if (!dateCounts[r.leave_date]) dateCounts[r.leave_date] = [];
+      dateCounts[r.leave_date].push(r.employee_name);
+    });
+    const conflicts = Object.entries(dateCounts).filter(([,names]) => names.length >= 2);
+    const conflictArea = document.getElementById('conflict-area');
+    if (conflicts.length) {
+      conflictArea.innerHTML = `<div class="conflict-banner">⚠ 衝假提醒：${conflicts.map(([d,names])=>`${d.slice(5)} (${names.join('、')})`).join('；')}</div>`;
+    } else {
+      conflictArea.innerHTML = '';
+    }
+
+    const fmtDate = d => d.slice(5).replace('-','/');
+    const chips = (arr, type) => arr.map(d => `<span class="date-chip ${type}">${fmtDate(d)}</span>`).join('');
+
+    const tbody = document.getElementById('mgr-tbody');
+    tbody.innerHTML = EMPLOYEES.map(emp => {
+      const d = byEmp[emp];
+      const hasAny = d.weekday.length || d.weekend.length || d.special.length;
+      return `<tr>
+        <td style="font-weight:600;">${emp}</td>
+        <td>${chips(d.weekday,'weekday') || '<span style="color:var(--text-light);font-size:11px;">未填</span>'}</td>
+        <td>${chips(d.weekend,'weekend') || '<span style="color:var(--text-light);font-size:11px;">未填</span>'}</td>
+        <td>${chips(d.special,'special') || '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── API ──
+  async function apiFetch(path, opts = {}) {
+    try {
+      const res = await fetch(SUPABASE_URL + path, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': opts.prefer || ''
+        },
+        ...opts
+      });
+      if (!res.ok) return null;
+      const text = await res.text();
+      return text ? JSON.parse(text) : [];
+    } catch { return null; }
+  }
+
+  // ── Init ──
+  setupDeadline();
+  renderEmpBtns();
+</script>
+</body>
+</html>
