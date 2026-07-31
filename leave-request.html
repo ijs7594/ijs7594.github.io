@@ -515,6 +515,21 @@
 </nav>
 
 <script>
+  if (new URLSearchParams(location.search).get('from') === 'staff') {
+    document.querySelector('.sidebar-nav').innerHTML = `
+      <a class="nav-item" href="staff.html">
+        <span class="nav-icon">←</span>
+        <div><div class="nav-text">返回夥伴互動入口</div></div>
+      </a>
+      <a class="nav-item" href="index.html">
+        <span class="nav-icon">🏠</span>
+        <div><div class="nav-text">回首頁</div></div>
+      </a>`;
+    document.querySelector('.mobile-nav').innerHTML = `
+      <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>
+      <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>首頁</span></a>`;
+  }
+
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
   const STORE_NAME   = '光遠店';

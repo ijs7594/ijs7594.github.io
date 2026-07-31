@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>教育訓練 · 今年貴焿助理</title>
+  <title>營收帳務 · 今年貴焿助理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -73,8 +73,6 @@
     .article-desc { font-size: 12.5px; color: var(--text-light); }
     .article-arrow { margin-left: auto; color: var(--text-light); font-size: 14px; flex-shrink: 0; }
 
-    .empty-note { font-size: 13px; color: var(--text-light); padding: 20px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; }
-
     /* ── Mobile ── */
     .mobile-nav {
       display: none;
@@ -128,7 +126,7 @@
       <span class="nav-icon">🔍</span>
       <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
     </a>
-    <a class="nav-item" href="daily-report.html">
+    <a class="nav-item active" href="daily-report.html">
       <span class="nav-icon">📆</span>
       <div><div class="nav-text">日報表</div><div class="nav-sub">營收／支出</div></div>
     </a>
@@ -136,7 +134,7 @@
       <span class="nav-icon">📒</span>
       <div><div class="nav-text">應收應付</div><div class="nav-sub">毛利結算</div></div>
     </a>
-    <a class="nav-item active" href="training.html">
+    <a class="nav-item" href="training.html">
       <span class="nav-icon">🎓</span>
       <div><div class="nav-text">教育訓練</div><div class="nav-sub">店長／組長必讀</div></div>
     </a>
@@ -149,33 +147,33 @@
 
 <div class="main">
   <div class="topbar">
-    <span class="topbar-icon">🎓</span>
+    <span class="topbar-icon">📆</span>
     <div>
-      <div class="topbar-title">教育訓練</div>
-      <div class="topbar-sub">店長、組長必讀的觀念與操作教學</div>
+      <div class="topbar-title">營收帳務</div>
+      <div class="topbar-sub">每日營收登記、應收應付與毛利結算</div>
     </div>
   </div>
 
   <div class="content">
-    <div class="group-label">日常作業</div>
+    <div class="group-label">日常登記</div>
     <div class="article-list">
-      <a class="article-card" href="sop.html">
-        <div class="article-icon">📖</div>
+      <a class="article-card" href="daily-report.html">
+        <div class="article-icon">📆</div>
         <div>
-          <div class="article-title">一日作業流程</div>
-          <div class="article-desc">開店到打烊的標準作業手冊</div>
+          <div class="article-title">日報表</div>
+          <div class="article-desc">每天登載營收與支出，之後自動疊成內帳與損益表</div>
         </div>
         <div class="article-arrow">→</div>
       </a>
     </div>
 
-    <div class="group-label">財務／盤點</div>
+    <div class="group-label">半月結算</div>
     <div class="article-list">
-      <a class="article-card" href="margin-guide.html">
-        <div class="article-icon">🧮</div>
+      <a class="article-card" href="ledger.html">
+        <div class="article-icon">📒</div>
         <div>
-          <div class="article-title">毛利率異常，怎麼自己先排查</div>
-          <div class="article-desc">看到毛利率跟平常差很多時，怎麼用公式自己判斷方向，不用等總部發現</div>
+          <div class="article-title">應收應付與毛利</div>
+          <div class="article-desc">未收款登記、廠商進貨貨款、逐項盤點自動算毛利率</div>
         </div>
         <div class="article-arrow">→</div>
       </a>
@@ -185,9 +183,9 @@
 
 <nav class="mobile-nav">
   <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
-  <a class="mobile-nav-item" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
   <a class="mobile-nav-item" href="daily-report.html"><span class="mn-icon">📆</span><span>日報表</span></a>
-  <a class="mobile-nav-item active" href="training.html"><span class="mn-icon">🎓</span><span>教育訓練</span></a>
+  <a class="mobile-nav-item active" href="finance-hub.html"><span class="mn-icon">📆</span><span>營收帳務</span></a>
+  <a class="mobile-nav-item" href="ledger.html"><span class="mn-icon">📒</span><span>應收應付</span></a>
   <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
 </nav>
 
@@ -205,7 +203,9 @@
     document.querySelector('.mobile-nav').innerHTML = `
       <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>
       <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>首頁</span></a>`;
-    document.querySelectorAll('.article-card[href="sop.html"]').forEach(a => a.href = 'sop.html?from=staff');
+    document.querySelectorAll('.article-card').forEach(a => {
+      a.href = a.getAttribute('href') + '?from=staff';
+    });
   }
 </script>
 

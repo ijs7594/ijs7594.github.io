@@ -31,7 +31,14 @@
       background: var(--brown);
       padding: 48px 20px 24px;
       display: flex; flex-direction: column; align-items: center; gap: 8px;
+      position: relative;
     }
+    .home-link {
+      position: absolute; top: 16px; left: 16px;
+      font-size: 11px; color: rgba(255,255,255,0.55);
+      text-decoration: none; display: flex; align-items: center; gap: 4px;
+    }
+    .home-link:active { color: #fff; }
     .app-logo {
       width: 64px; height: 64px; border-radius: 18px;
       background: linear-gradient(135deg, #C17B4E, #8B5E3C);
@@ -109,6 +116,7 @@
 
 <!-- Header -->
 <div class="app-header">
+  <a class="home-link" href="index.html">🏠 首頁</a>
   <div class="app-logo">🌾</div>
   <div class="app-title">今年貴焿</div>
   <div class="app-sub">夥伴互動入口</div>
@@ -128,7 +136,7 @@
       <div class="menu-arrow">›</div>
     </a>
 
-    <a class="menu-item" href="schedule.html?from=staff">
+    <a class="menu-item" href="schedule-hub.html?from=staff">
       <div class="menu-icon green">📅</div>
       <div class="menu-text">
         <div class="menu-name">排班 & 排假申請</div>
@@ -137,11 +145,11 @@
       <div class="menu-arrow">›</div>
     </a>
 
-    <a class="menu-item" href="daily-report.html?from=staff">
+    <a class="menu-item" href="finance-hub.html?from=staff">
       <div class="menu-icon blue">📆</div>
       <div class="menu-text">
         <div class="menu-name">營收帳務</div>
-        <div class="menu-desc">每日營收 · 支出填報</div>
+        <div class="menu-desc">日報表 · 應收應付與毛利</div>
       </div>
       <div class="menu-arrow">›</div>
     </a>
