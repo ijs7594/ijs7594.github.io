@@ -98,13 +98,22 @@
     /* ── Content ── */
     .content { padding: 20px 24px 32px; }
 
+    /* ── Section label ── */
+    .section-label {
+      font-size: 10px; font-weight: 700; color: var(--text-light);
+      letter-spacing: 1.5px; padding: 4px 0 2px;
+      margin-top: 4px;
+    }
+
     /* ── Tool Grid ── */
     .tool-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
+    .tool-grid.emp { grid-template-columns: repeat(3, 1fr); }
+    .tool-grid.mgr { grid-template-columns: repeat(4, 1fr); }
+
     .tool-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -113,7 +122,6 @@
       text-decoration: none;
       display: flex; flex-direction: column; gap: 8px;
       transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
-      cursor: pointer;
     }
     .tool-card:hover {
       border-color: var(--caramel);
@@ -124,11 +132,6 @@
     .tool-icon { font-size: 26px; line-height: 1; }
     .tool-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
     .tool-desc { font-size: 10px; color: var(--text-light); line-height: 1.4; }
-
-    /* Disabled card (not yet built) */
-    .tool-card.soon {
-      opacity: 0.45; cursor: default; pointer-events: none;
-    }
 
     /* ── Personal Card ── */
     .personal-card {
@@ -171,13 +174,14 @@
     .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
 
     @media (max-width: 1100px) {
-      .tool-grid { grid-template-columns: repeat(3, 1fr); }
+      .tool-grid.mgr { grid-template-columns: repeat(3, 1fr); }
     }
     @media (max-width: 768px) {
       .sidebar { display: none; }
       .content { padding: 14px 14px 80px; }
       .mobile-nav { display: flex; }
-      .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .tool-grid.emp,
+      .tool-grid.mgr { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .portal-bar { padding: 12px 14px; }
       .pb-name { font-size: 14px; }
       .days-badge { display: none; }
@@ -276,81 +280,54 @@
 
   <div class="content">
 
-    <!-- Tool Grid -->
-    <div class="tool-grid">
-
+    <!-- 夥伴入口 -->
+    <div class="section-label">夥伴入口</div>
+    <div class="tool-grid emp">
       <a class="tool-card" href="sop.html">
         <span class="tool-icon">📖</span>
         <span class="tool-name">一日流程</span>
-        <span class="tool-desc">作業 SOP · 開收店手冊</span>
+        <span class="tool-desc">教育訓練 · 開收店 SOP</span>
       </a>
-
-      <a class="tool-card" href="inbox.html">
-        <span class="tool-icon">📋</span>
-        <span class="tool-name">待辦 Inbox</span>
-        <span class="tool-desc">任務管理 · 追蹤清單</span>
-      </a>
-
       <a class="tool-card" href="schedule.html">
         <span class="tool-icon">📅</span>
-        <span class="tool-name">排班表</span>
-        <span class="tool-desc">光遠店 · 班次管理</span>
+        <span class="tool-name">排班 & 排假</span>
+        <span class="tool-desc">查班次 · 申請休假</span>
       </a>
-
-      <a class="tool-card" href="leave-request.html">
-        <span class="tool-icon">🙏</span>
-        <span class="tool-name">排假申請</span>
-        <span class="tool-desc">夥伴申請 · AI 統整</span>
-      </a>
-
-      <a class="tool-card" href="stores.html">
-        <span class="tool-icon">🏪</span>
-        <span class="tool-name">展店紀錄</span>
-        <span class="tool-desc">工程進度 · 廠商 · 甘特</span>
-      </a>
-
-      <a class="tool-card" href="finance.html">
-        <span class="tool-icon">📊</span>
-        <span class="tool-name">營業儀表板</span>
-        <span class="tool-desc">營收 · 毛利 · 財務數據</span>
-      </a>
-
-      <a class="tool-card" href="supervision.html">
-        <span class="tool-icon">🔍</span>
-        <span class="tool-name">督導管理</span>
-        <span class="tool-desc">TYP 稽核 · 門市考核</span>
-      </a>
-
-      <a class="tool-card" href="daily-report.html">
-        <span class="tool-icon">📆</span>
-        <span class="tool-name">日報表</span>
-        <span class="tool-desc">每日營收 · 支出紀錄</span>
-      </a>
-
-      <a class="tool-card" href="ledger.html">
-        <span class="tool-icon">📒</span>
-        <span class="tool-name">應收應付</span>
-        <span class="tool-desc">帳款管理 · 毛利結算</span>
-      </a>
-
-      <a class="tool-card" href="scripts.html">
-        <span class="tool-icon">✍️</span>
-        <span class="tool-name">腳本庫</span>
-        <span class="tool-desc">TikTok · 探店文案</span>
-      </a>
-
       <a class="tool-card" href="chronicle.html">
         <span class="tool-icon">📜</span>
         <span class="tool-name">建制里程碑</span>
         <span class="tool-desc">系統進化歷程</span>
       </a>
+    </div>
 
-      <a class="tool-card" href="liuqiu2026.html">
-        <span class="tool-icon">🐢</span>
-        <span class="tool-name">小琉球</span>
-        <span class="tool-desc">員工旅遊 · 2026</span>
+    <!-- 管理工具 -->
+    <div class="section-label">管理工具</div>
+    <div class="tool-grid mgr">
+      <a class="tool-card" href="finance.html">
+        <span class="tool-icon">💰</span>
+        <span class="tool-name">財務管理</span>
+        <span class="tool-desc">營收報 · 儀表板 · 應收應付</span>
       </a>
-
+      <a class="tool-card" href="supervision.html">
+        <span class="tool-icon">🔍</span>
+        <span class="tool-name">督導管理</span>
+        <span class="tool-desc">TYP 稽核 · 門市考核</span>
+      </a>
+      <a class="tool-card" href="stores.html">
+        <span class="tool-icon">🏪</span>
+        <span class="tool-name">展店紀錄</span>
+        <span class="tool-desc">工程進度 · 廠商 · 甘特</span>
+      </a>
+      <a class="tool-card" href="scripts.html">
+        <span class="tool-icon">✍️</span>
+        <span class="tool-name">腳本庫</span>
+        <span class="tool-desc">TikTok · 探店文案</span>
+      </a>
+      <a class="tool-card" href="inbox.html">
+        <span class="tool-icon">📋</span>
+        <span class="tool-name">待辦 Inbox</span>
+        <span class="tool-desc">任務管理 · 追蹤清單</span>
+      </a>
     </div>
 
     <!-- Personal -->
