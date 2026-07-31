@@ -34,16 +34,6 @@
       overflow: hidden;
     }
 
-    /* ── Password Gate ── */
-    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .gate-box h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
-    .gate-box p { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
-    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
-    .gate-box input:focus { border-color: var(--caramel); }
-    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .gate-box button:hover { background: var(--brown-mid); }
-    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
 
     /* ── Sidebar ── */
     .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
@@ -181,16 +171,6 @@
   </style>
 </head>
 <body>
-
-<div class="gate" id="gate">
-  <div class="gate-box">
-    <h2>🔒 應收應付與毛利</h2>
-    <p>輸入密碼查看財務資料</p>
-    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
-    <button onclick="checkPw()">進入</button>
-    <div class="gate-error" id="pw-error"></div>
-  </div>
-</div>
 
 <nav class="sidebar">
   <div class="sidebar-brand">
@@ -414,22 +394,6 @@
 
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
-  const PASSWORD = '7594';
-
-  function checkPw() {
-    const val = document.getElementById('pw-input').value;
-    if (val === PASSWORD) {
-      sessionStorage.setItem('finance_auth', '1');
-      document.getElementById('gate').style.display = 'none';
-      init();
-    } else {
-      document.getElementById('pw-error').textContent = '密碼錯誤';
-    }
-  }
-  if (sessionStorage.getItem('finance_auth') === '1') {
-    document.getElementById('gate').style.display = 'none';
-  }
-
   let stores = [];
   let currentStoreId = null;
   let currentSection = 'margin';
@@ -491,7 +455,7 @@
     await loadAll();
     await checkPriceChangeBanner();
   }
-  if (sessionStorage.getItem('finance_auth') === '1') init();
+  init();
 
   function onStoreChange() {
     currentStoreId = document.getElementById('store-select').value;
