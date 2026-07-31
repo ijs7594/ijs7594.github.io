@@ -161,15 +161,6 @@
 </head>
 <body>
 
-<div class="gate" id="gate">
-  <div class="gate-box">
-    <h2>🔒 日報表</h2>
-    <p>輸入密碼查看營收與支出資料</p>
-    <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')checkPw()" />
-    <button onclick="checkPw()">進入</button>
-    <div class="gate-error" id="pw-error"></div>
-  </div>
-</div>
 
 <nav class="sidebar">
   <div class="sidebar-brand">
@@ -321,21 +312,6 @@
 <script>
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
-  const PASSWORD = '7594';
-
-  function checkPw() {
-    const val = document.getElementById('pw-input').value;
-    if (val === PASSWORD) {
-      sessionStorage.setItem('finance_auth', '1');
-      document.getElementById('gate').style.display = 'none';
-      init();
-    } else {
-      document.getElementById('pw-error').textContent = '密碼錯誤';
-    }
-  }
-  if (sessionStorage.getItem('finance_auth') === '1') {
-    document.getElementById('gate').style.display = 'none';
-  }
 
   let stores = [];
   let reportRows = [];
@@ -375,7 +351,7 @@
     applyShiftDisplay();
     await loadAndRender();
   }
-  if (sessionStorage.getItem('finance_auth') === '1') init();
+  init();
 
   function onStoreChange() {
     currentStoreId = document.getElementById('store-select').value;
