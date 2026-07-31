@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>今年貴焿 · 夥伴入口</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --brown:   #2C1A0E;
+      --caramel: #C17B4E;
+      --cream:   #F5EDE0;
+      --bg:      #F2EDE7;
+      --card:    #FFFFFF;
+      --border:  rgba(0,0,0,0.06);
+      --text:    #1A1A1A;
+      --sub:     #888;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--brown);
+      padding: 48px 20px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .app-logo {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: linear-gradient(135deg, #C17B4E, #8B5E3C);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin-bottom: 4px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+    .app-title { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .app-sub   { font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
+
+    /* ── Section ── */
+    .section { margin: 16px 14px 0; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--sub);
+      letter-spacing: 1px; padding: 0 6px 8px;
+    }
+
+    /* ── Menu List ── */
+    .menu-list {
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .menu-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 15px 16px;
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+      position: relative;
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:active { background: #f7f4f1; }
+
+    .menu-icon {
+      width: 46px; height: 46px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .menu-icon.orange { background: #FFF0E6; }
+    .menu-icon.green  { background: #E8F7EF; }
+    .menu-icon.blue   { background: #E8F0FE; }
+    .menu-icon.amber  { background: #FFF8E1; }
+    .menu-icon.brown  { background: var(--cream); }
+
+    .menu-text { flex: 1; }
+    .menu-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .menu-desc { font-size: 12px; color: var(--sub); }
+
+    .menu-arrow { font-size: 14px; color: #C0C0C0; flex-shrink: 0; }
+
+    /* ── Notice Banner ── */
+    .notice-banner {
+      margin: 14px 14px 0;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .notice-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .notice-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .notice-body  { font-size: 12px; color: var(--sub); line-height: 1.6; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; padding: 28px 20px 36px;
+      font-size: 11px; color: var(--sub);
+    }
+    .footer span { color: var(--caramel); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <div class="app-logo">🌾</div>
+  <div class="app-title">今年貴焿</div>
+  <div class="app-sub">夥伴互動入口</div>
+</div>
+
+<!-- 日常工具 -->
+<div class="section">
+  <div class="section-label">日常工具</div>
+  <div class="menu-list">
+
+    <a class="menu-item" href="sop.html">
+      <div class="menu-icon orange">📖</div>
+      <div class="menu-text">
+        <div class="menu-name">一日流程</div>
+        <div class="menu-desc">開收店 SOP · 作業手冊</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </a>
+
+    <a class="menu-item" href="schedule.html">
+      <div class="menu-icon green">📅</div>
+      <div class="menu-text">
+        <div class="menu-name">排班 & 排假申請</div>
+        <div class="menu-desc">查班次 · 送出休假申請</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </a>
+
+  </div>
+</div>
+
+<!-- 品牌資訊 -->
+<div class="section">
+  <div class="section-label">品牌資訊</div>
+  <div class="menu-list">
+
+    <a class="menu-item" href="chronicle.html">
+      <div class="menu-icon amber">📜</div>
+      <div class="menu-text">
+        <div class="menu-name">建制里程碑</div>
+        <div class="menu-desc">系統進化歷程 · 品牌建置記錄</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </a>
+
+  </div>
+</div>
+
+<!-- Notice -->
+<div class="notice-banner">
+  <div class="notice-icon">🙏</div>
+  <div>
+    <div class="notice-title">排假提醒</div>
+    <div class="notice-body">每月 18 號前請完成排假申請，感謝夥伴們互相成就。</div>
+  </div>
+</div>
+
+<div class="footer">
+  今年貴焿古早味麵線羹<br />
+  <span>使人和睦的人有福了。</span>
+</div>
+
+</body>
+</html>
