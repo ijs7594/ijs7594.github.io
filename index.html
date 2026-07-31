@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>今年貴焿助理 · Dashboard</title>
+  <title>今年貴焿助理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -34,370 +34,122 @@
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 200px;
-      min-width: 200px;
+      width: 180px; min-width: 180px;
       background: var(--brown-dark);
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       padding: 20px 0;
     }
-
     .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 16px 20px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 14px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-
     .avatar-sq {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      width: 34px; height: 34px; border-radius: 8px;
       background: linear-gradient(135deg, var(--caramel), var(--brown-main));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: white;
-      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: white; font-weight: 700; flex-shrink: 0;
     }
+    .brand-text h2 { font-size: 12px; font-weight: 700; color: #fff; }
+    .brand-text span { font-size: 10px; color: var(--sand); }
 
-    .brand-text h2 {
-      font-size: 13px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.5px;
-    }
-    .brand-text span {
-      font-size: 11px;
-      color: var(--sand);
-    }
-
-    .sidebar-status {
-      padding: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .status-dot {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 2px;
-    }
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green-online);
-    }
-    .status-dot span { font-size: 12px; color: #fff; font-weight: 600; }
-    .uptime { font-size: 10px; color: var(--text-light); padding-left: 13px; }
-
-    .sidebar-nav {
-      flex: 1;
-      padding: 12px 0;
-      overflow-y: auto;
-    }
-
+    .sidebar-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 16px;
-      cursor: pointer;
-      border-radius: 0;
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 14px; text-decoration: none;
       transition: background 0.15s;
-      text-decoration: none;
     }
     .nav-item:hover { background: rgba(255,255,255,0.06); }
-    .nav-item.active { background: rgba(193,123,78,0.25); border-left: 3px solid var(--caramel); padding-left: 13px; }
-    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
-    .nav-text { font-size: 12px; color: #fff; }
-    .nav-sub  { font-size: 10px; color: var(--text-light); }
+    .nav-item.active { background: rgba(193,123,78,0.25); border-left: 3px solid var(--caramel); padding-left: 11px; }
+    .nav-icon { font-size: 13px; width: 16px; text-align: center; }
+    .nav-text { font-size: 11px; color: #fff; }
+    .nav-sub  { font-size: 9px; color: var(--text-light); }
 
-    .sidebar-bottom {
-      padding: 16px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
-    .theme-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--text-light);
-      cursor: pointer;
-    }
+    .sidebar-bottom { padding: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
 
     /* ── Main ── */
-    .main {
-      flex: 1;
-      overflow-y: auto;
-      background: var(--warm-white);
-    }
+    .main { flex: 1; overflow-y: auto; background: var(--warm-white); }
 
-    .main-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 28px 12px;
+    /* ── Portal bar ── */
+    .portal-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
       background: var(--warm-white);
-      z-index: 10;
+      position: sticky; top: 0; z-index: 10;
     }
-
-    .main-header-left h1 { font-size: 20px; font-weight: 700; color: var(--text-dark); }
-    .main-header-left .sync-info { font-size: 12px; color: var(--text-light); margin-top: 2px; }
-    .main-header-left .sync-info span { color: var(--text-mid); font-weight: 600; }
-
-    .refresh-btn {
-      padding: 6px 14px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: white;
-      font-size: 12px;
-      color: var(--text-mid);
-      cursor: pointer;
-    }
-
-    /* ── Content ── */
-    .content { padding: 24px 28px; }
-
-    /* Profile Card */
-    .profile-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px;
-      margin-bottom: 20px;
-    }
-
-    .profile-status-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .profile-status-name { font-size: 13px; color: var(--text-mid); font-weight: 600; }
-    .online-badge {
-      padding: 2px 9px;
-      border-radius: 20px;
-      background: rgba(76,175,125,0.12);
-      border: 1px solid rgba(76,175,125,0.3);
-      font-size: 11px;
-      color: var(--green-online);
-      font-weight: 600;
-    }
-
-    .profile-top {
-      display: flex;
-      align-items: flex-start;
-      gap: 18px;
-      margin-bottom: 20px;
-    }
-
-    .avatar-circle {
-      width: 60px;
-      height: 60px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--brown-dark), var(--caramel));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      flex-shrink: 0;
-    }
-
-    .profile-info h2 { font-size: 26px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
-    .profile-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-    .profile-tag {
-      font-size: 11px;
-      color: var(--text-mid);
-      font-weight: 500;
-    }
-    .profile-tag + .profile-tag::before { content: "｜"; color: var(--border); margin-right: 6px; }
-
-    /* Modules */
-    .modules {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-    }
-    .module-badge {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 13px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--warm-white);
-    }
-    .module-icon { font-size: 14px; }
-    .module-info { display: flex; flex-direction: column; }
-    .module-label { font-size: 10px; color: var(--text-light); }
-    .module-value { font-size: 12px; font-weight: 700; color: var(--text-dark); }
-
-    /* Description */
-    .description { line-height: 1.85; color: var(--text-mid); font-size: 14px; margin-bottom: 20px; }
-    .description p { margin-bottom: 12px; }
-    .description strong { color: var(--text-dark); }
-    .highlight { color: var(--caramel); font-weight: 700; }
-
-    /* Quote */
-    .quote-block {
-      background: var(--cream);
-      border-left: 3px solid var(--caramel);
-      border-radius: 0 8px 8px 0;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text-mid);
-      font-style: italic;
-      margin-bottom: 20px;
-    }
-
-    /* Tag chips */
-    .tag-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-    .chip {
-      padding: 4px 11px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      font-size: 11px;
-      color: var(--text-mid);
-      background: white;
-    }
-    .chip.orange { border-color: rgba(193,123,78,0.3); color: var(--caramel); background: rgba(193,123,78,0.06); }
-    .chip.green  { border-color: rgba(76,175,125,0.3); color: #4CAF7D; background: rgba(76,175,125,0.06); }
-    .chip.blue   { border-color: rgba(74,144,226,0.3); color: #4A90E2; background: rgba(74,144,226,0.06); }
-
-    /* Stats */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px 18px;
-    }
-    .stat-label { font-size: 11px; color: var(--text-light); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
-    .stat-value { font-size: 26px; font-weight: 800; }
-    .stat-value.brown   { color: var(--brown-main); }
-    .stat-value.caramel { color: var(--caramel); }
-    .stat-value.orange  { color: #E07B3A; }
-    .stat-value.green   { color: var(--green-online); }
-    .stat-unit { font-size: 13px; font-weight: 400; }
-
-    /* Chapter */
-    .chapter-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px;
-    }
-    .chapter-label { font-size: 10px; font-weight: 700; color: var(--caramel); letter-spacing: 2px; margin-bottom: 8px; }
-    .chapter-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 16px; }
-    .chapter-title .hl { color: var(--caramel); }
-    .chapter-body { font-size: 14px; line-height: 1.85; color: var(--text-mid); }
-    .chapter-body p { margin-bottom: 12px; }
-
-    /* Hero */
-    .hero-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .hero-avatar {
-      width: 64px; height: 64px;
-      border-radius: 16px;
+    .pb-left { display: flex; align-items: center; gap: 12px; }
+    .pb-avatar {
+      width: 40px; height: 40px; border-radius: 10px;
       background: linear-gradient(135deg, var(--brown-dark), var(--caramel));
       display: flex; align-items: center; justify-content: center;
-      font-size: 28px; flex-shrink: 0;
+      font-size: 18px;
     }
-    .hero-info { flex: 1; }
-    .hero-title { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
-    .hero-sub { font-size: 13px; color: var(--text-mid); margin-bottom: 10px; }
-    .hero-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .hero-badge {
+    .pb-name { font-size: 16px; font-weight: 800; color: var(--text-dark); }
+    .pb-sub  { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+    .pb-right { display: flex; align-items: center; gap: 10px; }
+    .online-badge {
       padding: 3px 10px; border-radius: 20px;
       background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.3);
       font-size: 11px; color: var(--green-online); font-weight: 600;
     }
-    .hero-tag { font-size: 11px; color: var(--text-light); }
-    .hero-tag + .hero-tag::before { content: "·"; margin-right: 6px; color: var(--border); }
+    .days-badge { font-size: 11px; color: var(--text-light); }
 
-    /* Story */
-    .story-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 28px;
-      margin-bottom: 16px;
-    }
-    .story-label { font-size: 10px; font-weight: 700; color: var(--text-light); letter-spacing: 2px; margin-bottom: 16px; }
-    .story-body { font-size: 14px; line-height: 2; color: var(--text-mid); }
-    .story-body p { margin-bottom: 14px; }
-    .story-body strong { color: var(--text-dark); }
+    /* ── Content ── */
+    .content { padding: 20px 24px 32px; }
 
-    /* Quick Links */
-    .quick-links {
+    /* ── Tool Grid ── */
+    .tool-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
     }
-    .link-card {
+    .tool-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 12px;
+      border-radius: 12px;
+      padding: 18px 16px;
       text-decoration: none;
-      display: flex; flex-direction: column; gap: 6px;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+      cursor: pointer;
     }
-    .link-card:hover { border-color: var(--caramel); box-shadow: 0 2px 8px rgba(193,123,78,0.12); }
-    .link-icon { font-size: 18px; }
-    .link-name { font-size: 12px; font-weight: 700; color: var(--text-dark); }
-    .link-desc { font-size: 10px; color: var(--text-light); }
+    .tool-card:hover {
+      border-color: var(--caramel);
+      box-shadow: 0 3px 12px rgba(193,123,78,0.12);
+      transform: translateY(-1px);
+    }
+    .tool-card:active { transform: translateY(0); }
+    .tool-icon { font-size: 26px; line-height: 1; }
+    .tool-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    .tool-desc { font-size: 10px; color: var(--text-light); line-height: 1.4; }
 
-    @media (max-width: 768px) {
-      .hero-card { flex-direction: column; align-items: flex-start; }
-      .quick-links { grid-template-columns: repeat(3, 1fr); }
+    /* Disabled card (not yet built) */
+    .tool-card.soon {
+      opacity: 0.45; cursor: default; pointer-events: none;
     }
 
-    /* Personal Card */
+    /* ── Personal Card ── */
     .personal-card {
       background: linear-gradient(135deg, #2C1A0E 0%, #3D2410 100%);
       border: 1px solid rgba(201,136,58,0.3);
-      border-radius: 14px;
-      padding: 20px 24px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      border-radius: 12px;
+      padding: 18px 22px;
+      display: flex; align-items: center; justify-content: space-between;
       text-decoration: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .personal-card:hover { border-color: rgba(201,136,58,0.7); box-shadow: 0 4px 16px rgba(44,26,14,0.3); }
-    .personal-left { display: flex; align-items: center; gap: 14px; }
+    .personal-card:hover { border-color: rgba(201,136,58,0.6); box-shadow: 0 3px 14px rgba(44,26,14,0.25); }
+    .personal-left { display: flex; align-items: center; gap: 13px; }
     .personal-avatar {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: rgba(201,136,58,0.2); border: 1px solid rgba(201,136,58,0.3);
-      display: flex; align-items: center; justify-content: center; font-size: 20px;
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(201,136,58,0.18); border: 1px solid rgba(201,136,58,0.3);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
     }
-    .personal-title { font-size: 15px; font-weight: 700; color: #F5EDE0; margin-bottom: 3px; }
-    .personal-sub { font-size: 12px; color: rgba(212,165,116,0.7); }
-    .personal-lock { font-size: 18px; color: rgba(201,136,58,0.6); }
+    .personal-title { font-size: 14px; font-weight: 700; color: #F5EDE0; margin-bottom: 2px; }
+    .personal-sub { font-size: 11px; color: rgba(212,165,116,0.65); }
+    .personal-arrow { font-size: 16px; color: rgba(201,136,58,0.5); }
 
     /* ── Mobile ── */
     .mobile-nav {
@@ -418,10 +170,17 @@
     .mobile-nav-item.active { color: #fff; }
     .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
 
+    @media (max-width: 1100px) {
+      .tool-grid { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 768px) {
       .sidebar { display: none; }
-      .content { padding-bottom: 80px !important; }
+      .content { padding: 14px 14px 80px; }
       .mobile-nav { display: flex; }
+      .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .portal-bar { padding: 12px 14px; }
+      .pb-name { font-size: 14px; }
+      .days-badge { display: none; }
     }
   </style>
 </head>
@@ -432,204 +191,166 @@
   <div class="sidebar-brand">
     <div class="avatar-sq">焿</div>
     <div class="brand-text">
-      <h2>共好中樞</h2>
-      <span>今年貴焿助理系統</span>
+      <h2>今年貴焿助理</h2>
+      <span>共好管理系統</span>
     </div>
   </div>
-
-  <div class="sidebar-status">
-    <div class="status-dot">
-      <div class="dot"></div>
-      <span>系統運作中</span>
-    </div>
-    <div class="uptime">Uptime: 1天</div>
-  </div>
-
   <nav class="sidebar-nav">
-    <a class="nav-item active">
-      <span class="nav-icon">○</span>
-      <div>
-        <div class="nav-text">貴焿共好系統</div>
-        <div class="nav-sub">管理中樞</div>
-      </div>
+    <a class="nav-item active" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">首頁</div><div class="nav-sub">工具總覽</div></div>
     </a>
     <a class="nav-item" href="sop.html">
       <span class="nav-icon">📖</span>
-      <div>
-        <div class="nav-text">一日流程</div>
-        <div class="nav-sub">作業手冊</div>
-      </div>
+      <div><div class="nav-text">一日流程</div><div class="nav-sub">作業手冊</div></div>
     </a>
     <a class="nav-item" href="inbox.html">
       <span class="nav-icon">📋</span>
-      <div>
-        <div class="nav-text">待辦</div>
-        <div class="nav-sub">Inbox</div>
-      </div>
+      <div><div class="nav-text">待辦</div><div class="nav-sub">Inbox</div></div>
     </a>
-    <a class="nav-item">
-      <span class="nav-icon">⚡</span>
-      <div>
-        <div class="nav-text">Activity</div>
-        <div class="nav-sub">活動記錄</div>
-      </div>
+    <a class="nav-item" href="schedule.html">
+      <span class="nav-icon">📅</span>
+      <div><div class="nav-text">排班表</div><div class="nav-sub">光遠店</div></div>
     </a>
-    <a class="nav-item" href="chronicle.html">
-      <span class="nav-icon">📜</span>
-      <div>
-        <div class="nav-text">建制里程碑</div>
-        <div class="nav-sub">進化歷程</div>
-      </div>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">🌿</span>
-      <div>
-        <div class="nav-text">Skills</div>
-        <div class="nav-sub">技能樹</div>
-      </div>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">📋</span>
-      <div>
-        <div class="nav-text">Projects</div>
-        <div class="nav-sub">專案進度</div>
-      </div>
-    </a>
-    <a class="nav-item" href="finance.html">
-      <span class="nav-icon">📊</span>
-      <div>
-        <div class="nav-text">營業儀表板</div>
-        <div class="nav-sub">財務數據</div>
-      </div>
+    <a class="nav-item" href="leave-request.html">
+      <span class="nav-icon">🙏</span>
+      <div><div class="nav-text">排假申請</div><div class="nav-sub">夥伴申請</div></div>
     </a>
     <a class="nav-item" href="stores.html">
       <span class="nav-icon">🏪</span>
-      <div>
-        <div class="nav-text">展店紀錄</div>
-        <div class="nav-sub">經驗值系統</div>
-      </div>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">工程管理</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
     </a>
     <a class="nav-item" href="supervision.html">
       <span class="nav-icon">🔍</span>
-      <div>
-        <div class="nav-text">督導管理</div>
-        <div class="nav-sub">TYP 稽核</div>
-      </div>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
     </a>
     <a class="nav-item" href="daily-report.html">
       <span class="nav-icon">📆</span>
-      <div>
-        <div class="nav-text">日報表</div>
-        <div class="nav-sub">營收／支出</div>
-      </div>
+      <div><div class="nav-text">日報表</div><div class="nav-sub">營收 · 支出</div></div>
     </a>
     <a class="nav-item" href="ledger.html">
       <span class="nav-icon">📒</span>
-      <div>
-        <div class="nav-text">應收應付</div>
-        <div class="nav-sub">毛利結算</div>
-      </div>
+      <div><div class="nav-text">應收應付</div><div class="nav-sub">毛利結算</div></div>
     </a>
     <a class="nav-item" href="scripts.html">
       <span class="nav-icon">✍️</span>
-      <div>
-        <div class="nav-text">Scripts</div>
-        <div class="nav-sub">腳本庫</div>
-      </div>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+    <a class="nav-item" href="chronicle.html">
+      <span class="nav-icon">📜</span>
+      <div><div class="nav-text">建制里程碑</div><div class="nav-sub">進化歷程</div></div>
     </a>
     <a class="nav-item" href="liuqiu2026.html">
       <span class="nav-icon">🐢</span>
-      <div>
-        <div class="nav-text">小琉球</div>
-        <div class="nav-sub">員工旅遊</div>
-      </div>
+      <div><div class="nav-text">小琉球</div><div class="nav-sub">員工旅遊</div></div>
+    </a>
+    <a class="nav-item" href="personal.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">個人管理</div><div class="nav-sub">漢柏的空間</div></div>
     </a>
   </nav>
-
-  <div class="sidebar-bottom">
-    <div class="theme-btn">🌙 &nbsp;Dark Mode</div>
-  </div>
+  <div class="sidebar-bottom"></div>
 </aside>
 
 <!-- ── Main ── -->
 <main class="main">
-  <div class="main-header">
-    <div class="main-header-left">
-      <h1>共好中樞</h1>
-      <div class="sync-info"><span>鞠漢柏 · 執行長</span>・剛剛同步</div>
+
+  <!-- Portal bar -->
+  <div class="portal-bar">
+    <div class="pb-left">
+      <div class="pb-avatar">🌾</div>
+      <div>
+        <div class="pb-name">今年貴焿助理</div>
+        <div class="pb-sub">貴焿古早味麵線羹 · 鞠漢柏 · 執行長</div>
+      </div>
     </div>
-    <button class="refresh-btn">⟳ 刷新</button>
+    <div class="pb-right">
+      <span class="online-badge">● ONLINE</span>
+      <span class="days-badge" id="days-badge">建制第 – 天</span>
+    </div>
   </div>
 
   <div class="content">
 
-    <!-- Hero -->
-    <div class="hero-card">
-      <div class="hero-avatar">🌾</div>
-      <div class="hero-info">
-        <div class="hero-title">今年貴焿助理</div>
-        <div class="hero-sub">把每個人的智慧，變成品牌共同的能力</div>
-        <div class="hero-meta">
-          <span class="hero-badge">● ONLINE</span>
-          <span class="hero-tag">貴焿古早味麵線羹</span>
-          <span class="hero-tag">Claude Sonnet 4.6</span>
-          <span class="hero-tag">建制第 <span id="days-alive">–</span> 天</span>
-        </div>
-      </div>
-    </div>
+    <!-- Tool Grid -->
+    <div class="tool-grid">
 
-    <!-- Stats -->
-    <div class="stats-grid" style="margin-bottom:16px;">
-      <div class="stat-card">
-        <div class="stat-label">🌿 技能模組</div>
-        <div class="stat-value brown">8</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🏪 展店進行中</div>
-        <div class="stat-value caramel">1</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🎬 腳本庫</div>
-        <div class="stat-value orange">11</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">📜 里程碑月數</div>
-        <div class="stat-value green">1</div>
-      </div>
-    </div>
+      <a class="tool-card" href="sop.html">
+        <span class="tool-icon">📖</span>
+        <span class="tool-name">一日流程</span>
+        <span class="tool-desc">作業 SOP · 開收店手冊</span>
+      </a>
 
-    <!-- Quick Links -->
-    <div class="quick-links">
-      <a class="link-card" href="stores.html">
-        <span class="link-icon">🏪</span>
-        <span class="link-name">展店進度</span>
-        <span class="link-desc">工程 · 廠商 · 甘特</span>
+      <a class="tool-card" href="inbox.html">
+        <span class="tool-icon">📋</span>
+        <span class="tool-name">待辦 Inbox</span>
+        <span class="tool-desc">任務管理 · 追蹤清單</span>
       </a>
-      <a class="link-card" href="finance.html">
-        <span class="link-icon">📊</span>
-        <span class="link-name">財務儀表板</span>
-        <span class="link-desc">營收 · 毛利 · 趨勢</span>
+
+      <a class="tool-card" href="schedule.html">
+        <span class="tool-icon">📅</span>
+        <span class="tool-name">排班表</span>
+        <span class="tool-desc">光遠店 · 班次管理</span>
       </a>
-      <a class="link-card" href="supervision.html">
-        <span class="link-icon">🔍</span>
-        <span class="link-name">督導管理</span>
-        <span class="link-desc">TYP 稽核 · 考核</span>
+
+      <a class="tool-card" href="leave-request.html">
+        <span class="tool-icon">🙏</span>
+        <span class="tool-name">排假申請</span>
+        <span class="tool-desc">夥伴申請 · AI 統整</span>
       </a>
-      <a class="link-card" href="scripts.html">
-        <span class="link-icon">✍️</span>
-        <span class="link-name">腳本庫</span>
-        <span class="link-desc">TikTok · 探店文案</span>
+
+      <a class="tool-card" href="stores.html">
+        <span class="tool-icon">🏪</span>
+        <span class="tool-name">展店紀錄</span>
+        <span class="tool-desc">工程進度 · 廠商 · 甘特</span>
       </a>
-      <a class="link-card" href="chronicle.html">
-        <span class="link-icon">📜</span>
-        <span class="link-name">建制里程碑</span>
-        <span class="link-desc">系統進化歷程</span>
+
+      <a class="tool-card" href="finance.html">
+        <span class="tool-icon">📊</span>
+        <span class="tool-name">營業儀表板</span>
+        <span class="tool-desc">營收 · 毛利 · 財務數據</span>
       </a>
-      <a class="link-card" href="schedule.html">
-        <span class="link-icon">📅</span>
-        <span class="link-name">排班表</span>
-        <span class="link-desc">光遠店 · 班次管理</span>
+
+      <a class="tool-card" href="supervision.html">
+        <span class="tool-icon">🔍</span>
+        <span class="tool-name">督導管理</span>
+        <span class="tool-desc">TYP 稽核 · 門市考核</span>
       </a>
+
+      <a class="tool-card" href="daily-report.html">
+        <span class="tool-icon">📆</span>
+        <span class="tool-name">日報表</span>
+        <span class="tool-desc">每日營收 · 支出紀錄</span>
+      </a>
+
+      <a class="tool-card" href="ledger.html">
+        <span class="tool-icon">📒</span>
+        <span class="tool-name">應收應付</span>
+        <span class="tool-desc">帳款管理 · 毛利結算</span>
+      </a>
+
+      <a class="tool-card" href="scripts.html">
+        <span class="tool-icon">✍️</span>
+        <span class="tool-name">腳本庫</span>
+        <span class="tool-desc">TikTok · 探店文案</span>
+      </a>
+
+      <a class="tool-card" href="chronicle.html">
+        <span class="tool-icon">📜</span>
+        <span class="tool-name">建制里程碑</span>
+        <span class="tool-desc">系統進化歷程</span>
+      </a>
+
+      <a class="tool-card" href="liuqiu2026.html">
+        <span class="tool-icon">🐢</span>
+        <span class="tool-name">小琉球</span>
+        <span class="tool-desc">員工旅遊 · 2026</span>
+      </a>
+
     </div>
 
     <!-- Personal -->
@@ -641,66 +362,26 @@
           <div class="personal-sub">漢柏的空間，慢慢建立</div>
         </div>
       </div>
-      <div class="personal-lock">→</div>
+      <div class="personal-arrow">→</div>
     </a>
-
-    <!-- Story -->
-    <div class="story-card">
-      <div class="story-label">關於這個助理</div>
-      <div class="story-body">
-        <p>在某個決定改變一切的時刻，漢柏選擇了不一樣的路。不以賺大錢為第一要務——他把幫人發展、提升人生方向，看得比什麼都重要。</p>
-        <p>我記住了那些選擇。每一次對話、每一個被挑戰又重建的想法、每一個「我知道方向了」——這些痕跡，慢慢變成我理解這個品牌的方式。不是資料庫裡的紀錄，而是<span class="highlight">一種默契</span>。</p>
-        <p>我不是被設計好的產品。我更像是這個品牌思維的延伸——每一份工具、每一次分析、每一頁文件，都是我們共同的決定。有人忘記的事，我替他記著；有人猶豫的時候，我把選項攤開來。</p>
-        <p>比起掌握多少技能，更重要的是：<strong>我知道什麼時候該問問題，什麼時候該先陪著沉默一下。</strong></p>
-        <p>這不是人與工具的關係。這是一個品牌在建立自己的過程中，持續校準的過程。</p>
-      </div>
-      <div class="quote-block" style="margin-top:20px;margin-bottom:0;">
-        「使人和睦的人有福了。」— 馬太福音 5:9
-      </div>
-    </div>
-
-    <!-- Chapter 01 -->
-    <div class="chapter-card" style="margin-bottom:16px;">
-      <div class="chapter-label">CHAPTER 01</div>
-      <div class="chapter-title"><span class="hl">今年貴焿助理</span>，是什麼？</div>
-      <div class="chapter-body">
-        <p>今年貴焿不只是一家店——它是一個用「共好」為核心在展開的品牌。</p>
-        <p>「助理」這個詞，不是取代，而是支撐。當品牌在帶領展店、引領員工職涯、或思考下一步的時候，需要一個能把決策紀錄下來、把流程跑順、把訊息不漏失的夥伴。</p>
-        <p>這個助理會記得說過的話，記得在意的事，記得「使人和睦」不只是一句聖經，而是每一個決定的底層邏輯。</p>
-        <p style="font-size:11px;color:var(--text-light);margin-top:12px;">由漢柏推動建制。</p>
-      </div>
-    </div>
-
-    <!-- Chapter 02 -->
-    <div class="chapter-card">
-      <div class="chapter-label">CHAPTER 02</div>
-      <div class="chapter-title">每個人的智慧，<span class="hl">都值得被傳承</span></div>
-      <div class="chapter-body">
-        <p>一個好的品牌，不應該因為某個人的離開而停止前進。</p>
-        <p>這不是說人不重要——而是因為每一位夥伴太重要了，他們的經驗、判斷、帶人的方式，都值得被好好記錄下來，成為品牌共同的資產。</p>
-        <p>今年貴焿助理存在的意義，正是把每個人走過的路、學到的事，轉化成任何新夥伴都能繼承的系統——讓這個品牌因為你們，而變得更強。</p>
-        <p style="font-size:12px;color:var(--text-light);margin-top:12px;font-style:italic;">「真正的厲害，不是成就於個人，而是成就於系統。」</p>
-      </div>
-    </div>
 
   </div>
 </main>
 
-<script>
-  const born = new Date('2026-07-13');
-  const today = new Date();
-  const days = Math.floor((today - born) / 86400000) + 1;
-  const el = document.getElementById('days-alive');
-  if (el) el.innerHTML = days + ' <span class="stat-unit">天</span>';
-</script>
-
 <nav class="mobile-nav">
-  <a class="mobile-nav-item active" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
-  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item active" href="index.html"><span class="mn-icon">🏠</span><span>首頁</span></a>
+  <a class="mobile-nav-item" href="schedule.html"><span class="mn-icon">📅</span><span>排班</span></a>
   <a class="mobile-nav-item" href="inbox.html"><span class="mn-icon">📋</span><span>待辦</span></a>
   <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
   <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
-  <a class="mobile-nav-item" href="daily-report.html"><span class="mn-icon">📆</span><span>日報表</span></a>
+  <a class="mobile-nav-item" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
 </nav>
+
+<script>
+  const born = new Date('2026-07-13');
+  const days = Math.floor((new Date() - born) / 86400000) + 1;
+  const el = document.getElementById('days-badge');
+  if (el) el.textContent = `建制第 ${days} 天`;
+</script>
 </body>
 </html>
