@@ -27,14 +27,6 @@
   h1{font-size:26px; font-weight:800; color:var(--text-dark); margin:0 0 8px; text-wrap:balance;}
   .sub{font-size:14px; color:var(--text-mid); max-width:640px;}
 
-  .changelog{
-    background:var(--new-bg); border:1px solid var(--new); border-left-width:4px;
-    border-radius:10px; padding:14px 18px; margin:20px 0 32px; font-size:13px; color:var(--text-dark);
-  }
-  .changelog b{color:var(--new);}
-  .changelog ul{margin:8px 0 0; padding-left:20px;}
-  .changelog li{margin-bottom:4px;}
-
   section{margin-bottom:36px;}
   h2{font-size:16px; font-weight:700; color:var(--brown-mid); margin:0 0 14px; display:flex; align-items:center; gap:8px;}
   h2::before{content:""; width:4px; height:16px; background:var(--caramel); border-radius:2px; display:inline-block;}
@@ -62,9 +54,7 @@
 
   .knowhow-list{display:flex; flex-direction:column; gap:10px;}
   .kh{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; box-shadow:var(--shadow);}
-  .kh.is-new{border-color:var(--new);}
   .kh-head{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
-  .kh-tag{font-size:10px; font-weight:700; background:var(--new); color:#fff; border-radius:4px; padding:2px 6px; letter-spacing:0.03em;}
   .kh h4{font-size:13px; margin:0; color:var(--brown-main);}
   .kh p{font-size:12.5px; color:var(--text-mid); margin:0; line-height:1.7;}
 
@@ -114,36 +104,6 @@
     <h1>開店工程流程圖 v3</h1>
     <p class="sub">以仁武店複盤範本為基礎，補上富國店的工項，再往下扎根加一層 WBS／要徑（critical path）／浮時（float）分析——底層嚴謹算過，上層才能放心簡化。</p>
   </header>
-
-  <div class="changelog">
-    <b>v3.4 修正：簽約後加一場「聯合現場丈量勘查」，並補上遮雨棚、斜坡鐵工</b>
-    <ul>
-      <li>簽約當天發通知，Day 2 辦「聯合現場丈量勘查」，木工／水電／弱電／拆除／輕鋼架／招牌／地板／冷氣／台電／遮雨棚／斜坡鐵工／設計丈量人員都到場，玻璃／鐵工／油漆／廚房設備商也一起叫來先熟悉環境（精確丈量仍要等拆除完才定案），房東／管委會視情況參加</li>
-      <li>新增<b>遮雨棚</b>（招牌完工後安裝）跟<b>斜坡鐵工</b>（水電完工後施作，用來保護地上外露電線、避免絆倒）兩個工項</li>
-      <li>總天數因此多 1 天：Day 25 完成試車驗收，Day 26 軟性開幕</li>
-    </ul>
-    <b style="display:block;margin-top:10px;">v3.3 修正：對照真實費用清單，補上3個原本沒排進去的工項</b>
-    <ul>
-      <li>新增<b>台電外接電申請</b>：跟招牌、設備一樣，簽約當天就要申請，抓 14 天前置期（電力公司排隊時間，自己趕不動）</li>
-      <li>新增<b>輕鋼架</b>（天花板骨架）：獨立的工班，跟拆除是不同時間點——要等拆除完、現場淨空才能進場，同時段施工會有工安風險（割傷）</li>
-      <li>補上<b>水塔</b>安裝的協調技巧：可以跟招牌安裝共用同一台吊車，省一次吊車費用</li>
-      <li>財務項目（押租金／首月租金／仲介費）標註在簽約里程碑旁邊，只做時點提醒，不算進工程排程</li>
-      <li>流程圖文字太小的問題也修正了：高階圖只留 12 個節點放大字體，天數改用長條視覺化，細節都在下面的甘特圖跟 WBS 表</li>
-    </ul>
-    <b style="display:block;margin-top:10px;">v3.2 修正：接回富國店最終真實結果，試營運期從猜的3-4天改成真實的26天</b>
-    <ul>
-      <li>富國店 7/31 完成備料＋試車＋驗收（Day 24，跟目標 20-25 天吻合），8/1-8/26 才是真正試營運（26天），8/27-31 開幕促銷週（每人3碗特價$29）等於正式開幕——原本 v3.1 猜的「3-4天試營運」差太多，已修正</li>
-      <li>新增一條真實踩過的坑：<b>玻璃設計定案前要先給廠商確認結構安全性</b>，不是只確認尺寸——富國店有玻璃廠商在最後一刻說設計不安全拒做</li>
-      <li>提醒：淘寶來的設備／家具常卡在最後幾天才到貨，還要再等水電協助組裝，這段容易被低估，排時程要多留意</li>
-    </ul>
-    <b style="display:block;margin-top:10px;">v3.1 修正：照富國店真實日期重算，總天數從 41 天修回 24 天</b>
-    <ul>
-      <li><b>抓到建模錯誤</b>：原本把玻璃工程整段（7-8天生產）都排在鐵工完工之後才開始，但富國店實際上玻璃是跟木工同期就開始生產，鐵工只影響最後現場裝門那一步，不是整段都要等</li>
-      <li>廚房設備下單天數修正為 20 天（原本用 20-25 天區間的中間值 23 天），對照真實需求時間只差 1 天，等於沒有浮時，簽約當天沒下單就會直接拖到開幕</li>
-      <li>加入<b>弱電廠商</b>（監控／音響／網路／POS 線路），跟水電同期施作、同期裝機</li>
-      <li>加上完整 <b>WBS 編號 ／ 最早開始・完成 ／ 浮時</b> 分析表，跟可列印的<b>關卡確認清單</b></li>
-    </ul>
-  </div>
 
   <section>
     <h2>工程流程圖（高階總覽——詳細天數看下面的甘特圖跟 WBS 表）</h2>
@@ -342,37 +302,37 @@ flowchart TD
     <div class="knowhow-list">
       <div class="kh"><div class="kh-head"><h4>為什麼要先場勘？</h4></div>
         <p>簽約前先場勘，是為了確認樑柱、給排水、電力容量等硬體條件符不符合開店需求，也才能抓出拆除與裝潢的大概範圍與天數。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼簽約後2天要辦一場「聯合現場丈量勘查」？該找誰來？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼簽約後2天要辦一場「聯合現場丈量勘查」？該找誰來？</h4></div>
         <p>簽約當天就找木工、水電、弱電、拆除、輕鋼架、招牌、地板、冷氣、台電、遮雨棚、斜坡鐵工、負責畫設計圖的丈量人員全部一起到現場看一次，讓每個工班用同一份現場狀況去抓自己的粗估報價跟排班，不用各自約時間、各講各的、資訊兜不起來。玻璃、鐵工、油漆、廚房設備商也建議一起叫來——雖然隔間還沒拆、他們現場評估不出真正的施作安排，但先讓他們熟悉環境，之後排程會更順。房東或管委會要不要到場則看情況（有涉及外觀、招牌位置變動時比較需要）。這場是初步的共同認知，不是最終精確丈量——精確的尺寸還是要等拆除完現場淨空後才抓（見下一條）。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>舊玻璃門、舊招牌要在簽約前先評估</h4></div>
+      <div class="kh"><div class="kh-head"><h4>舊玻璃門、舊招牌要在簽約前先評估</h4></div>
         <p>能不能沿用，直接影響裝潢預算跟拆除範圍。簽約後才發現不能用，重做成本跟時間都會被打亂。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼拆除完才約木工水電丈量報價？</h4></div>
         <p>拆除前現場還有舊隔間擋著，管線走向、樑柱位置都看不清楚。太早丈量，抓的是不準的數字。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼台電外接電要簽約當天就申請？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼台電外接電要簽約當天就申請？</h4></div>
         <p>電力公司拉線進來大概要 1-2 週，是店家自己完全排不上的外部時間，晚申請不會因為你趕工就變快。簽約當天跟招牌、設備一樣馬上申請，才不會卡在最後全功率試車那一關。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼輕鋼架不能跟拆除同時進場？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼輕鋼架不能跟拆除同時進場？</h4></div>
         <p>輕鋼架是做天花板骨架的另一組工班，拆除現場還有清運中的雜物、鋭利邊角，這時候讓輕鋼架師傅進來施工，容易割傷手。要等拆除完、現場淨空之後才能讓輕鋼架進場，雖然都排在同一週，順序還是要分開。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>水塔為什麼要跟招牌一起裝？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>水塔為什麼要跟招牌一起裝？</h4></div>
         <p>招牌安裝通常需要吊車把招牌吊到定位，這台吊車來一次不便宜。如果店裡也要裝水塔（例如樓上有出租給住戶要用水），可以排在同一天，用同一台吊車把水塔一起吊上去，省下再叫一次吊車的費用跟協調時間。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼斜坡鐵工要排在水電施工完成之後？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼斜坡鐵工要排在水電施工完成之後？</h4></div>
         <p>水電施工期間，電線常常會暫時外露在地面上。等水電工程做完，才用斜坡鐵工把地上的電線蓋起來、做成不會絆倒人的斜坡，這樣既保護電線不被踩踏破損，也避免現場人員被電線絆倒受傷。太早裝，水電之後還要動線，反而會把剛做好的斜坡弄壞。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼油漆要在鋪地板之前？</h4></div>
         <p>油漆會噴濺、有粉塵，地板先鋪好容易弄髒刮傷，事後重新拋光更花錢費工。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼設備要等地板鋪完才能進場？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼設備要等地板鋪完才能進場？</h4></div>
         <p>餐飲設備通常很重，需要在平整完工的地面上定位抓水平。地板沒鋪完就搬設備進場，可能壓壞底材。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">修正</span><h4>玻璃到底要不要等鐵工完工？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>玻璃到底要不要等鐵工完工？</h4></div>
         <p>不是整段都要等——玻璃廠商可以用拆除後的粗估尺寸提前開始生產（實務上跟木工同期就能動工），只有最後現場「精確丈量＋裝門」那一步，才需要等鐵工把門框骨架定案，這樣玻璃尺寸才對得上。把整段生產都排在鐵工之後，是 v3 第一版算錯的地方，會平白拖長將近 2 週。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼玻璃設計定案前要先確認結構安全，不是只確認尺寸？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼玻璃設計定案前要先確認結構安全，不是只確認尺寸？</h4></div>
         <p>尺寸量得出來，不代表結構做得出來——大面積無框玻璃、特殊懸空設計，廠商可能在最後現場丈量時才發現無法確保安全而拒做。富國店就遇到這個狀況。設計階段就該把設計圖拿給玻璃廠商過目確認可行，不要等到最後一刻才發現要改設計，臨時改動會直接衝擊已經排好的安裝時程。</p></div>
       <div class="kh"><div class="kh-head"><h4>水電為什麼要進場 2～3 次？</h4></div>
         <p><b>評估</b>：跟拆除同期確認用電安全。<b>粗胚</b>：封牆前把插座迴路管線預埋好。<b>精修收尾</b>：設備定位後回來做最後微調與全功率試車。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼冷氣要找兩家廠商評估？</h4></div>
         <p>噸數、安裝位置、管線走法、報價，兩家一比就知道有沒有漏算或坑錢的地方。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼監視器、音響要等五金定位、桌椅都差不多才裝？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼監視器、音響要等五金定位、桌椅都差不多才裝？</h4></div>
         <p>鏡頭角度、喇叭擺位都要對應「最終」的空間格局。太早裝好，之後家具一擺，鏡頭可能被擋、音響效果也會被家具吸音改變。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼設備要「同時全功率」運轉測試？</h4></div>
         <p>分開開機只能確認單一設備能不能動，看不出同時使用時的總用電量，測不出電力總容量夠不夠。</p></div>
-      <div class="kh is-new"><div class="kh-head"><span class="kh-tag">新增</span><h4>為什麼要抓「試營運」，不直接開幕？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼要抓「試營運」，不直接開幕？</h4></div>
         <p>備料、出餐、清洗、收銀的動線，只有真實客人上門才會暴露問題。試營運期間出的包還有時間修，留到開幕當天代價高很多。</p></div>
     </div>
   </section>
