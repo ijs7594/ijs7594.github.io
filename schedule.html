@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>排班表 · 今年貴焿助理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+
+      --clr-A: #4A90E2;
+      --clr-B: #5BAF82;
+      --clr-C: #9B59B6;
+      --clr-D: #C17B4E;
+      --clr-E: #E07B3A;
+      --clr-rest: #B0B0B0;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: var(--brown-dark);
+      display: flex; flex-direction: column;
+      padding: 20px 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--caramel), var(--brown-main));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: white; font-weight: 700;
+    }
+    .brand-text h2 { font-size: 13px; font-weight: 700; color: #fff; }
+    .brand-text span { font-size: 11px; color: var(--sand); }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; transition: background 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.active { background: rgba(193,123,78,0.25); border-left: 3px solid var(--caramel); padding-left: 13px; }
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+    .nav-text { font-size: 12px; color: #fff; }
+    .nav-sub  { font-size: 10px; color: var(--text-light); }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--warm-white); }
+
+    .main-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--warm-white); flex-shrink: 0;
+    }
+    .main-header-left h1 { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .main-header-left .sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+    /* ── Legend ── */
+    .legend-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--border);
+      background: #fff; flex-shrink: 0;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text-mid);
+    }
+    .legend-dot {
+      width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+    }
+
+    /* ── Month Nav ── */
+    .month-nav {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--warm-white); flex-shrink: 0;
+    }
+    .month-nav-btn {
+      width: 30px; height: 30px; border-radius: 8px;
+      border: 1px solid var(--border); background: white;
+      font-size: 14px; cursor: pointer; color: var(--text-mid);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .month-nav-btn:hover { border-color: var(--caramel); color: var(--caramel); }
+    .month-label { font-size: 15px; font-weight: 700; color: var(--text-dark); min-width: 90px; text-align: center; }
+    .save-status { margin-left: auto; font-size: 11px; color: var(--text-light); }
+
+    /* ── Table ── */
+    .table-wrap {
+      flex: 1; overflow: auto;
+      padding: 0;
+    }
+
+    table.sched {
+      border-collapse: collapse;
+      min-width: 100%;
+    }
+    table.sched th, table.sched td {
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    /* Sticky name column */
+    table.sched .col-name {
+      position: sticky; left: 0; z-index: 2;
+      background: #fff;
+      min-width: 80px; padding: 0 12px;
+      font-size: 12px; font-weight: 600; color: var(--text-dark);
+    }
+    table.sched thead .col-name {
+      background: var(--cream);
+      font-size: 11px; color: var(--text-light); font-weight: 700; letter-spacing: 0.5px;
+    }
+
+    /* Day headers */
+    table.sched thead th.col-day {
+      min-width: 36px; max-width: 36px; width: 36px;
+      padding: 6px 0; text-align: center;
+      font-size: 11px; color: var(--text-mid); font-weight: 600;
+      background: var(--cream);
+    }
+    table.sched thead th.col-day.weekend { color: var(--caramel); }
+
+    /* Name cells */
+    table.sched tbody td.col-name {
+      background: #fefcf8;
+      height: 44px;
+    }
+
+    /* Shift cells */
+    table.sched tbody td.col-day {
+      min-width: 36px; max-width: 36px; width: 36px;
+      height: 44px; text-align: center; cursor: pointer;
+      transition: opacity 0.1s;
+    }
+    table.sched tbody td.col-day:hover { opacity: 0.8; }
+
+    .shift-cell {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      border-radius: 0;
+    }
+    .shift-cell.empty { color: var(--border); font-weight: 400; font-size: 10px; }
+    .shift-cell.A { background: var(--clr-A); }
+    .shift-cell.B { background: var(--clr-B); }
+    .shift-cell.C { background: var(--clr-C); }
+    .shift-cell.D { background: var(--clr-D); }
+    .shift-cell.E { background: var(--clr-E); }
+    .shift-cell.rest { background: #ECECEC; color: var(--clr-rest); }
+
+    /* Weekend column bg */
+    table.sched tbody td.col-day.weekend { background: #FFF8F2; }
+
+    /* ── Popup selector ── */
+    #shift-popup {
+      position: fixed; z-index: 100;
+      background: white; border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      padding: 10px; display: none;
+      flex-direction: column; gap: 6px; min-width: 160px;
+    }
+    .popup-title {
+      font-size: 10px; color: var(--text-light);
+      font-weight: 700; letter-spacing: 1px;
+      padding: 0 4px 4px; border-bottom: 1px solid var(--border);
+      margin-bottom: 2px;
+    }
+    .popup-options {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;
+    }
+    .popup-btn {
+      padding: 8px 4px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      color: #fff; transition: transform 0.1s;
+    }
+    .popup-btn:active { transform: scale(0.92); }
+    .popup-btn.A { background: var(--clr-A); }
+    .popup-btn.B { background: var(--clr-B); }
+    .popup-btn.C { background: var(--clr-C); }
+    .popup-btn.D { background: var(--clr-D); }
+    .popup-btn.E { background: var(--clr-E); }
+    .popup-btn.rest { background: #ECECEC; color: var(--text-mid); }
+    .popup-btn.clear { background: var(--warm-white); color: var(--text-light); border: 1px solid var(--border); font-size: 11px; }
+
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px; justify-content: space-around; align-items: center;
+      z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .mobile-nav { display: flex; }
+      .table-wrap { padding-bottom: 70px; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">焿</div>
+    <div class="brand-text">
+      <h2>共好中樞</h2>
+      <span>今年貴焿助理系統</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">○</span>
+      <div><div class="nav-text">貴焿共好系統</div><div class="nav-sub">管理中樞</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item active" href="schedule.html">
+      <span class="nav-icon">📅</span>
+      <div><div class="nav-text">排班表</div><div class="nav-sub">光遠店</div></div>
+    </a>
+    <a class="nav-item" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="daily-report.html">
+      <span class="nav-icon">📆</span>
+      <div><div class="nav-text">日報表</div><div class="nav-sub">營收／支出</div></div>
+    </a>
+    <a class="nav-item" href="inbox.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">待辦</div><div class="nav-sub">Inbox</div></div>
+    </a>
+    <a class="nav-item" href="personal.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">個人管理</div><div class="nav-sub">漢柏的空間</div></div>
+    </a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="main-header">
+    <div class="main-header-left">
+      <h1>📅 排班表</h1>
+      <div class="sub">光遠店 · 點擊格子編輯班次</div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend-bar">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--clr-A)">A</div>
+      <span>05:30–14:00</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--clr-B)">B</div>
+      <span>10:30–19:00</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--clr-C)">C</div>
+      <span>16:00–20:00</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--clr-D)">D</div>
+      <span>11:30–20:00</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--clr-E)">E</div>
+      <span>05:30–13:00</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#ECECEC; color:var(--clr-rest)">●</div>
+      <span>休</span>
+    </div>
+  </div>
+
+  <!-- Month Nav -->
+  <div class="month-nav">
+    <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
+    <div class="month-label" id="month-label"></div>
+    <button class="month-nav-btn" onclick="changeMonth(1)">›</button>
+    <div class="save-status" id="save-status"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table class="sched">
+      <thead id="sched-head"></thead>
+      <tbody id="sched-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Shift Popup -->
+<div id="shift-popup">
+  <div class="popup-title">選擇班次</div>
+  <div class="popup-options">
+    <button class="popup-btn A" onclick="selectShift('A')">A</button>
+    <button class="popup-btn B" onclick="selectShift('B')">B</button>
+    <button class="popup-btn C" onclick="selectShift('C')">C</button>
+    <button class="popup-btn D" onclick="selectShift('D')">D</button>
+    <button class="popup-btn E" onclick="selectShift('E')">E</button>
+    <button class="popup-btn rest" onclick="selectShift('●')">●休</button>
+    <button class="popup-btn clear" style="grid-column:span 3" onclick="selectShift('')">清除</button>
+  </div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item active" href="schedule.html"><span class="mn-icon">📅</span><span>排班</span></a>
+  <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+  <a class="mobile-nav-item" href="finance.html"><span class="mn-icon">📊</span><span>財務</span></a>
+</nav>
+
+<script>
+  const SUPABASE_URL  = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const STORE_NAME    = '光遠店';
+  const EMPLOYEES     = ['陳雅婷','尤愛稜','彭淑美','莊鳳怡','涂家蓁','陳柏岑'];
+  const SHIFT_CODES   = ['A','B','C','D','E','●'];
+  const WEEKDAY_NAMES = ['日','一','二','三','四','五','六'];
+
+  let curYear  = new Date().getFullYear();
+  let curMonth = new Date().getMonth() + 1;
+  let schedData = {};   // key: "name|YYYY-MM-DD" → shift code
+  let activeCell = null; // { emp, date }
+
+  // ── API ──
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(SUPABASE_URL + path, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || ''
+      },
+      ...opts
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  }
+
+  // ── Load month ──
+  async function loadMonth() {
+    const y = curYear, m = String(curMonth).padStart(2,'0');
+    const from = `${y}-${m}-01`;
+    const lastDay = new Date(y, curMonth, 0).getDate();
+    const to   = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+
+    setStatus('載入中…');
+    const rows = await apiFetch(
+      `/rest/v1/schedule_entries?store_name=eq.${encodeURIComponent(STORE_NAME)}&shift_date=gte.${from}&shift_date=lte.${to}&select=employee_name,shift_date,shift_code`
+    );
+
+    schedData = {};
+    if (rows) {
+      rows.forEach(r => {
+        schedData[r.employee_name + '|' + r.shift_date] = r.shift_code;
+      });
+    }
+    renderTable();
+    setStatus(rows ? '' : '⚠ 無法連線，資料改存本機');
+  }
+
+  // ── Save cell ──
+  async function saveCell(emp, dateStr, code) {
+    const key = emp + '|' + dateStr;
+    schedData[key] = code;
+    renderCell(emp, dateStr);
+    setStatus('儲存中…');
+
+    if (!code) {
+      // delete
+      await apiFetch(
+        `/rest/v1/schedule_entries?store_name=eq.${encodeURIComponent(STORE_NAME)}&employee_name=eq.${encodeURIComponent(emp)}&shift_date=eq.${dateStr}`,
+        { method: 'DELETE', prefer: 'return=minimal' }
+      );
+    } else {
+      await apiFetch('/rest/v1/schedule_entries', {
+        method: 'POST',
+        prefer: 'resolution=merge-duplicates,return=minimal',
+        body: JSON.stringify({ store_name: STORE_NAME, employee_name: emp, shift_date: dateStr, shift_code: code })
+      });
+    }
+    setStatus('已儲存 ✓');
+    setTimeout(() => setStatus(''), 2000);
+  }
+
+  function setStatus(msg) {
+    document.getElementById('save-status').textContent = msg;
+  }
+
+  // ── Render ──
+  function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+
+  function renderTable() {
+    const y = curYear, m = curMonth;
+    const days = daysInMonth(y, m);
+    const head = document.getElementById('sched-head');
+    const body = document.getElementById('sched-body');
+
+    // Header
+    let hRow = '<tr><th class="col-name" style="height:40px;">姓名</th>';
+    for (let d = 1; d <= days; d++) {
+      const date = new Date(y, m - 1, d);
+      const wd = date.getDay();
+      const isWe = wd === 0 || wd === 6;
+      hRow += `<th class="col-day${isWe ? ' weekend' : ''}">
+        <div style="font-size:10px;color:inherit;">${d}</div>
+        <div style="font-size:9px;opacity:0.7;">${WEEKDAY_NAMES[wd]}</div>
+      </th>`;
+    }
+    hRow += '</tr>';
+    head.innerHTML = hRow;
+
+    // Body
+    body.innerHTML = '';
+    EMPLOYEES.forEach(emp => {
+      const tr = document.createElement('tr');
+      const nameTd = document.createElement('td');
+      nameTd.className = 'col-name';
+      nameTd.textContent = emp;
+      tr.appendChild(nameTd);
+
+      for (let d = 1; d <= days; d++) {
+        const date = new Date(y, m - 1, d);
+        const wd = date.getDay();
+        const isWe = wd === 0 || wd === 6;
+        const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const td = document.createElement('td');
+        td.className = 'col-day' + (isWe ? ' weekend' : '');
+        td.id = cellId(emp, dateStr);
+        td.onclick = (e) => openPopup(e, emp, dateStr);
+        setCellContent(td, schedData[emp + '|' + dateStr] || '');
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    });
+  }
+
+  function cellId(emp, dateStr) {
+    return 'cell_' + emp.replace(/\s/g,'_') + '_' + dateStr;
+  }
+
+  function setCellContent(td, code) {
+    if (!code) {
+      td.innerHTML = '<div class="shift-cell empty">·</div>';
+    } else if (code === '●') {
+      td.innerHTML = '<div class="shift-cell rest">●</div>';
+    } else {
+      td.innerHTML = `<div class="shift-cell ${code}">${code}</div>`;
+    }
+  }
+
+  function renderCell(emp, dateStr) {
+    const td = document.getElementById(cellId(emp, dateStr));
+    if (td) setCellContent(td, schedData[emp + '|' + dateStr] || '');
+  }
+
+  // ── Popup ──
+  function openPopup(e, emp, dateStr) {
+    e.stopPropagation();
+    activeCell = { emp, dateStr };
+    const pop = document.getElementById('shift-popup');
+    pop.style.display = 'flex';
+    const rect = e.currentTarget.getBoundingClientRect();
+    let top = rect.bottom + 4;
+    let left = rect.left - 60;
+    if (left + 170 > window.innerWidth) left = window.innerWidth - 175;
+    if (left < 4) left = 4;
+    if (top + 160 > window.innerHeight) top = rect.top - 165;
+    pop.style.top  = top + 'px';
+    pop.style.left = left + 'px';
+  }
+
+  function selectShift(code) {
+    if (!activeCell) return;
+    saveCell(activeCell.emp, activeCell.dateStr, code);
+    closePopup();
+  }
+
+  function closePopup() {
+    document.getElementById('shift-popup').style.display = 'none';
+    activeCell = null;
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#shift-popup') && !e.target.closest('.col-day')) closePopup();
+  });
+
+  // ── Month nav ──
+  function changeMonth(delta) {
+    curMonth += delta;
+    if (curMonth > 12) { curMonth = 1; curYear++; }
+    if (curMonth < 1)  { curMonth = 12; curYear--; }
+    document.getElementById('month-label').textContent = `${curYear} 年 ${curMonth} 月`;
+    loadMonth();
+  }
+
+  // ── Init ──
+  document.getElementById('month-label').textContent = `${curYear} 年 ${curMonth} 月`;
+  loadMonth();
+</script>
+</body>
+</html>
