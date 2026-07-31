@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>月結對帳 · 今年貴焿</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --brown:    #2C1A0E;
+      --caramel:  #C17B4E;
+      --cream:    #F5EDE0;
+      --bg:       #F2EDE7;
+      --card:     #FFFFFF;
+      --border:   rgba(0,0,0,0.08);
+      --text:     #1A1A1A;
+      --sub:      #888;
+      --green:    #2D9E6B;
+      --green-bg: #E8F7EF;
+      --red:      #C0392B;
+      --red-bg:   #FEF0EE;
+      --amber:    #B45309;
+      --amber-bg: #FEF3C7;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      max-width: 520px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--brown);
+      padding: 40px 20px 20px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .header-back {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: rgba(255,255,255,0.6);
+      font-size: 13px; margin-bottom: 10px;
+    }
+    .header-back:hover { color: white; }
+    .header-title { font-size: 20px; font-weight: 800; color: #fff; }
+    .header-sub   { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    /* ── Selector Bar ── */
+    .selector-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex; gap: 10px; align-items: center;
+      position: sticky; top: 0; z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .selector-bar select,
+    .selector-bar input[type="month"] {
+      flex: 1; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      outline: none; background: var(--bg);
+      color: var(--text);
+    }
+    .selector-bar select:focus,
+    .selector-bar input[type="month"]:focus { border-color: var(--caramel); }
+
+    /* ── Status Badge ── */
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      font-size: 12px; color: var(--sub);
+    }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+    }
+    .status-badge.draft    { background: var(--amber-bg); color: var(--amber); }
+    .status-badge.confirmed { background: var(--green-bg); color: var(--green); }
+    .fill-count { color: var(--sub); font-size: 12px; }
+
+    /* ── Cards ── */
+    .section { margin: 0 14px 14px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--sub);
+      letter-spacing: 1px; padding: 0 2px 8px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* ── Estimate Rows ── */
+    .est-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .est-row:last-child { border-bottom: none; }
+    .est-label { color: var(--sub); }
+    .est-value { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .est-value.total { color: var(--caramel); font-size: 15px; }
+    .est-value.cost  { color: var(--red); }
+    .est-value.profit { color: var(--green); }
+    .est-divider { height: 1px; background: var(--cream); margin: 4px 16px; }
+
+    /* ── Actual Input Rows ── */
+    .actual-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .actual-row:last-child { border-bottom: none; }
+    .actual-label { flex: 1; font-size: 13px; color: var(--text); }
+    .actual-label small { display: block; font-size: 11px; color: var(--sub); margin-top: 1px; }
+    .actual-input {
+      width: 130px; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-size: 14px; font-family: inherit;
+      outline: none; text-align: right; color: var(--text);
+      background: var(--bg);
+    }
+    .actual-input:focus { border-color: var(--caramel); background: white; }
+    .actual-input:disabled { color: var(--sub); background: var(--cream); }
+
+    /* ── Diff Row ── */
+    .diff-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .diff-row:last-child { border-bottom: none; }
+    .diff-label { color: var(--sub); }
+    .diff-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .diff-val.pos { color: var(--green); }
+    .diff-val.neg { color: var(--red); }
+    .diff-val.zero { color: var(--sub); }
+
+    /* ── Summary Total ── */
+    .summary-total {
+      background: var(--brown);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin: 0 14px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .summary-total-label { color: rgba(255,255,255,0.7); font-size: 13px; }
+    .summary-total-val   { color: #fff; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    /* ── Notes ── */
+    .notes-wrap { padding: 12px 16px; }
+    .notes-input {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-size: 13px; font-family: inherit;
+      outline: none; resize: vertical; min-height: 72px;
+      background: var(--bg); color: var(--text);
+    }
+    .notes-input:focus { border-color: var(--caramel); background: white; }
+
+    /* ── Confirm Button ── */
+    .btn-confirm {
+      display: block; width: calc(100% - 28px);
+      margin: 0 14px; padding: 15px;
+      background: var(--caramel); color: white;
+      border: none; border-radius: 14px;
+      font-size: 15px; font-weight: 800; font-family: inherit;
+      cursor: pointer; text-align: center;
+      box-shadow: 0 4px 16px rgba(193,123,78,0.35);
+      transition: background 0.15s;
+    }
+    .btn-confirm:hover { background: #A86840; }
+    .btn-confirm:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+    .btn-reopen {
+      display: block; width: calc(100% - 28px);
+      margin: 8px 14px 0; padding: 12px;
+      background: transparent; color: var(--sub);
+      border: 1px solid var(--border); border-radius: 14px;
+      font-size: 13px; font-family: inherit;
+      cursor: pointer; text-align: center;
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center; padding: 40px 20px;
+      color: var(--sub); font-size: 13px; line-height: 1.8;
+    }
+    .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--brown); color: white;
+      padding: 12px 24px; border-radius: 24px;
+      font-size: 13px; font-weight: 600;
+      transition: transform 0.3s; z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <a class="header-back" href="index.html">‹ 返回管理後台</a>
+  <div class="header-title">月結對帳</div>
+  <div class="header-sub">確認各平台實際撥款，鎖定損益表</div>
+</div>
+
+<!-- Selector -->
+<div class="selector-bar">
+  <select id="store-select" onchange="onStoreChange()"></select>
+  <input type="month" id="month-select" onchange="onMonthChange()" />
+</div>
+
+<!-- Status -->
+<div class="status-bar">
+  <span class="fill-count" id="fill-count">載入中…</span>
+  <span class="status-badge draft" id="status-badge">🟡 估算中</span>
+</div>
+
+<!-- Estimated Summary -->
+<div class="section">
+  <div class="section-label">本月估算（日報累計）</div>
+  <div class="card" id="est-card">
+    <div class="empty-state"><div class="icon">📊</div>請選擇店鋪與月份</div>
+  </div>
+</div>
+
+<!-- Actual Amounts -->
+<div class="section">
+  <div class="section-label">平台實際撥款金額</div>
+  <div class="card">
+    <div class="actual-row">
+      <div class="actual-label">
+        LINE Pay 實際撥款
+        <small>從 LINE Pay 商家後台查看</small>
+      </div>
+      <input class="actual-input" type="number" id="linepay-actual" placeholder="0" oninput="updateDiff()" />
+    </div>
+    <div class="actual-row">
+      <div class="actual-label">
+        Uber Eats 實際撥款
+        <small>從 Uber Eats 後台查看</small>
+      </div>
+      <input class="actual-input" type="number" id="uber-actual" placeholder="0" oninput="updateDiff()" />
+    </div>
+    <div class="actual-row">
+      <div class="actual-label">
+        熊貓實際撥款
+        <small>從 foodpanda 後台查看</small>
+      </div>
+      <input class="actual-input" type="number" id="foodpanda-actual" placeholder="0" oninput="updateDiff()" />
+    </div>
+  </div>
+</div>
+
+<!-- Difference -->
+<div class="section" id="diff-section" style="display:none">
+  <div class="section-label">對帳差異（實際 − 估算）</div>
+  <div class="card" id="diff-card"></div>
+</div>
+
+<!-- Corrected P&L -->
+<div class="summary-total" id="corrected-total" style="display:none">
+  <div class="summary-total-label">修正後本月總營收</div>
+  <div class="summary-total-val" id="corrected-val">$0</div>
+</div>
+
+<!-- Notes -->
+<div class="section">
+  <div class="section-label">備註</div>
+  <div class="card">
+    <div class="notes-wrap">
+      <textarea class="notes-input" id="notes" placeholder="例：熊貓本月有活動補貼、Uber 遲到兩天入帳…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Buttons -->
+<button class="btn-confirm" id="btn-confirm" onclick="saveReconciliation()" disabled>確認並鎖定本月對帳</button>
+<button class="btn-reopen" id="btn-reopen" onclick="reopenReconciliation()" style="display:none">重新開啟修改</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  let stores = [];
+  let currentStoreId = null;
+  let currentYearMonth = '';
+  let estData = { cash: 0, linepay: 0, uber: 0, foodpanda: 0, uncollected: 0, variable: 0, fixed: 0, days: 0 };
+  let existingRecordId = null;
+  let isConfirmed = false;
+
+  const fmt = n => '$' + Math.round(n).toLocaleString('zh-TW');
+
+  async function dbGet(table, query = '') {
+    const url = `${SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
+    const res = await fetch(url, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    return res.ok ? res.json() : [];
+  }
+
+  async function dbUpsert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=store_id,year_month`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation,resolution=merge-duplicates'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  async function dbPatch(table, id, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  function getMonthRange(yearMonth) {
+    const [y, m] = yearMonth.split('-').map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    return {
+      start: `${yearMonth}-01`,
+      end:   `${yearMonth}-${String(lastDay).padStart(2, '0')}`
+    };
+  }
+
+  async function init() {
+    // Default month = current month
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('month-select').value = ym;
+    currentYearMonth = ym;
+
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    if (stores.length > 0) {
+      currentStoreId = stores[0].id;
+      await loadData();
+    }
+  }
+
+  async function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    await loadData();
+  }
+
+  async function onMonthChange() {
+    currentYearMonth = document.getElementById('month-select').value;
+    await loadData();
+  }
+
+  async function loadData() {
+    if (!currentStoreId || !currentYearMonth) return;
+    const { start, end } = getMonthRange(currentYearMonth);
+
+    // Fetch daily reports + expenses in parallel
+    const [reports, expenses, existing] = await Promise.all([
+      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`),
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`),
+      dbGet('monthly_reconciliation', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}`)
+    ]);
+
+    // Compute estimated totals
+    const days = new Set((reports || []).map(r => r.date)).size;
+    estData = {
+      cash:       (reports || []).reduce((s, r) => s + (Number(r.morning_revenue) || 0), 0),
+      linepay:    (reports || []).reduce((s, r) => s + (Number(r.line_pay) || 0), 0),
+      uber:       (reports || []).reduce((s, r) => s + (Number(r.uber_amount) || 0), 0),
+      foodpanda:  (reports || []).reduce((s, r) => s + (Number(r.foodpanda_amount) || 0), 0),
+      uncollected:(reports || []).reduce((s, r) => s + (Number(r.uncollected) || 0), 0),
+      variable:   (expenses || []).filter(e => (e.description || '').startsWith('【變動成本】'))
+                                  .reduce((s, e) => s + (Number(e.amount) || 0), 0),
+      fixed:      (expenses || []).filter(e => (e.description || '').startsWith('【費用】'))
+                                  .reduce((s, e) => s + (Number(e.amount) || 0), 0),
+      days
+    };
+
+    renderEstimate();
+
+    // Load existing reconciliation
+    existingRecordId = null;
+    isConfirmed = false;
+    if (existing && existing.length > 0) {
+      const rec = existing[0];
+      existingRecordId = rec.id;
+      isConfirmed = rec.status === 'confirmed';
+      document.getElementById('linepay-actual').value   = rec.linepay_actual ?? '';
+      document.getElementById('uber-actual').value      = rec.uber_actual ?? '';
+      document.getElementById('foodpanda-actual').value = rec.foodpanda_actual ?? '';
+      document.getElementById('notes').value            = rec.notes ?? '';
+    } else {
+      document.getElementById('linepay-actual').value   = '';
+      document.getElementById('uber-actual').value      = '';
+      document.getElementById('foodpanda-actual').value = '';
+      document.getElementById('notes').value            = '';
+    }
+
+    setLockedState(isConfirmed);
+    updateDiff();
+  }
+
+  function renderEstimate() {
+    const totalEst = estData.cash + estData.linepay + estData.uber + estData.foodpanda + estData.uncollected;
+    const totalCost = estData.variable + estData.fixed;
+    const grossProfit = estData.linepay + estData.uber + estData.foodpanda + estData.cash - estData.variable;
+    const costRate = totalEst > 0 ? (estData.variable / totalEst * 100).toFixed(1) : '—';
+
+    document.getElementById('fill-count').textContent = `已填 ${estData.days} 天日報`;
+
+    document.getElementById('est-card').innerHTML = estData.days === 0
+      ? `<div class="empty-state"><div class="icon">📋</div>本月尚無日報資料</div>`
+      : `
+        <div class="est-row"><span class="est-label">現場現金</span><span class="est-value">${fmt(estData.cash)}</span></div>
+        <div class="est-row"><span class="est-label">LINE Pay（估）</span><span class="est-value">${fmt(estData.linepay)}</span></div>
+        <div class="est-row"><span class="est-label">Uber Eats（估）</span><span class="est-value">${fmt(estData.uber)}</span></div>
+        <div class="est-row"><span class="est-label">熊貓（估）</span><span class="est-value">${fmt(estData.foodpanda)}</span></div>
+        ${estData.uncollected > 0 ? `<div class="est-row"><span class="est-label">當日未收款</span><span class="est-value">${fmt(estData.uncollected)}</span></div>` : ''}
+        <div class="est-divider"></div>
+        <div class="est-row"><span class="est-label">總營收（估）</span><span class="est-value total">${fmt(totalEst)}</span></div>
+        <div class="est-divider"></div>
+        <div class="est-row"><span class="est-label">變動成本</span><span class="est-value cost">${fmt(estData.variable)}<small style="font-size:11px;font-weight:400;color:var(--sub);margin-left:4px">食材成本率 ${costRate}%</small></span></div>
+        <div class="est-row"><span class="est-label">固定費用</span><span class="est-value cost">${fmt(estData.fixed)}</span></div>
+        <div class="est-row"><span class="est-label">食材毛利（估）</span><span class="est-value profit">${fmt(totalEst - estData.variable)}</span></div>
+      `;
+
+    document.getElementById('btn-confirm').disabled = estData.days === 0;
+  }
+
+  function updateDiff() {
+    const lp_act  = Number(document.getElementById('linepay-actual').value) || 0;
+    const ub_act  = Number(document.getElementById('uber-actual').value) || 0;
+    const fp_act  = Number(document.getElementById('foodpanda-actual').value) || 0;
+    const hasAny  = lp_act > 0 || ub_act > 0 || fp_act > 0;
+
+    document.getElementById('diff-section').style.display   = hasAny ? '' : 'none';
+    document.getElementById('corrected-total').style.display = hasAny ? '' : 'none';
+
+    if (!hasAny) return;
+
+    const lp_diff  = lp_act - estData.linepay;
+    const ub_diff  = ub_act - estData.uber;
+    const fp_diff  = fp_act - estData.foodpanda;
+
+    const diffRow = (label, diff) => {
+      const cls = diff > 0 ? 'pos' : diff < 0 ? 'neg' : 'zero';
+      const sign = diff > 0 ? '+' : '';
+      return `<div class="diff-row">
+        <span class="diff-label">${label}</span>
+        <span class="diff-val ${cls}">${sign}${Math.round(diff).toLocaleString('zh-TW')}</span>
+      </div>`;
+    };
+
+    document.getElementById('diff-card').innerHTML =
+      diffRow('LINE Pay 差異', lp_diff) +
+      diffRow('Uber Eats 差異', ub_diff) +
+      diffRow('熊貓差異', fp_diff);
+
+    const corrected = estData.cash + lp_act + ub_act + fp_act + estData.uncollected;
+    document.getElementById('corrected-val').textContent = fmt(corrected);
+  }
+
+  function setLockedState(locked) {
+    const badge   = document.getElementById('status-badge');
+    const confirm = document.getElementById('btn-confirm');
+    const reopen  = document.getElementById('btn-reopen');
+    const inputs  = ['linepay-actual', 'uber-actual', 'foodpanda-actual', 'notes'];
+
+    badge.className   = 'status-badge ' + (locked ? 'confirmed' : 'draft');
+    badge.textContent = locked ? '✅ 已確認' : '🟡 估算中';
+    confirm.style.display = locked ? 'none' : 'block';
+    reopen.style.display  = locked ? 'block' : 'none';
+    inputs.forEach(id => document.getElementById(id).disabled = locked);
+  }
+
+  async function saveReconciliation() {
+    if (!currentStoreId || !currentYearMonth) return;
+    const btn = document.getElementById('btn-confirm');
+    btn.disabled = true;
+    btn.textContent = '儲存中…';
+
+    const lp  = Number(document.getElementById('linepay-actual').value) || null;
+    const ub  = Number(document.getElementById('uber-actual').value) || null;
+    const fp  = Number(document.getElementById('foodpanda-actual').value) || null;
+    const notes = document.getElementById('notes').value.trim() || null;
+
+    const corrected = estData.cash + (lp||0) + (ub||0) + (fp||0) + estData.uncollected;
+
+    const payload = {
+      store_id:           currentStoreId,
+      year_month:         currentYearMonth,
+      linepay_estimated:  estData.linepay,
+      uber_estimated:     estData.uber,
+      foodpanda_estimated:estData.foodpanda,
+      cash_revenue:       estData.cash,
+      variable_cost:      estData.variable,
+      fixed_cost:         estData.fixed,
+      linepay_actual:     lp,
+      uber_actual:        ub,
+      foodpanda_actual:   fp,
+      corrected_revenue:  corrected,
+      status:             'confirmed',
+      confirmed_at:       new Date().toISOString(),
+      notes
+    };
+
+    const result = await dbUpsert('monthly_reconciliation', payload);
+    if (result) {
+      existingRecordId = result[0]?.id || existingRecordId;
+      isConfirmed = true;
+      setLockedState(true);
+      showToast('✅ 本月對帳已鎖定');
+    } else {
+      showToast('❌ 儲存失敗，請重試');
+      btn.disabled = false;
+      btn.textContent = '確認並鎖定本月對帳';
+    }
+  }
+
+  async function reopenReconciliation() {
+    if (!existingRecordId) return;
+    if (!confirm('確定重新開啟本月對帳？')) return;
+
+    await dbPatch('monthly_reconciliation', existingRecordId, { status: 'draft', confirmed_at: null });
+    isConfirmed = false;
+    setLockedState(false);
+    document.getElementById('btn-confirm').disabled = false;
+    document.getElementById('btn-confirm').textContent = '確認並鎖定本月對帳';
+    showToast('已重新開啟，可修改數字');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  init();
+</script>
+</body>
+</html>
