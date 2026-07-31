@@ -149,12 +149,20 @@ def build_prompt(collected):
         if c.get("error"):
             lines.append(f"【{name}】{c['error']}\n")
             continue
-        no_new_reviews = c["_has_history"] and len(c["reviews"]) == 0
+        count_increased = c["_has_history"] and c["delta_count"] is not None and c["delta_count"] > 0
+        has_new_text = len(c["reviews"]) > 0
         delta_r = f"{c['delta_rating']:+}" if c["delta_rating"] is not None else "無上月資料"
         delta_c = f"{c['delta_count']:+}" if c["delta_count"] is not None else ""
         lines.append(f"【{name}】目前 {c['rating']} 分（{delta_r}），共 {c['count']} 則（{delta_c}）")
-        if no_new_reviews:
-            lines.append("  本月沒有真正新發布的評論（Google 顯示的都是上次回報之前的舊評論），不要杜撰或引用舊評論內容當作本月回饋依據。")
+        if c["_has_history"] and not count_increased:
+            lines.append("  本月則數沒有增加，確定沒有新評論，不要杜撰或引用舊評論內容當作本月回饋依據。")
+        elif count_increased and not has_new_text:
+            lines.append(
+                f"  本月則數增加了 {c['delta_count']} 則，代表確實有新評論，"
+                "但 Google 這支 API 只回傳幾則代表性評論、不保證包含最新這幾則，"
+                "所以抓不到新評論的實際內容。回饋要老實說「本月有新評論但系統抓不到內容，"
+                "建議店長自行到 Google 地圖看一下」，不要說「本月無新評論」，也不要拿下面列的舊評論內容硬湊。"
+            )
         for rv in c["reviews"]:
             lines.append(f"  - [{rv['rating']}星 {rv['time']}] {rv['text'][:200]}")
         lines.append("")
@@ -162,11 +170,14 @@ def build_prompt(collected):
         "請用繁體中文輸出兩個部分，用 <manager> 跟 <exec> 這兩個 XML 標籤包起來：\n"
         "1. <manager> 標籤內：每家店各一句話，給該店店長看的具體本月回饋，"
         "根據評論內容指出這個月最該讚美或最該改善的一件事，語氣直接不要客套。"
-        "如果該店本月沒有新評論（我有特別註明的），這句話就只講「本月無新評論」，"
-        "不要翻舊帳去引用之前的評論內容或問題，除非我有另外要求做舊帳回顧。\n"
+        "如果我有特別註明該店本月沒有新評論，這句話就只講「本月無新評論」；"
+        "如果我有特別註明該店本月則數增加但抓不到新評論內容，就照我給的說法講清楚這個狀況；"
+        "這兩種情況都不要翻舊帳去引用之前的評論內容或問題，除非我有另外要求做舊帳回顧。\n"
         "2. <exec> 標籤內：給執行長跟督導看的整體趨勢摘要，"
         "只根據本月真的有新增的評論來判斷退步/進步和共通問題模式，"
-        "沒有新評論的店不用列入這段討論。"
+        "完全沒有新評論的店不用列入這段討論；"
+        "則數有增加但抓不到內容的店，可以在「整體趨勢」提一句「有新評論但系統抓不到內容，建議人工查看」，"
+        "不用列進系統性問題或自我檢查那兩段。"
         "內容要分成三段，各自用小標題開頭（純文字小標題，不用再包標籤）：\n"
         "「整體趨勢」：2-3 句，哪幾家分數在退步、哪幾家在進步。\n"
         "「可用 SOP 解決的系統性問題」：列出跨店重複出現、屬於制度或流程層級的問題"
