@@ -3,431 +3,195 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>私人助理</title>
+  <title>個人管理 · 今年貴焿助理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg:        #1A0F07;
-      --surface:   #251508;
-      --card:      #2E1B0C;
-      --border:    rgba(201,136,58,0.2);
-      --amber:     #C9883A;
-      --amber-lt:  #D4A574;
-      --cream:     #F5EDE0;
-      --text:      #EDE0CF;
-      --text-mid:  #B8926A;
-      --text-dim:  #7A5A3A;
-      --green:     #5BAF82;
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --green-online:#4CAF7D;
+      --border:      #EDE0D0;
     }
 
     body {
       font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ── PIN Gate ── */
-    #pin-gate {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 100; gap: 0;
-    }
-    .pin-avatar {
-      width: 72px; height: 72px; border-radius: 20px;
-      background: linear-gradient(135deg, #3D2410, #6B3D1A);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 32px; margin-bottom: 20px;
-      border: 1px solid rgba(201,136,58,0.3);
-    }
-    .pin-title { font-size: 20px; font-weight: 800; color: var(--cream); margin-bottom: 6px; }
-    .pin-sub { font-size: 13px; color: var(--text-mid); margin-bottom: 36px; }
-    .pin-dots {
-      display: flex; gap: 12px; margin-bottom: 28px;
-    }
-    .pin-dot {
-      width: 14px; height: 14px; border-radius: 50%;
-      border: 2px solid var(--text-dim);
-      background: transparent;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .pin-dot.filled { background: var(--amber); border-color: var(--amber); }
-    .pin-dot.error  { background: #E05555; border-color: #E05555; }
-    .pin-pad {
-      display: grid; grid-template-columns: repeat(3, 72px);
-      gap: 10px;
-    }
-    .pin-btn {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: var(--card); border: 1px solid var(--border);
-      color: var(--cream); font-size: 20px; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .pin-btn:hover { background: #3D2410; }
-    .pin-btn:active { background: var(--amber); color: #fff; }
-    .pin-btn.del { font-size: 16px; color: var(--text-mid); }
-    .pin-error-msg {
-      margin-top: 20px; font-size: 13px; color: #E05555;
-      opacity: 0; transition: opacity 0.2s;
-    }
-    .pin-back {
-      margin-top: 24px; font-size: 12px; color: var(--text-dim);
-      text-decoration: none; display: block; text-align: center;
-    }
-    .pin-back:hover { color: var(--amber); }
-
-    /* ── App ── */
-    #app { display: none; }
-
-    .app-header {
-      position: sticky; top: 0; z-index: 10;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .app-title { font-size: 16px; font-weight: 700; color: var(--cream); }
-    .app-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-    .lock-btn {
-      background: rgba(201,136,58,0.12); border: 1px solid var(--border);
-      border-radius: 8px; padding: 6px 12px;
-      font-size: 12px; color: var(--amber); cursor: pointer;
-    }
-    .lock-btn:hover { background: rgba(201,136,58,0.2); }
-
-    .content { padding: 20px; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-
-    /* Section Card */
-    .sec-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
       overflow: hidden;
     }
-    .sec-header {
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: var(--brown-dark);
+      display: flex; flex-direction: column;
+      padding: 20px 0;
+    }
+    .sidebar-brand {
       display: flex; align-items: center; gap: 10px;
-      padding: 16px 18px 12px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--caramel), var(--brown-main));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: white; font-weight: 700;
+    }
+    .brand-text h2 { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    .brand-text span { font-size: 11px; color: var(--sand); }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; cursor: pointer;
+      transition: background 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.active { background: rgba(193,123,78,0.25); border-left: 3px solid var(--caramel); padding-left: 13px; }
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+    .nav-text { font-size: 12px; color: #fff; }
+    .nav-sub  { font-size: 10px; color: var(--text-light); }
+
+    .sidebar-bottom {
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; background: var(--warm-white); }
+
+    .main-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px 12px;
       border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: var(--warm-white); z-index: 10;
     }
-    .sec-icon { font-size: 18px; }
-    .sec-title { font-size: 14px; font-weight: 700; color: var(--cream); }
-    .sec-badge {
-      margin-left: auto; font-size: 10px; padding: 2px 8px;
-      border-radius: 12px; font-weight: 600;
-      background: rgba(91,175,130,0.15); color: var(--green);
-      border: 1px solid rgba(91,175,130,0.25);
-    }
-    .sec-body { padding: 14px 18px; }
+    .main-header-left h1 { font-size: 20px; font-weight: 700; color: var(--text-dark); }
+    .main-header-left .sync-info { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .main-header-left .sync-info span { color: var(--text-mid); font-weight: 600; }
 
-    /* Note area */
-    .note-area {
-      width: 100%; background: transparent;
-      border: none; outline: none; resize: none;
-      color: var(--text); font-size: 14px; line-height: 1.8;
-      font-family: inherit; min-height: 80px;
-    }
-    .note-area::placeholder { color: var(--text-dim); }
+    .content { padding: 40px 28px; }
 
-    /* Item list */
-    .item-list { display: flex; flex-direction: column; gap: 8px; }
-    .item-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 10px; border-radius: 8px;
-      background: rgba(255,255,255,0.03);
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; padding: 60px 0; color: var(--text-light); text-align: center;
     }
-    .item-check {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid var(--text-dim); flex-shrink: 0;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-    }
-    .item-check.done { background: var(--green); border-color: var(--green); }
-    .item-check.done::after { content: "✓"; font-size: 10px; color: #fff; font-weight: 700; }
-    .item-text { font-size: 13px; color: var(--text); flex: 1; }
-    .item-text.done { color: var(--text-dim); text-decoration: line-through; }
-    .item-del { font-size: 14px; color: var(--text-dim); cursor: pointer; padding: 2px 4px; }
-    .item-del:hover { color: #E05555; }
+    .empty-icon { font-size: 36px; opacity: 0.4; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text-mid); }
+    .empty-sub { font-size: 13px; line-height: 1.7; }
 
-    .add-row {
-      display: flex; align-items: center; gap: 8px; margin-top: 8px;
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px; justify-content: space-around; align-items: center;
+      z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .add-input {
-      flex: 1; background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 12px; color: var(--text); font-size: 13px;
-      font-family: inherit; outline: none;
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
     }
-    .add-input:focus { border-color: rgba(201,136,58,0.5); }
-    .add-input::placeholder { color: var(--text-dim); }
-    .add-btn {
-      padding: 8px 14px; border-radius: 8px;
-      background: rgba(201,136,58,0.15); border: 1px solid rgba(201,136,58,0.3);
-      color: var(--amber); font-size: 13px; cursor: pointer; white-space: nowrap;
-    }
-    .add-btn:hover { background: rgba(201,136,58,0.25); }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
 
-    /* Quote */
-    .family-quote {
-      text-align: center; padding: 20px;
-      font-size: 13px; color: var(--text-dim); font-style: italic;
-      border-top: 1px solid var(--border); margin-top: 8px;
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
     }
-
-    /* Mobile bottom back */
-    .back-row {
-      text-align: center; padding: 8px 0 32px;
-    }
-    .back-link {
-      font-size: 12px; color: var(--text-dim); text-decoration: none;
-    }
-    .back-link:hover { color: var(--amber); }
   </style>
 </head>
 <body>
 
-<!-- PIN Gate -->
-<div id="pin-gate">
-  <div class="pin-avatar">🏠</div>
-  <div class="pin-title">私人空間</div>
-  <div class="pin-sub">輸入 PIN 碼進入</div>
-  <div class="pin-dots">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
-  </div>
-  <div class="pin-pad">
-    <button class="pin-btn" onclick="pressPin('1')">1</button>
-    <button class="pin-btn" onclick="pressPin('2')">2</button>
-    <button class="pin-btn" onclick="pressPin('3')">3</button>
-    <button class="pin-btn" onclick="pressPin('4')">4</button>
-    <button class="pin-btn" onclick="pressPin('5')">5</button>
-    <button class="pin-btn" onclick="pressPin('6')">6</button>
-    <button class="pin-btn" onclick="pressPin('7')">7</button>
-    <button class="pin-btn" onclick="pressPin('8')">8</button>
-    <button class="pin-btn" onclick="pressPin('9')">9</button>
-    <button class="pin-btn" style="background:transparent;border:none;"></button>
-    <button class="pin-btn" onclick="pressPin('0')">0</button>
-    <button class="pin-btn del" onclick="deletePin()">⌫</button>
-  </div>
-  <div class="pin-error-msg" id="pin-error">PIN 碼錯誤，請再試一次</div>
-  <a class="pin-back" href="index.html">← 返回首頁</a>
-</div>
-
-<!-- App (unlocked) -->
-<div id="app">
-  <div class="app-header">
-    <div>
-      <div class="app-title">🏠 漢柏的私人助理</div>
-      <div class="app-sub">只有你看得到這裡</div>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">焿</div>
+    <div class="brand-text">
+      <h2>共好中樞</h2>
+      <span>今年貴焿助理系統</span>
     </div>
-    <button class="lock-btn" onclick="lockApp()">🔒 鎖定</button>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">○</span>
+      <div><div class="nav-text">貴焿共好系統</div><div class="nav-sub">管理中樞</div></div>
+    </a>
+    <a class="nav-item" href="sop.html">
+      <span class="nav-icon">📖</span>
+      <div><div class="nav-text">一日流程</div><div class="nav-sub">作業手冊</div></div>
+    </a>
+    <a class="nav-item" href="inbox.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">待辦</div><div class="nav-sub">Inbox</div></div>
+    </a>
+    <a class="nav-item" href="chronicle.html">
+      <span class="nav-icon">📜</span>
+      <div><div class="nav-text">建制里程碑</div><div class="nav-sub">進化歷程</div></div>
+    </a>
+    <a class="nav-item active" href="personal.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">個人管理</div><div class="nav-sub">漢柏的空間</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+  </nav>
+  <div class="sidebar-bottom"></div>
+</aside>
+
+<main class="main">
+  <div class="main-header">
+    <div class="main-header-left">
+      <h1>個人管理</h1>
+      <div class="sync-info"><span>鞠漢柏</span>・漢柏的空間</div>
+    </div>
   </div>
 
   <div class="content">
-
-    <!-- 老婆 -->
-    <div class="sec-card">
-      <div class="sec-header">
-        <span class="sec-icon">💑</span>
-        <span class="sec-title">陪伴老婆</span>
-        <span class="sec-badge">用心</span>
-      </div>
-      <div class="sec-body">
-        <div class="item-list" id="wife-list"></div>
-        <div class="add-row">
-          <input class="add-input" id="wife-input" placeholder="記一件想為她做的事…" onkeydown="if(event.key==='Enter')addItem('wife')" />
-          <button class="add-btn" onclick="addItem('wife')">記下</button>
-        </div>
-        <div style="margin-top:14px;">
-          <textarea class="note-area" id="wife-note" placeholder="她最近的狀態、你想記住的事…" oninput="saveNote('wife')" rows="3"></textarea>
-        </div>
-      </div>
+    <div class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <div class="empty-title">這裡是你的個人空間</div>
+      <div class="empty-sub">老婆、小孩、個人待辦——<br>需要什麼就慢慢建立。</div>
     </div>
-
-    <!-- 小孩 -->
-    <div class="sec-card">
-      <div class="sec-header">
-        <span class="sec-icon">👶</span>
-        <span class="sec-title">帶小孩</span>
-        <span class="sec-badge">成長</span>
-      </div>
-      <div class="sec-body">
-        <div class="item-list" id="kids-list"></div>
-        <div class="add-row">
-          <input class="add-input" id="kids-input" placeholder="記一件關於小孩的事…" onkeydown="if(event.key==='Enter')addItem('kids')" />
-          <button class="add-btn" onclick="addItem('kids')">記下</button>
-        </div>
-        <div style="margin-top:14px;">
-          <textarea class="note-area" id="kids-note" placeholder="小孩最近的樣子、值得記住的時刻…" oninput="saveNote('kids')" rows="3"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- 個人待辦 -->
-    <div class="sec-card">
-      <div class="sec-header">
-        <span class="sec-icon">✅</span>
-        <span class="sec-title">個人待辦</span>
-      </div>
-      <div class="sec-body">
-        <div class="item-list" id="personal-list"></div>
-        <div class="add-row">
-          <input class="add-input" id="personal-input" placeholder="加一件只屬於你的事…" onkeydown="if(event.key==='Enter')addItem('personal')" />
-          <button class="add-btn" onclick="addItem('personal')">加入</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 自由書寫 -->
-    <div class="sec-card">
-      <div class="sec-header">
-        <span class="sec-icon">📝</span>
-        <span class="sec-title">心裡的話</span>
-      </div>
-      <div class="sec-body">
-        <textarea class="note-area" id="heart-note" placeholder="想說的話，不用整理，隨手記下來…" oninput="saveNote('heart')" rows="6"></textarea>
-      </div>
-    </div>
-
-    <div class="family-quote">
-      「你在最靠近的人身上，練習使人和睦。」
-    </div>
-
-    <div class="back-row">
-      <a class="back-link" href="index.html">← 返回共好中樞</a>
-    </div>
-
   </div>
-</div>
+</main>
 
-<script>
-  // ── PIN ──
-  const PIN_HASH = '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0'; // sha256("0000")
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item" href="inbox.html"><span class="mn-icon">📋</span><span>待辦</span></a>
+  <a class="mobile-nav-item active" href="personal.html"><span class="mn-icon">🧍</span><span>個人</span></a>
+  <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+</nav>
 
-  async function sha256(str) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
-  let pinInput = '';
-
-  function updateDots() {
-    for (let i = 0; i < 4; i++) {
-      const d = document.getElementById('d' + i);
-      d.classList.toggle('filled', i < pinInput.length);
-      d.classList.remove('error');
-    }
-  }
-
-  async function pressPin(digit) {
-    if (pinInput.length >= 4) return;
-    pinInput += digit;
-    updateDots();
-    if (pinInput.length === 4) {
-      const h = await sha256(pinInput);
-      if (h === PIN_HASH) {
-        document.getElementById('pin-gate').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        loadAll();
-      } else {
-        for (let i = 0; i < 4; i++) document.getElementById('d' + i).classList.add('error');
-        const msg = document.getElementById('pin-error');
-        msg.style.opacity = '1';
-        setTimeout(() => { pinInput = ''; updateDots(); msg.style.opacity = '0'; }, 1200);
-      }
-    }
-  }
-
-  function deletePin() {
-    pinInput = pinInput.slice(0, -1);
-    updateDots();
-  }
-
-  function lockApp() {
-    pinInput = '';
-    updateDots();
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('pin-gate').style.display = 'flex';
-  }
-
-  // ── Storage ──
-  function sk(key) { return 'personal_' + key; }
-
-  function loadAll() {
-    renderList('wife');
-    renderList('kids');
-    renderList('personal');
-    ['wife','kids','heart'].forEach(k => {
-      const el = document.getElementById(k + '-note');
-      if (el) el.value = localStorage.getItem(sk('note_' + k)) || '';
-    });
-  }
-
-  function getItems(key) {
-    return JSON.parse(localStorage.getItem(sk('items_' + key)) || '[]');
-  }
-  function saveItems(key, arr) {
-    localStorage.setItem(sk('items_' + key), JSON.stringify(arr));
-  }
-
-  function renderList(key) {
-    const list = document.getElementById(key + '-list');
-    const items = getItems(key);
-    list.innerHTML = items.map((item, i) => `
-      <div class="item-row">
-        <div class="item-check ${item.done ? 'done' : ''}" onclick="toggleItem('${key}',${i})"></div>
-        <span class="item-text ${item.done ? 'done' : ''}">${escHtml(item.text)}</span>
-        <span class="item-del" onclick="deleteItem('${key}',${i})">✕</span>
-      </div>
-    `).join('');
-  }
-
-  function addItem(key) {
-    const input = document.getElementById(key + '-input');
-    const text = input.value.trim();
-    if (!text) return;
-    const items = getItems(key);
-    items.push({ text, done: false });
-    saveItems(key, items);
-    input.value = '';
-    renderList(key);
-  }
-
-  function toggleItem(key, i) {
-    const items = getItems(key);
-    items[i].done = !items[i].done;
-    saveItems(key, items);
-    renderList(key);
-  }
-
-  function deleteItem(key, i) {
-    const items = getItems(key);
-    items.splice(i, 1);
-    saveItems(key, items);
-    renderList(key);
-  }
-
-  function saveNote(key) {
-    const el = document.getElementById(key + '-note');
-    if (el) localStorage.setItem(sk('note_' + key), el.value);
-  }
-
-  function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  // keyboard support
-  document.addEventListener('keydown', e => {
-    if (document.getElementById('pin-gate').style.display === 'none') return;
-    if (e.key >= '0' && e.key <= '9') pressPin(e.key);
-    if (e.key === 'Backspace') deletePin();
-  });
-</script>
 </body>
 </html>
