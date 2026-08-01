@@ -30,16 +30,22 @@
     /* ── Header ── */
     .app-header {
       background: var(--card);
-      border-top: 4px solid var(--seal);
-      border-bottom: 1px solid var(--border);
-      padding: 32px 20px 22px;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 56px 32px 36px;
+      display: flex; flex-direction: column; align-items: center;
       position: relative;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.03), 0 8px 24px rgba(44,26,14,0.05);
     }
     .app-logo-img {
-      width: 100%; max-width: 320px; height: auto; display: block;
+      width: 100%; max-width: 280px; height: auto; display: block;
     }
-    .app-sub   { font-size: 12px; color: var(--sub); letter-spacing: 1.5px; margin-top: 2px; }
+    .app-sub {
+      font-size: 10px; color: var(--sub); font-weight: 600;
+      letter-spacing: 3px; margin-top: 22px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .app-sub::before, .app-sub::after {
+      content: ""; width: 16px; height: 1px; background: var(--border);
+    }
 
     /* ── Section ── */
     .section { margin: 16px 14px 0; }
