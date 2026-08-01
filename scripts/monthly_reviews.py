@@ -19,6 +19,14 @@ RESEND_KEY = os.environ["RESEND_API_KEY"]
 REPORT_TO = os.environ.get("REPORT_TO_EMAIL") or "ijs7594@gmail.com"
 
 
+def load_known_constraints():
+    path = os.path.join(os.path.dirname(__file__), "known_constraints.txt")
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
+
+
 def http_json(url, method="GET", headers=None, body=None):
     data = json.dumps(body).encode() if body is not None else None
     all_headers = {"User-Agent": "Mozilla/5.0 (compatible; guijiao-monthly-report/1.0)"}
@@ -191,6 +199,16 @@ def collect_store_data():
 def build_prompt(collected):
     period_desc = "上個月" if LOOKBACK_MONTHS == 1 else f"最近 {LOOKBACK_MONTHS} 個月"
     lines = [f"以下是今年貴焿古早味麵線羹{period_desc}各分店的 Google 評論資料，請幫忙寫月報。\n"]
+    constraints = load_known_constraints()
+    if constraints:
+        lines.append(
+            "以下是總部已經明確決定、不會因為顧客評論而調整的既定政策。"
+            "評論內容如果只是在抱怨這些，不要放進「可用SOP解決的系統性問題」或"
+            "「需要店長／夥伴自我檢查的問題」這兩段去要求改善，也不要建議店長回應顧客時道歉或承諾會改，"
+            "當作已有共識的既定政策看待就好：\n"
+            + "\n".join(f"- {c}" for c in constraints)
+            + "\n"
+        )
     for c in collected:
         name = c["store"]["name"]
         if c.get("error"):
