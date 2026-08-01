@@ -245,119 +245,119 @@
 
 <script>
 const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_X3HEDV1lG1ZYf1SQ3Lvc2A_huzbsrGb';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+const LIFF_URL = 'https://liff.line.me/2010930752-DdwrPCTY';
 
-const params = new URLSearchParams(window.location.search);
-const token = params.get('token');
+const TYPE_LABEL = { franchise: '加盟契約', partnership: '合夥契約', manager: '管理責任協議', policy: '公司政策' };
+const TYPE_ICON  = { franchise: '🤝', partnership: '👥', manager: '🧑‍💼', policy: '📘' };
 
 const contentEl = document.getElementById('content');
 const syncInfoEl = document.getElementById('sync-info');
 const badgeEl = document.getElementById('access-badge');
 
+async function dbGet(table, q = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${q ? '?' + q : ''}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  return res.json();
+}
+
 function escapeHtml(str) {
   const div = document.createElement('div');
-  div.textContent = str;
+  div.textContent = str || '';
   return div.innerHTML;
 }
 
-function docIcon(category) {
-  if (category === '加盟契約') return '🤝';
-  if (category === '合夥契約') return '👥';
-  if (category === '經理人合約') return '🧑‍💼';
-  return '📘';
+function renderSigBadges(sigs) {
+  if (!sigs.length) return '<span style="color:#9E7B60;font-size:11px;">尚無簽署記錄</span>';
+  return sigs.map(s => {
+    const icon = s.status === 'approved' ? '✅' : s.status === 'pending' ? '⏳' : '❌';
+    return `<span style="font-size:11px;margin-right:10px;">${icon} ${escapeHtml(s.signer_name)}</span>`;
+  }).join('');
 }
 
-function renderCard(doc, hasContent) {
-  const store = doc.store_name || '總部政策';
-  const meta = `${escapeHtml(doc.category)} · v${doc.version}` + (doc.effective_date ? ` · 生效 ${doc.effective_date}` : '');
-  const bodyHtml = hasContent
-    ? `<div class="doc-body">${escapeHtml(doc.content)}</div>`
-    : `<div class="lock-note">🔒 完整內容需透過該店專屬連結查看，請洽漢柏取得連結。</div>`;
+function renderCard(c, sigs) {
+  const label = TYPE_LABEL[c.contract_type] || c.contract_type;
+  const icon  = TYPE_ICON[c.contract_type] || '📄';
+  const approved = sigs.filter(s => s.status === 'approved').length;
+  const pending  = sigs.filter(s => s.status === 'pending').length;
+
   return `
     <div class="doc-card">
       <div class="doc-card-head" onclick="this.parentElement.classList.toggle('open')">
-        <span class="doc-icon">${docIcon(doc.category)}</span>
+        <span class="doc-icon">${icon}</span>
         <div class="doc-info">
-          <div class="doc-title">${escapeHtml(doc.title)}</div>
+          <div class="doc-title">${escapeHtml(c.title)}</div>
           <div class="doc-meta">
-            <span class="status-pill status-${doc.status}">${doc.status}</span>
-            <span>${meta}</span>
+            <span class="status-pill status-生效中">生效中</span>
+            <span>${escapeHtml(label)} · ${escapeHtml(c.version)}</span>
+            ${approved ? `<span style="color:#4CAF7D;font-weight:600;">✅ ${approved}人已核可</span>` : ''}
+            ${pending  ? `<span style="color:#C17B4E;font-weight:600;">⏳ ${pending}人待核可</span>`  : ''}
           </div>
         </div>
         <span class="doc-chevron">▶</span>
       </div>
-      ${bodyHtml}
-    </div>
-  `;
-}
-
-function groupByStore(docs) {
-  const groups = {};
-  for (const d of docs) {
-    const key = d.store_name || '總部政策';
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(d);
-  }
-  return groups;
-}
-
-function render(docs, hasContent) {
-  if (!docs.length) {
-    contentEl.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📄</div>
-        <div class="empty-title">${token ? '這組連結查不到任何合約' : '目前沒有合約資料'}</div>
-        <div class="empty-sub">${token ? '連結可能已失效，請跟漢柏確認。' : ''}</div>
-      </div>`;
-    return;
-  }
-  const groups = groupByStore(docs);
-  let html = '';
-  for (const store in groups) {
-    html += `<div class="store-group">
-      <div class="store-group-title">${escapeHtml(store)}</div>
-      <div class="card-list">${groups[store].map(d => renderCard(d, hasContent)).join('')}</div>
+      <div class="doc-body">
+        <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #EDE0D0;">
+          ${renderSigBadges(sigs)}
+        </div>
+        ${escapeHtml(c.content)}
+      </div>
     </div>`;
-  }
-  contentEl.innerHTML = html;
 }
 
 async function load() {
   try {
-    if (token) {
-      badgeEl.textContent = '完整檢視';
-      badgeEl.className = 'access-badge full';
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_contracts_by_token`, {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ p_token: token })
-      });
-      const docs = await res.json();
-      if (!res.ok || !Array.isArray(docs)) throw new Error('讀取失敗');
-      syncInfoEl.textContent = `共 ${docs.length} 份合約 · 完整內容`;
-      render(docs, true);
-    } else {
-      badgeEl.textContent = '摘要檢視';
-      badgeEl.className = 'access-badge summary';
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/contract_summaries?select=*&order=created_at.asc`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      const docs = await res.json();
-      if (!res.ok || !Array.isArray(docs)) throw new Error('讀取失敗');
-      syncInfoEl.textContent = `共 ${docs.length} 份合約 · 摘要（完整內容需密鑰連結）`;
-      render(docs, false);
+    const [stores, contracts, sigs] = await Promise.all([
+      dbGet('stores', 'select=id,name'),
+      dbGet('contracts', 'select=*&is_active=eq.true&order=store_id.asc,id.asc'),
+      dbGet('contract_signatures', 'select=contract_id,signer_name,status&status=neq.rejected')
+    ]);
+
+    const storeMap = {};
+    (stores || []).forEach(s => storeMap[s.id] = s.name);
+
+    const sigsByContract = {};
+    (sigs || []).forEach(s => {
+      if (!sigsByContract[s.contract_id]) sigsByContract[s.contract_id] = [];
+      sigsByContract[s.contract_id].push(s);
+    });
+
+    const list = (contracts || []);
+    syncInfoEl.innerHTML = `共 <span>${list.length}</span> 份合約`;
+    badgeEl.textContent = '完整檢視';
+    badgeEl.className = 'access-badge full';
+
+    if (!list.length) {
+      contentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><div class="empty-title">目前沒有合約</div></div>`;
+      return;
     }
-  } catch (err) {
-    contentEl.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <div class="empty-title">讀取失敗</div>
-        <div class="empty-sub">${escapeHtml(err.message)}</div>
+
+    const groups = {};
+    list.forEach(c => {
+      const key = c.store_id ? (storeMap[c.store_id] || '未知分店') : '總部政策';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(c);
+    });
+
+    let html = '';
+    for (const store in groups) {
+      html += `<div class="store-group">
+        <div class="store-group-title">${escapeHtml(store)}</div>
+        <div class="card-list">${groups[store].map(c => renderCard(c, sigsByContract[c.id] || [])).join('')}</div>
       </div>`;
+    }
+
+    html += `<div style="margin-top:28px;padding:16px 18px;background:#F5EDE0;border-radius:12px;border:1px solid #EDE0D0;">
+      <div style="font-size:12px;font-weight:700;color:#5C3317;margin-bottom:8px;">簽名連結（發給合夥人在 LINE 內開啟）</div>
+      <div style="font-size:12px;color:#8B5E3C;word-break:break-all;margin-bottom:8px;">${LIFF_URL}</div>
+      <button onclick="navigator.clipboard.writeText('${LIFF_URL}').then(()=>{this.textContent='已複製！';setTimeout(()=>this.textContent='複製連結',2000)})"
+        style="padding:6px 16px;border:1px solid #C17B4E;border-radius:8px;background:white;color:#C17B4E;cursor:pointer;font-size:12px;font-weight:600;">複製連結</button>
+    </div>`;
+
+    contentEl.innerHTML = html;
+  } catch (err) {
+    contentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">讀取失敗</div><div class="empty-sub">${escapeHtml(err.message)}</div></div>`;
   }
 }
 
