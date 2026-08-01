@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>合約管理 · 今年貴焿</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --brown:    #2C1A0E;
+      --caramel:  #C17B4E;
+      --cream:    #F5EDE0;
+      --bg:       #F2EDE7;
+      --card:     #FFFFFF;
+      --border:   rgba(0,0,0,0.08);
+      --text:     #1A1A1A;
+      --sub:      #888;
+      --green:    #2D9E6B;
+      --green-bg: #E8F7EF;
+      --red:      #C0392B;
+      --red-bg:   #FEF0EE;
+      --amber:    #B45309;
+      --amber-bg: #FEF3C7;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    /* ── Loading ── */
+    #view-loading {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; gap: 16px;
+      color: var(--sub); font-size: 14px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--cream);
+      border-top-color: var(--caramel);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--brown);
+      padding: 44px 18px 18px;
+    }
+    .header-user {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .user-pic {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      object-fit: cover;
+    }
+    .user-pic-placeholder {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--caramel); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; flex-shrink: 0;
+    }
+    .user-name { font-size: 15px; font-weight: 700; color: #fff; }
+    .user-sub  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .header-title { font-size: 20px; font-weight: 800; color: #fff; }
+    .header-sub   { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex; background: var(--brown);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 6px;
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      border: none; background: transparent;
+      cursor: pointer; font-family: inherit;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s;
+    }
+    .tab-btn.active { color: #fff; border-bottom-color: var(--caramel); }
+
+    /* ── Store Selector ── */
+    .selector-bar {
+      background: var(--card);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .selector-bar select {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      outline: none; background: var(--bg); color: var(--text);
+    }
+    .selector-bar select:focus { border-color: var(--caramel); }
+
+    /* ── Card / Section ── */
+    .section { margin: 0 14px 14px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--sub);
+      letter-spacing: 1px; padding: 12px 2px 6px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* ── Contract List Item ── */
+    .contract-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.12s;
+    }
+    .contract-item:last-child { border-bottom: none; }
+    .contract-item:active { background: #f7f4f1; }
+    .c-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--cream); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .c-info { flex: 1; }
+    .c-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .c-meta  { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .c-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 20px; display: inline-block;
+    }
+    .c-badge.pending  { background: var(--amber-bg); color: var(--amber); }
+    .c-badge.signed   { background: var(--green-bg); color: var(--green); }
+    .c-badge.unsigned { background: #f0f0f0; color: var(--sub); }
+    .c-ver { font-size: 11px; color: var(--sub); }
+    .c-arrow { font-size: 14px; color: #ccc; }
+
+    /* ── Contract Detail ── */
+    #view-detail { display: none; }
+    .detail-header {
+      background: var(--brown);
+      padding: 44px 18px 18px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.15); border: none;
+      border-radius: 8px; padding: 6px 10px;
+      font-size: 13px; color: white;
+      cursor: pointer; font-family: inherit; flex-shrink: 0;
+    }
+    .detail-title { font-size: 17px; font-weight: 800; color: #fff; flex: 1; }
+    .detail-meta  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+
+    .contract-content {
+      background: var(--card); margin: 14px;
+      border-radius: 14px; padding: 18px 16px;
+      font-size: 13px; line-height: 1.8; color: var(--text);
+      white-space: pre-wrap; word-break: break-word;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      max-height: 400px; overflow-y: auto;
+    }
+
+    /* ── Signature Canvas ── */
+    .sig-section { margin: 0 14px 14px; }
+    .sig-label { font-size: 11px; font-weight: 700; color: var(--sub); letter-spacing: 1px; padding-bottom: 8px; }
+    .sig-card { background: var(--card); border-radius: 14px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .sig-canvas-wrap {
+      border: 2px dashed var(--border); border-radius: 10px;
+      background: #FAFAFA; position: relative;
+      touch-action: none;
+    }
+    #sig-canvas {
+      display: block; width: 100%; height: 160px;
+      cursor: crosshair; border-radius: 10px;
+    }
+    .sig-hint {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 13px; color: #ccc; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .sig-actions {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .btn-clear {
+      flex: 1; padding: 10px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: transparent; color: var(--sub);
+      font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+    .btn-submit {
+      flex: 2; padding: 10px;
+      background: var(--caramel); color: white;
+      border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+    }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* ── Success ── */
+    #view-success {
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 60vh; padding: 40px 20px; text-align: center;
+    }
+    .success-icon { font-size: 56px; margin-bottom: 16px; }
+    .success-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .success-sub { font-size: 14px; color: var(--sub); line-height: 1.6; }
+
+    /* ── Admin / Pending ── */
+    #view-admin { display: none; }
+    .pending-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pending-item:last-child { border-bottom: none; }
+    .pending-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .pending-meta { font-size: 12px; color: var(--sub); margin-bottom: 10px; }
+    .pending-sig {
+      width: 100%; border-radius: 8px;
+      border: 1px solid var(--border); max-height: 80px;
+      object-fit: contain; background: #fafafa;
+      margin-bottom: 10px;
+    }
+    .btn-approve {
+      padding: 8px 20px;
+      background: var(--green); color: white;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+    }
+    .btn-reject {
+      padding: 8px 16px; margin-left: 8px;
+      background: transparent; color: var(--red);
+      border: 1px solid var(--red); border-radius: 8px;
+      font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+    .status-approved { color: var(--green); font-size: 12px; font-weight: 700; }
+
+    /* ── Empty ── */
+    .empty-state {
+      text-align: center; padding: 40px 20px;
+      color: var(--sub); font-size: 13px; line-height: 1.8;
+    }
+    .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--brown); color: white;
+      padding: 12px 24px; border-radius: 24px;
+      font-size: 13px; font-weight: 600;
+      transition: transform 0.3s; z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="view-loading">
+  <div class="spinner"></div>
+  <span>LINE 身分驗證中…</span>
+</div>
+
+<!-- Main -->
+<div id="view-main" class="hidden">
+
+  <div class="app-header">
+    <div class="header-user">
+      <div class="user-pic-placeholder" id="user-avatar">?</div>
+      <div>
+        <div class="user-name" id="user-name">載入中</div>
+        <div class="user-sub">已透過 LINE 驗證身分</div>
+      </div>
+    </div>
+    <div class="header-title">合約管理</div>
+    <div class="header-sub">閱讀合約 · 線上簽署 · 督導核可</div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('contracts')">📄 合約列表</button>
+    <button class="tab-btn" onclick="switchTab('admin')" id="admin-tab">✅ 待核可</button>
+  </div>
+
+  <div class="selector-bar">
+    <select id="store-select" onchange="onStoreChange()">
+      <option>載入店鋪中…</option>
+    </select>
+  </div>
+
+  <!-- Contracts Tab -->
+  <div id="tab-contracts">
+    <div class="section">
+      <div class="section-label">本店合約</div>
+      <div class="card" id="contract-list">
+        <div class="empty-state"><div class="icon">📄</div>載入中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Tab -->
+  <div id="tab-admin" class="hidden">
+    <div class="section">
+      <div class="section-label">待核可簽署</div>
+      <div class="card" id="pending-list">
+        <div class="empty-state"><div class="icon">✅</div>目前沒有待核可的簽署</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Contract Detail View -->
+<div id="view-detail">
+
+  <div class="detail-header">
+    <button class="back-btn" onclick="backToList()">‹ 返回</button>
+    <div>
+      <div class="detail-title" id="detail-title">合約標題</div>
+      <div class="detail-meta" id="detail-meta">版本</div>
+    </div>
+  </div>
+
+  <div class="contract-content" id="detail-content">載入中…</div>
+
+  <div class="sig-section" id="sig-section">
+    <div class="sig-label">手寫簽名（以 LINE 身分確認）</div>
+    <div class="sig-card">
+      <div class="sig-canvas-wrap">
+        <canvas id="sig-canvas"></canvas>
+        <div class="sig-hint" id="sig-hint">用手指在此簽名</div>
+      </div>
+      <div class="sig-actions">
+        <button class="btn-clear" onclick="clearSig()">清除</button>
+        <button class="btn-submit" id="btn-submit" onclick="submitSig()">確認簽署</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-top:8px;padding:0 2px">
+      簽署即代表本人已閱讀並同意上述合約內容。記錄將包含您的 LINE 身分、簽名及時間戳記。
+    </div>
+  </div>
+
+  <!-- Already signed notice -->
+  <div class="section" id="signed-notice" style="display:none">
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:24px;margin-bottom:8px">✅</div>
+      <div style="font-weight:700;color:var(--green)">您已簽署此合約</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:4px" id="signed-at-text"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Success -->
+<div id="view-success">
+  <div class="success-icon">🎉</div>
+  <div class="success-title">簽署完成</div>
+  <div class="success-sub">
+    您的簽名已記錄。<br />
+    督導核可後即完成正式建檔。
+  </div>
+  <button onclick="backToList()" style="margin-top:24px;padding:12px 32px;background:var(--caramel);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">返回合約列表</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const LIFF_ID = '2010930752-DdwrPCTY';
+
+  let currentUser = null;
+  let currentStoreId = null;
+  let currentContract = null;
+  let stores = [];
+  let isSigned = false;
+  let sigHasMark = false;
+
+  /* ── DB helpers ── */
+  async function dbGet(table, q = '') {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${q ? '?' + q : ''}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    return res.ok ? res.json() : [];
+  }
+
+  async function dbInsert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  async function dbPatch(table, id, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.ok ? res.json() : null;
+  }
+
+  /* ── LIFF Init ── */
+  async function initLiff() {
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
+        return;
+      }
+      const profile = await liff.getProfile();
+      currentUser = {
+        uid:     profile.userId,
+        name:    profile.displayName,
+        picture: profile.pictureUrl
+      };
+      renderUserHeader();
+      await loadStores();
+      show('view-main');
+    } catch (e) {
+      document.getElementById('view-loading').innerHTML =
+        `<div style="text-align:center;padding:40px 20px;color:#888">
+          <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+          <div style="font-weight:700">需要在 LINE 中開啟</div>
+          <div style="font-size:12px;margin-top:6px">請透過 LINE 分享的連結開啟此頁面</div>
+        </div>`;
+    }
+  }
+
+  function renderUserHeader() {
+    document.getElementById('user-name').textContent = currentUser.name;
+    const av = document.getElementById('user-avatar');
+    if (currentUser.picture) {
+      av.outerHTML = `<img class="user-pic" src="${currentUser.picture}" id="user-avatar" />`;
+    } else {
+      av.textContent = currentUser.name[0] || '?';
+    }
+  }
+
+  /* ── Stores ── */
+  async function loadStores() {
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores) || stores.length === 0) return;
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    currentStoreId = stores[0].id;
+    await loadContracts();
+    await loadPending();
+  }
+
+  async function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    await loadContracts();
+  }
+
+  /* ── Contracts List ── */
+  async function loadContracts() {
+    if (!currentStoreId) return;
+    const list = document.getElementById('contract-list');
+    list.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>載入中…</div>`;
+
+    const [all, storeSigs] = await Promise.all([
+      dbGet('contracts', `is_active=eq.true&or=(store_id.eq.${currentStoreId},store_id.is.null)&order=created_at.asc`),
+      dbGet('contract_signatures', `store_id=eq.${currentStoreId}&signer_line_uid=eq.${currentUser.uid}`)
+    ]);
+
+    if (!all || all.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">📄</div>本店目前沒有合約</div>`;
+      return;
+    }
+
+    const signedIds = new Set((storeSigs || []).map(s => s.contract_id));
+    const pendingIds = new Set((storeSigs || []).filter(s => s.status === 'pending').map(s => s.contract_id));
+
+    const typeIcon = { franchise: '📜', partnership: '🤝', manager: '👤', policy: '📋' };
+
+    list.innerHTML = all.map(c => {
+      const signed = signedIds.has(c.id);
+      const pending = pendingIds.has(c.id);
+      let badgeClass = 'unsigned', badgeText = '未簽署';
+      if (signed && !pending) { badgeClass = 'signed'; badgeText = '已核可'; }
+      else if (pending) { badgeClass = 'pending'; badgeText = '待核可'; }
+      return `
+        <div class="contract-item" onclick="openContract(${c.id})">
+          <div class="c-icon">${typeIcon[c.contract_type] || '📄'}</div>
+          <div class="c-info">
+            <div class="c-title">${esc(c.title)}</div>
+            <div class="c-meta">
+              <span class="c-badge ${badgeClass}">${badgeText}</span>
+              <span class="c-ver">${esc(c.version || '')}</span>
+            </div>
+          </div>
+          <div class="c-arrow">›</div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Contract Detail ── */
+  async function openContract(id) {
+    const contracts = await dbGet('contracts', `id=eq.${id}`);
+    if (!contracts || contracts.length === 0) return;
+    currentContract = contracts[0];
+
+    document.getElementById('detail-title').textContent = currentContract.title;
+    document.getElementById('detail-meta').textContent  = `${currentContract.contract_type || ''} · ${currentContract.version || 'v1'}`;
+    document.getElementById('detail-content').textContent = currentContract.content || '（合約內容尚未填入）';
+
+    // Check if already signed
+    const sigs = await dbGet('contract_signatures',
+      `contract_id=eq.${id}&store_id=eq.${currentStoreId}&signer_line_uid=eq.${currentUser.uid}&order=created_at.desc&limit=1`);
+    isSigned = sigs && sigs.length > 0;
+
+    if (isSigned) {
+      document.getElementById('sig-section').style.display = 'none';
+      const notice = document.getElementById('signed-notice');
+      notice.style.display = '';
+      const at = sigs[0].signed_at ? new Date(sigs[0].signed_at).toLocaleString('zh-TW') : '';
+      document.getElementById('signed-at-text').textContent = `簽署於 ${at}　狀態：${sigs[0].status === 'approved' ? '✅ 已核可' : '🟡 待核可'}`;
+    } else {
+      document.getElementById('sig-section').style.display = '';
+      document.getElementById('signed-notice').style.display = 'none';
+      initCanvas();
+    }
+
+    show('view-detail');
+    window.scrollTo(0, 0);
+  }
+
+  function backToList() {
+    show('view-main');
+    loadContracts();
+    window.scrollTo(0, 0);
+  }
+
+  /* ── Signature Canvas ── */
+  let ctx, drawing = false, lastX = 0, lastY = 0;
+
+  function initCanvas() {
+    const canvas = document.getElementById('sig-canvas');
+    const wrap   = canvas.parentElement;
+    canvas.width  = wrap.clientWidth || 320;
+    canvas.height = 160;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#1A1A1A';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    sigHasMark = false;
+
+    const pos = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / r.width;
+      const scaleY = canvas.height / r.height;
+      if (e.touches) {
+        return { x: (e.touches[0].clientX - r.left) * scaleX, y: (e.touches[0].clientY - r.top) * scaleY };
+      }
+      return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
+    };
+
+    const start = (e) => {
+      e.preventDefault();
+      drawing = true;
+      const p = pos(e);
+      [lastX, lastY] = [p.x, p.y];
+      document.getElementById('sig-hint').style.opacity = '0';
+    };
+    const draw = (e) => {
+      e.preventDefault();
+      if (!drawing) return;
+      const p = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      [lastX, lastY] = [p.x, p.y];
+      sigHasMark = true;
+    };
+    const stop = () => { drawing = false; };
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stop);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stop);
+  }
+
+  function clearSig() {
+    if (!ctx) return;
+    const canvas = document.getElementById('sig-canvas');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    sigHasMark = false;
+    document.getElementById('sig-hint').style.opacity = '1';
+  }
+
+  async function submitSig() {
+    if (!sigHasMark) { showToast('請先簽名'); return; }
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.textContent = '送出中…';
+
+    const canvas = document.getElementById('sig-canvas');
+    const sigImage = canvas.toDataURL('image/png');
+
+    const payload = {
+      contract_id:      currentContract.id,
+      store_id:         currentStoreId,
+      signer_line_uid:  currentUser.uid,
+      signer_name:      currentUser.name,
+      signer_picture:   currentUser.picture || null,
+      signature_image:  sigImage,
+      signed_at:        new Date().toISOString(),
+      status:           'pending'
+    };
+
+    const result = await dbInsert('contract_signatures', payload);
+    if (result) {
+      show('view-success');
+    } else {
+      showToast('❌ 送出失敗，請重試');
+      btn.disabled = false; btn.textContent = '確認簽署';
+    }
+  }
+
+  /* ── Admin / Pending ── */
+  async function loadPending() {
+    const sigs = await dbGet('contract_signatures',
+      'status=eq.pending&order=created_at.desc');
+    const tab = document.getElementById('admin-tab');
+    const count = sigs ? sigs.length : 0;
+    tab.textContent = `✅ 待核可${count > 0 ? ` (${count})` : ''}`;
+
+    const list = document.getElementById('pending-list');
+    if (!sigs || count === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">✅</div>目前沒有待核可的簽署</div>`;
+      return;
+    }
+
+    const contractIds = [...new Set(sigs.map(s => s.contract_id))];
+    const contracts = await dbGet('contracts', `id=in.(${contractIds.join(',')})`);
+    const contractMap = Object.fromEntries((contracts || []).map(c => [c.id, c]));
+
+    list.innerHTML = sigs.map(s => {
+      const c = contractMap[s.contract_id];
+      const at = s.signed_at ? new Date(s.signed_at).toLocaleString('zh-TW') : '';
+      return `
+        <div class="pending-item" id="pending-${s.id}">
+          <div class="pending-name">${esc(s.signer_name || '（未知）')}</div>
+          <div class="pending-meta">
+            ${c ? esc(c.title) : '合約已刪除'} · ${at}
+          </div>
+          <img class="pending-sig" src="${s.signature_image}" alt="簽名" />
+          <button class="btn-approve" onclick="approve(${s.id})">核可</button>
+          <button class="btn-reject" onclick="reject(${s.id})">退回</button>
+        </div>`;
+    }).join('');
+  }
+
+  async function approve(id) {
+    await dbPatch('contract_signatures', id, {
+      status: 'approved',
+      approved_by_name: currentUser.name,
+      approved_at: new Date().toISOString()
+    });
+    const el = document.getElementById(`pending-${id}`);
+    if (el) el.innerHTML = `<div class="status-approved">✅ 已核可</div>`;
+    showToast('✅ 已核可');
+    await loadPending();
+  }
+
+  async function reject(id) {
+    await dbPatch('contract_signatures', id, { status: 'rejected' });
+    const el = document.getElementById(`pending-${id}`);
+    if (el) el.remove();
+    showToast('已退回');
+    await loadPending();
+  }
+
+  /* ── Tab switching ── */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-contracts').classList.add('hidden');
+    document.getElementById('tab-admin').classList.add('hidden');
+
+    if (tab === 'contracts') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('tab-contracts').classList.remove('hidden');
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('tab-admin').classList.remove('hidden');
+      loadPending();
+    }
+  }
+
+  /* ── View manager ── */
+  function show(viewId) {
+    ['view-loading', 'view-main', 'view-detail', 'view-success'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = (id === viewId) ? '' : 'none';
+    });
+    if (viewId === 'view-main') {
+      document.getElementById('view-main').classList.remove('hidden');
+    }
+  }
+
+  /* ── Helpers ── */
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── Boot ── */
+  window.addEventListener('load', () => {
+    show('view-loading');
+    initLiff();
+  });
+</script>
+</body>
+</html>
