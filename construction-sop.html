@@ -129,10 +129,7 @@ flowchart TD
   Z["簽約"]
   WALK["聯合現場丈量勘查"]
   A0["各工班報價／排班／合約用印"]
-  SIGN["招牌設計製作"]
-  EQUIP["設備下單"]
-  POWER["台電外接電申請"]
-  TRAIN["人員招募＋訓練＋認證"]
+  PREP["招牌設計製作／設備下單<br/>台電外接電申請／人員招募＋訓練＋認證<br/>（簽約當天同步啟動）"]
   B["拆除進場"]
   STEEL["輕鋼架（須等拆除淨空才能進場）"]
   QUOTE["丈量報價"]
@@ -145,10 +142,7 @@ flowchart TD
   OPEN2["正式開幕"]
 
   Z --> WALK --> A0 --> B --> STEEL --> QUOTE --> MID --> FINAL --> DELAY --> TEST --> OPEN --> M --> OPEN2
-  Z -.並行.-> SIGN --> FINAL
-  Z -.並行.-> EQUIP --> FINAL
-  Z -.並行.-> POWER --> TEST
-  Z -.並行.-> TRAIN --> TEST
+  Z -.並行.-> PREP --> FINAL
 
   classDef milestone fill:#2C1A0E,stroke:#2C1A0E,color:#fff;
   classDef critical fill:#F7DAD6,stroke:#C0524A,color:#2C1A0E,stroke-width:4px;
@@ -156,7 +150,7 @@ flowchart TD
 
   class Z,OPEN,OPEN2 milestone
   class WALK,A0,B,STEEL,QUOTE,MID,FINAL,DELAY,TEST,M critical
-  class SIGN,EQUIP,POWER,TRAIN float
+  class PREP float
       </pre>
     </div>
     <div class="legend">
