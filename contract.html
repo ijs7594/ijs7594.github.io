@@ -383,6 +383,7 @@
   const LIFF_ID = '2010930752-DdwrPCTY';
 
   let currentUser = null;
+  let isSupervisor = false;
   let currentStoreId = null;
   let currentContract = null;
   let stores = [];
@@ -436,6 +437,9 @@
         picture: profile.pictureUrl
       };
       renderUserHeader();
+      const supervisors = await dbGet('supervisor_users', `line_uid=eq.${currentUser.uid}`);
+      isSupervisor = Array.isArray(supervisors) && supervisors.length > 0;
+      document.getElementById('admin-tab').style.display = isSupervisor ? '' : 'none';
       await loadStores();
       show('view-main');
     } catch (e) {
@@ -670,8 +674,8 @@
             ${c ? esc(c.title) : '合約已刪除'} · ${at}
           </div>
           <img class="pending-sig" src="${s.signature_image}" alt="簽名" />
-          <button class="btn-approve" onclick="approve(${s.id})">核可</button>
-          <button class="btn-reject" onclick="reject(${s.id})">退回</button>
+          ${isSupervisor ? `<button class="btn-approve" onclick="approve(${s.id})">核可</button>
+          <button class="btn-reject" onclick="reject(${s.id})">退回</button>` : ''}
         </div>`;
     }).join('');
   }
