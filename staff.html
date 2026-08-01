@@ -10,6 +10,7 @@
     :root {
       --brown:   #2C1A0E;
       --caramel: #C17B4E;
+      --seal:    #C8102E;
       --cream:   #F5EDE0;
       --bg:      #F2EDE7;
       --card:    #FFFFFF;
@@ -28,20 +29,17 @@
 
     /* ── Header ── */
     .app-header {
-      background: var(--brown);
-      padding: 48px 20px 24px;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: var(--card);
+      border-top: 4px solid var(--seal);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 20px 22px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
       position: relative;
     }
-    .app-logo {
-      width: 64px; height: 64px; border-radius: 18px;
-      background: linear-gradient(135deg, #C17B4E, #8B5E3C);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 30px; margin-bottom: 4px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    .app-logo-img {
+      width: 100%; max-width: 320px; height: auto; display: block;
     }
-    .app-title { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 1px; }
-    .app-sub   { font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; }
+    .app-sub   { font-size: 12px; color: var(--sub); letter-spacing: 1.5px; margin-top: 2px; }
 
     /* ── Section ── */
     .section { margin: 16px 14px 0; }
@@ -116,7 +114,6 @@
       padding: 32px 24px; width: 100%; max-width: 380px;
       text-align: center;
     }
-    .store-gate-box .app-logo { margin: 0 auto 16px; }
     .store-gate-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
     .store-gate-sub { font-size: 12px; color: var(--sub); margin-bottom: 20px; }
     .store-gate-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
@@ -136,7 +133,7 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     .current-store-label { font-size: 11px; color: var(--sub); }
-    .current-store-name { font-size: 15px; font-weight: 800; color: var(--caramel); }
+    .current-store-name { font-size: 15px; font-weight: 800; color: var(--seal); }
     .switch-store-btn {
       font-size: 12px; color: var(--sub); background: none; border: 1px solid var(--border);
       border-radius: 20px; padding: 6px 12px; cursor: pointer; font-family: inherit;
@@ -147,7 +144,7 @@
 
 <div class="store-gate" id="store-gate" style="display:none;">
   <div class="store-gate-box">
-    <div class="app-logo">🌾</div>
+    <img class="app-logo-img" src="assets/logo.png" alt="今年貴焿" style="max-width:220px;margin-bottom:12px;" />
     <div class="store-gate-title">請選擇你的門店</div>
     <div class="store-gate-sub">選過一次，這台裝置以後會自動記得</div>
     <div class="store-gate-list" id="store-gate-list"></div>
@@ -156,8 +153,7 @@
 
 <!-- Header -->
 <div class="app-header">
-  <div class="app-logo">🌾</div>
-  <div class="app-title">今年貴焿</div>
+  <img class="app-logo-img" src="assets/logo.png" alt="今年貴焿" />
   <div class="app-sub">夥伴互動入口</div>
 </div>
 
