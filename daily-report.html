@@ -152,20 +152,6 @@
     .rcv-note { font-size: 12px; color: var(--text-light); }
     .rcv-note b { color: var(--text-dark); }
 
-    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.data-table th { text-align: left; padding: 8px 10px; background: var(--cream); color: var(--text-mid); font-weight: 700; font-size: 12px; }
-    table.data-table td { padding: 8px 10px; border-top: 1px solid var(--border); }
-    table.data-table tr.paid-row { opacity: 0.55; }
-    .status-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; cursor: pointer; }
-    .badge-yes { background: rgba(76,175,125,0.12); color: var(--green); }
-    .badge-no { background: #FDECEC; color: var(--red); }
-
-    .range-query { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-    .range-query input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
-    .range-query button { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
-    .range-result { font-size: 13px; color: var(--text-mid); }
-    .range-result b { color: var(--red); font-size: 16px; }
-
     /* ── Mobile ── */
     .mobile-nav {
       display: none;
@@ -341,17 +327,6 @@
       <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
       <button class="submit-btn" id="submit-btn" onclick="submitDailyReport()">送出今日日報表</button>
-    </div>
-
-    <div class="history-card" style="margin-bottom:20px;">
-      <h3>🔍 查詢指定日期區間支出加總</h3>
-      <div class="range-query">
-        <input type="date" id="range-start" />
-        <span>～</span>
-        <input type="date" id="range-end" />
-        <button onclick="queryRange()">查詢</button>
-      </div>
-      <div class="range-result" id="range-result"></div>
     </div>
 
     <div class="history-card">
@@ -579,17 +554,6 @@
       await loadAndRender();
       updatePreview();
     } catch { alert('刪除失敗，請再試一次'); }
-  }
-
-  // ── 查詢指定日期區間支出加總 ──
-  async function queryRange() {
-    const start = document.getElementById('range-start').value;
-    const end = document.getElementById('range-end').value;
-    if (!start || !end) { alert('請選擇起訖日期'); return; }
-    const expenses = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`);
-    const list = Array.isArray(expenses) ? expenses : [];
-    const total = list.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
-    document.getElementById('range-result').innerHTML = `${start} ～ ${end}，共 ${list.length} 筆，支出加總 <b>${fmt(total)}</b>`;
   }
 
   async function loadAndRender() {
