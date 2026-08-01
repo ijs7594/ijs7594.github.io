@@ -163,9 +163,37 @@
       background: var(--card); margin: 14px;
       border-radius: 14px; padding: 18px 16px;
       font-size: 13px; line-height: 1.8; color: var(--text);
-      white-space: pre-wrap; word-break: break-word;
+      word-break: break-word;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       max-height: 400px; overflow-y: auto;
+    }
+    .fill-field {
+      display: inline-block;
+      border: none; border-bottom: 1.5px solid var(--caramel);
+      background: rgba(193,123,78,0.08);
+      border-radius: 3px 3px 0 0;
+      padding: 1px 6px; margin: 0 2px;
+      font-size: 13px; font-family: inherit;
+      color: var(--text); min-width: 70px;
+      vertical-align: baseline;
+    }
+    .fill-field:focus { outline: none; border-bottom-color: var(--brown); background: rgba(193,123,78,0.18); }
+    .signer-id-badge {
+      background: var(--amber-bg); border-radius: 10px;
+      padding: 9px 13px; margin-bottom: 10px;
+      font-size: 12px; color: var(--amber); font-weight: 600;
+    }
+    .party-selector {
+      background: var(--card); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .party-selector label { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .party-selector select {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 7px 10px; font-size: 14px; font-family: inherit;
+      background: #fff; color: var(--text);
     }
 
     /* ── Signature Canvas ── */
@@ -338,6 +366,17 @@
 
   <div class="sig-section" id="sig-section">
     <div class="sig-label">手寫簽名（以 LINE 身分確認）</div>
+    <div class="signer-id-badge" id="signer-badge">👤 載入中…</div>
+    <div class="party-selector">
+      <label>簽署角色：</label>
+      <select id="party-role">
+        <option value="">請選擇</option>
+        <option value="甲方">甲方</option>
+        <option value="乙方">乙方</option>
+        <option value="丙方">丙方</option>
+        <option value="見證人">見證人</option>
+      </select>
+    </div>
     <div class="sig-card">
       <div class="sig-canvas-wrap">
         <canvas id="sig-canvas"></canvas>
@@ -527,7 +566,7 @@
 
     document.getElementById('detail-title').textContent = currentContract.title;
     document.getElementById('detail-meta').textContent  = `${currentContract.contract_type || ''} · ${currentContract.version || 'v1'}`;
-    document.getElementById('detail-content').textContent = currentContract.content || '（合約內容尚未填入）';
+    document.getElementById('detail-content').innerHTML = renderContractContent(currentContract.content || '（合約內容尚未填入）');
 
     // Check if already signed
     const sigs = await dbGet('contract_signatures',
@@ -543,6 +582,8 @@
     } else {
       document.getElementById('sig-section').style.display = '';
       document.getElementById('signed-notice').style.display = 'none';
+      document.getElementById('signer-badge').textContent = `👤 以「${currentUser.name}」身分簽署，請確認您的角色後再簽名`;
+      document.getElementById('party-role').value = '';
       initCanvas();
     }
 
@@ -619,11 +660,19 @@
 
   async function submitSig() {
     if (!sigHasMark) { showToast('請先簽名'); return; }
+    const partyRole = document.getElementById('party-role').value;
+    if (!partyRole) { showToast('請先選擇您的簽署角色'); return; }
+
     const btn = document.getElementById('btn-submit');
     btn.disabled = true; btn.textContent = '送出中…';
 
     const canvas = document.getElementById('sig-canvas');
     const sigImage = canvas.toDataURL('image/png');
+
+    const filled = {};
+    document.querySelectorAll('#detail-content .fill-field').forEach(el => {
+      if (el.value.trim()) filled[el.dataset.idx] = el.value.trim();
+    });
 
     const payload = {
       contract_id:      currentContract.id,
@@ -633,7 +682,8 @@
       signer_picture:   currentUser.picture || null,
       signature_image:  sigImage,
       signed_at:        new Date().toISOString(),
-      status:           'pending'
+      status:           'pending',
+      notes:            JSON.stringify({ role: partyRole, fields: filled })
     };
 
     const result = await dbInsert('contract_signatures', payload);
@@ -734,6 +784,20 @@
   /* ── Helpers ── */
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderContractContent(content) {
+    const parts = content.split(/(（待填）|_{3,})/);
+    let idx = 0;
+    const html = parts.map(p => {
+      if (p === '（待填）' || /^_{3,}$/.test(p)) {
+        idx++;
+        const w = p === '（待填）' ? '90px' : Math.max(60, p.length * 7) + 'px';
+        return `<input class="fill-field" type="text" placeholder="請填入" data-idx="${idx}" style="min-width:${w}">`;
+      }
+      return esc(p);
+    }).join('');
+    return `<div style="white-space:pre-wrap;word-break:break-word">${html}</div>`;
   }
 
   function showToast(msg) {
