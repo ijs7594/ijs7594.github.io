@@ -713,14 +713,19 @@
   }
 
   /* ── View manager ── */
+  const VIEW_DISPLAY = {
+    'view-loading': 'flex',
+    'view-main':    'block',
+    'view-detail':  'block',
+    'view-success': 'flex'
+  };
   function show(viewId) {
-    ['view-loading', 'view-main', 'view-detail', 'view-success'].forEach(id => {
+    Object.keys(VIEW_DISPLAY).forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.style.display = (id === viewId) ? '' : 'none';
+      if (!el) return;
+      el.style.display = (id === viewId) ? VIEW_DISPLAY[id] : 'none';
+      if (id === 'view-main') el.classList.remove('hidden');
     });
-    if (viewId === 'view-main') {
-      document.getElementById('view-main').classList.remove('hidden');
-    }
   }
 
   /* ── Helpers ── */
