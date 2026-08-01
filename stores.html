@@ -247,8 +247,15 @@
       .mobile-nav { display: flex; }
     }
 
+    /* ── 店家設定齒輪 ── */
+    .settings-gear-btn { background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; width: 28px; height: 28px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .settings-gear-btn:hover { border-color: var(--brown-main); }
+    .settings-popover { position: absolute; top: 34px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: 0 4px 20px rgba(44,26,14,0.15); z-index: 20; white-space: nowrap; }
+
     /* ── 里程碑 ── */
     .milestone-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .milestone-card { background: rgba(193,123,78,0.06); border: 1px solid var(--sand); border-radius: 12px; padding: 12px 14px; }
+    .milestone-hint { font-size: 11px; color: var(--text-light); margin-bottom: 8px; }
     .milestone-label { font-size: 11px; font-weight: 700; color: var(--text-light); margin-bottom: 8px; letter-spacing: 0.04em; }
     .milestone-grid { display: flex; flex-wrap: wrap; gap: 6px; }
     .milestone-chip {
@@ -295,21 +302,25 @@
     .gl-delay { display: inline-flex; align-items: center; gap: 4px; }
     .gl-delay::before { content: "▬"; color: #c0392b; font-size: 13px; }
     .gantt-scroll-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); }
-    .gantt-table { display: flex; flex-direction: column; width: 100%; }
-    .gantt-hdr-row { display: flex; width: 100%; background: var(--cream); border-bottom: 1px solid var(--border); }
+    .gantt-table { display: flex; flex-direction: column; width: 100%; min-width: 560px; }
     .gantt-name-col { width: 100px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; font-weight: 700; color: var(--text-light); letter-spacing: 0.03em; border-right: 2px solid var(--sand); display: flex; align-items: center; }
-    .gantt-month-hdr { flex: 1; text-align: center; font-size: 12px; font-weight: 700; color: var(--brown-mid); padding: 6px 0; border-right: 1px solid var(--sand); position: relative; }
-    .gantt-month-hdr:last-child { border-right: none; }
+    .gantt-hdr { display: flex; width: 100%; background: var(--cream); }
+    .gantt-hdr-months { flex: 1; display: grid; border-bottom: 1px solid var(--border); }
+    .gantt-hdr-days { flex: 1; display: grid; border-bottom: 2px solid var(--sand); }
+    .gantt-month-label { text-align: center; font-size: 11px; font-weight: 700; color: var(--brown-mid); padding: 4px 0; border-right: 1px solid var(--sand); overflow: hidden; white-space: nowrap; }
+    .gantt-day-label { text-align: center; font-size: 9.5px; color: var(--text-light); padding: 3px 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .gantt-vendor-row { display: flex; width: 100%; align-items: stretch; border-top: 1px solid var(--border); cursor: pointer; }
     .gantt-vendor-row:nth-child(even) { background: rgba(245,240,232,0.4); }
     .gantt-vendor-row:hover { background: rgba(180,130,80,0.07); }
     .gantt-vname { width: 100px; flex-shrink: 0; padding: 6px 10px; font-size: 11px; color: var(--text-dark); font-weight: 600; border-right: 2px solid var(--sand); word-break: break-all; line-height: 1.4; display: flex; align-items: center; }
-    .gantt-cell { flex: 1; min-height: 42px; position: relative; border-right: 1px solid var(--border); }
-    .gantt-cell:last-child { border-right: none; }
-    .gantt-work-bar { position: absolute; height: 10px; bottom: 9px; }
-    .gantt-survey-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; top: 8px; transform: translateX(-50%); z-index: 2; }
-    .gantt-mid-tick { position: absolute; bottom: 0; left: 50%; width: 1px; height: 6px; background: var(--border); }
+    .gantt-track { flex: 1; display: grid; position: relative; min-height: 38px; }
+    .gantt-work-bar { grid-row: 1; align-self: center; height: 14px; border-radius: 4px; }
+    .gantt-survey-dot { grid-row: 1; align-self: center; justify-self: center; width: 8px; height: 8px; border-radius: 50%; background: var(--caramel); border: 2px solid #fff; z-index: 2; }
     .gantt-popup { display: none; position: fixed; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; box-shadow: 0 4px 24px rgba(44,26,14,0.18); z-index: 300; font-size: 12px; min-width: 190px; pointer-events: none; }
+    .gantt-unscheduled { padding: 10px 14px; border-top: 1px solid var(--border); background: rgba(245,240,232,0.5); }
+    .gantt-unscheduled-title { font-size: 11px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; }
+    .gantt-unscheduled-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .gantt-unscheduled-chip { font-size: 11px; color: var(--text-mid); background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; }
     .gantt-popup-title { font-weight: 700; color: var(--text-dark); margin-bottom: 8px; font-size: 13px; }
     .gantt-popup-line { color: var(--text-mid); padding: 2px 0; }
 
@@ -520,9 +531,6 @@
     </select>
     <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:10px;">
       <input type="checkbox" id="new-store-legacy" style="width:auto;" /> 既有店家（暫不追蹤工程紀錄）
-    </label>
-    <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px;">
-      <input type="checkbox" id="new-store-shift-split" checked style="width:auto;" /> 有分早晚班
     </label>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeAddStoreModal()">取消</button>
@@ -758,7 +766,7 @@
         <span class="store-status status-${esc(s.status)}">${esc(s.status)}</span>
       </div>
       <div class="detail-addr">${esc(s.address) || '未填地址'}${s.opened_date ? ` · 開幕 ${esc(s.opened_date)}` : ''}</div>
-      <div class="milestone-section" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-mid);">
+      <div class="milestone-section" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-mid);position:relative;">
         <label style="display:flex;align-items:center;gap:6px;">
           營運狀態
           <select onchange="toggleStoreSetting('status', this.value)" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;">
@@ -767,16 +775,17 @@
             <option ${s.status === '已結束' ? 'selected' : ''}>已結束</option>
           </select>
         </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-          <input type="checkbox" ${s.is_legacy_store ? 'checked' : ''} onchange="toggleStoreSetting('is_legacy_store', this.checked)" /> 既有店家（暫不追蹤工程紀錄）
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-          <input type="checkbox" ${s.has_shift_split !== false ? 'checked' : ''} onchange="toggleStoreSetting('has_shift_split', this.checked)" /> 日報表分早晚班
-        </label>
+        <button class="settings-gear-btn" onclick="toggleSettingsPopover(event)" title="店家設定">⚙️</button>
+        <div class="settings-popover" id="settings-popover" style="display:none;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" ${s.is_legacy_store ? 'checked' : ''} onchange="toggleStoreSetting('is_legacy_store', this.checked)" /> 既有店家（暫不追蹤工程紀錄）
+          </label>
+        </div>
       </div>
       ${s.is_legacy_store ? '' : `
-      <div class="milestone-section">
+      <div class="milestone-section milestone-card">
         <div class="milestone-label">🗂 展店里程碑（點選切換）</div>
+        <div class="milestone-hint">勾選後才會開放對應廠商可聯絡（場勘／施工前置條件達成）</div>
         <div class="milestone-grid" id="milestone-grid"></div>
       </div>`}
     `;
@@ -863,33 +872,34 @@
     document.getElementById('vtab-construction').style.display = tab === 'construction' ? 'block' : 'none';
   }
 
-  function getMonthPeriods(startDate, endDate) {
-    const periods = [];
-    let year = startDate.getFullYear();
-    let month = startDate.getMonth();
-    while (new Date(year, month, 1) <= endDate) {
-      const lastDay = new Date(year, month + 1, 0).getDate();
-      periods.push({ year, month, label: `${month+1}月`, start: new Date(year, month, 1), end: new Date(year, month, lastDay, 23, 59, 59), days: lastDay });
-      month++;
-      if (month > 11) { month = 0; year++; }
-    }
-    return periods;
+  // 避免 timezone 偏移，統一用 local 日期解析
+  function parseD(s) {
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
   }
+  function dayIndex(base, d) { return Math.round((d - base) / 86400000); }
 
   function renderGantt() {
     const el = document.getElementById('gantt-chart');
     if (!el) return;
-    const list = vendors.filter(v => v.store_id === currentStoreId);
-    if (!list.length) {
+    const all = vendors.filter(v => v.store_id === currentStoreId);
+    if (!all.length) {
       el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);font-size:12px;">尚無廠商排程，請先在「施工排程」新增廠商</div>';
       return;
     }
 
-    // 避免 timezone 偏移，統一用 local 日期解析
-    function parseD(s) {
-      if (!s) return null;
-      const [y, m, d] = s.split('-').map(Number);
-      return new Date(y, m - 1, d);
+    const hasAnyDate = v => [v.planned_in, v.planned_out, v.actual_in, v.actual_out, v.survey_date].some(Boolean);
+    const list = all.filter(hasAnyDate);
+    const unscheduled = all.filter(v => !hasAnyDate(v));
+    const unscheduledHtml = unscheduled.length ? `<div class="gantt-unscheduled">
+      <div class="gantt-unscheduled-title">尚未排程（${unscheduled.length}）</div>
+      <div class="gantt-unscheduled-list">${unscheduled.map(v => `<span class="gantt-unscheduled-chip">${esc(v.vendor_name)}</span>`).join('')}</div>
+    </div>` : '';
+
+    if (!list.length) {
+      el.innerHTML = unscheduledHtml || '<div style="padding:20px;text-align:center;color:var(--text-light);font-size:12px;">尚無廠商排程，請先在「施工排程」新增廠商</div>';
+      return;
     }
 
     let minDate = null, maxDate = null;
@@ -900,19 +910,26 @@
         if (!maxDate || dt > maxDate) maxDate = dt;
       });
     });
-    if (!minDate) { minDate = new Date(); maxDate = new Date(); maxDate.setMonth(maxDate.getMonth() + 1); }
-    minDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-    maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
-    const periods = getMonthPeriods(minDate, maxDate);
+    minDate.setDate(minDate.getDate() - 1);
+    maxDate.setDate(maxDate.getDate() + 1);
+    const totalDays = dayIndex(minDate, maxDate) + 1;
+    const colStyle = `grid-template-columns:repeat(${totalDays}, minmax(20px, 1fr));`;
+    const trackStyle = `${colStyle}background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/${totalDays}));`;
 
-    // 月份標題列，15日有刻度標記
-    const hdrHtml = `<div class="gantt-hdr-row">
-      <div class="gantt-name-col">廠商</div>
-      ${periods.map(p => {
-        const midPct = (15 / p.days * 100).toFixed(1);
-        return `<div class="gantt-month-hdr">${p.label}<div class="gantt-mid-tick" style="left:${midPct}%"></div></div>`;
-      }).join('')}
-    </div>`;
+    // 月份分組（連續同月份合併成一個標籤）
+    const monthGroups = [];
+    for (let i = 0; i < totalDays; i++) {
+      const d = new Date(minDate); d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const last = monthGroups[monthGroups.length - 1];
+      if (last && last.key === key) last.end = i;
+      else monthGroups.push({ key, label: `${d.getMonth()+1}月`, start: i, end: i });
+    }
+    const monthHdrHtml = monthGroups.map(g => `<span class="gantt-month-label" style="grid-column:${g.start+1}/${g.end+2}">${g.label}</span>`).join('');
+    const dayHdrHtml = Array.from({ length: totalDays }, (_, i) => {
+      const d = new Date(minDate); d.setDate(d.getDate() + i);
+      return `<span class="gantt-day-label" style="grid-column:${i+1}/${i+2}">${d.getDate()}</span>`;
+    }).join('');
 
     const vendorRows = list.map(v => {
       const ws = parseD(v.actual_in || v.planned_in);
@@ -922,34 +939,21 @@
       else if (v.actual_in || v.status === '進場中') barColor = 'var(--caramel)';
       else if (v.status === '延遲') barColor = '#c0392b';
 
-      const cells = periods.map(p => {
-        const pMs = p.end - p.start;
-
-        // 場勘點：按比例定位（%）
-        let surveyDot = '';
-        const sd = parseD(v.survey_date);
-        if (sd && sd >= p.start && sd <= p.end) {
-          const pct = ((sd - p.start) / pMs * 100).toFixed(1);
-          surveyDot = `<div class="gantt-survey-dot" style="left:${pct}%"></div>`;
-        }
-
-        // 工期條：按比例計算 left%/right%，精確到天
-        let workBar = '';
-        if (ws && we && ws <= p.end && we >= p.start) {
-          const isFirst = ws >= p.start;
-          const isLast  = we <= p.end;
-          const leftPct  = isFirst ? ((ws - p.start) / pMs * 100).toFixed(1) : 0;
-          const rightPct = isLast  ? ((p.end - we)   / pMs * 100).toFixed(1) : 0;
-          const r = (isFirst && isLast) ? '4px' : isFirst ? '4px 0 0 4px' : isLast ? '0 4px 4px 0' : '0';
-          workBar = `<div class="gantt-work-bar" style="left:${leftPct}%;right:${rightPct}%;background:${barColor};border-radius:${r}"></div>`;
-        }
-
-        return `<div class="gantt-cell">${surveyDot}${workBar}</div>`;
-      }).join('');
+      let workBar = '';
+      if (ws && we) {
+        const si = dayIndex(minDate, ws), ei = dayIndex(minDate, we);
+        workBar = `<div class="gantt-work-bar" style="grid-column:${si+1}/${ei+2};background:${barColor}"></div>`;
+      }
+      let surveyDot = '';
+      const sd = parseD(v.survey_date);
+      if (sd) {
+        const si = dayIndex(minDate, sd);
+        surveyDot = `<div class="gantt-survey-dot" style="grid-column:${si+1}/${si+2}"></div>`;
+      }
 
       return `<div class="gantt-vendor-row" onclick="ganttRowClick(event,'${v.id}')">
         <div class="gantt-vname">${esc(v.vendor_name)}</div>
-        ${cells}
+        <div class="gantt-track" style="${trackStyle}">${workBar}${surveyDot}</div>
       </div>`;
     }).join('');
 
@@ -962,7 +966,17 @@
       document.addEventListener('click', () => { pop.style.display = 'none'; });
     }
 
-    el.innerHTML = `<div class="gantt-table">${hdrHtml}${vendorRows}</div>`;
+    el.innerHTML = `<div class="gantt-table">
+      <div class="gantt-hdr">
+        <div class="gantt-name-col">廠商</div>
+        <div class="gantt-hdr-months" style="${colStyle}">${monthHdrHtml}</div>
+      </div>
+      <div class="gantt-hdr">
+        <div class="gantt-name-col"></div>
+        <div class="gantt-hdr-days" style="${colStyle}">${dayHdrHtml}</div>
+      </div>
+      ${vendorRows}
+    </div>${unscheduledHtml}`;
   }
 
   function renderVendors() {
@@ -1538,7 +1552,6 @@
     document.getElementById('new-store-addr').value = '';
     document.getElementById('new-store-status').value = '籌備中';
     document.getElementById('new-store-legacy').checked = false;
-    document.getElementById('new-store-shift-split').checked = true;
   }
   async function submitNewStore() {
     const name = document.getElementById('new-store-name').value.trim();
@@ -1546,19 +1559,29 @@
     const address = document.getElementById('new-store-addr').value.trim();
     const status = document.getElementById('new-store-status').value;
     const is_legacy_store = document.getElementById('new-store-legacy').checked;
-    const has_shift_split = document.getElementById('new-store-shift-split').checked;
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/stores`, {
         method: 'POST',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-        body: JSON.stringify({ name, address, status, is_legacy_store, has_shift_split })
+        body: JSON.stringify({ name, address, status, is_legacy_store })
       });
       closeAddStoreModal();
       await loadAll();
     } catch { alert('新增失敗，請再試一次'); }
   }
 
-  // ── 店家設定（既有店家精簡介面／早晚班開關）──
+  // ── 店家設定（既有店家精簡介面）──
+  function toggleSettingsPopover(event) {
+    event.stopPropagation();
+    const pop = document.getElementById('settings-popover');
+    if (!pop) return;
+    const willShow = pop.style.display === 'none';
+    pop.style.display = willShow ? 'block' : 'none';
+    if (willShow) {
+      const closeOnce = () => { pop.style.display = 'none'; document.removeEventListener('click', closeOnce); };
+      setTimeout(() => document.addEventListener('click', closeOnce), 0);
+    }
+  }
   async function toggleStoreSetting(field, value) {
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/stores?id=eq.${currentStoreId}`, {
