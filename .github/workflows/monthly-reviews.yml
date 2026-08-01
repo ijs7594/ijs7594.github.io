@@ -3,7 +3,12 @@ name: 每月評論月報
 on:
   schedule:
     - cron: "13 1 1 * *"   # 每月 1 號 01:13 UTC = 台灣時間早上 09:13
-  workflow_dispatch: {}     # 也可以在 GitHub 網頁手動點一次來測試
+  workflow_dispatch:        # 也可以在 GitHub 網頁手動點一次來測試，或補跑錯過的月份
+    inputs:
+      lookback_months:
+        description: "回顧幾個月的評論（正常排程用 1，補跑錯過的月份可以填 2、3...）"
+        required: false
+        default: "1"
 
 jobs:
   send-report:
@@ -19,4 +24,5 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           REPORT_TO_EMAIL: ${{ secrets.REPORT_TO_EMAIL }}
+          REVIEW_LOOKBACK_MONTHS: ${{ github.event.inputs.lookback_months || '1' }}
         run: python scripts/monthly_reviews.py
