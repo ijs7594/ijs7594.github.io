@@ -190,15 +190,6 @@
       <div class="menu-arrow">›</div>
     </a>
 
-    <a class="menu-item" href="schedule-hub.html?from=staff" id="link-schedule">
-      <div class="menu-icon green">📅</div>
-      <div class="menu-text">
-        <div class="menu-name">排班 & 排假申請</div>
-        <div class="menu-desc">查班次 · 送出休假申請</div>
-      </div>
-      <div class="menu-arrow">›</div>
-    </a>
-
     <a class="menu-item" href="finance-hub.html?from=staff" id="link-finance">
       <div class="menu-icon blue">📆</div>
       <div class="menu-text">
@@ -272,8 +263,9 @@
   function applyStore(id, name) {
     document.getElementById('current-store-bar').style.display = 'flex';
     document.getElementById('current-store-name').textContent = name;
-    ['link-schedule', 'link-finance'].forEach(linkId => {
+    ['link-finance'].forEach(linkId => {
       const a = document.getElementById(linkId);
+      if (!a) return;
       const base = a.getAttribute('href').split('?')[0];
       a.href = `${base}?from=staff&store=${id}`;
     });

@@ -57,6 +57,7 @@
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
     .topbar-sub { font-size: 12px; color: var(--text-light); }
     .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .store-locked { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--brown-main); padding: 9px 14px; }
     .content { flex: 1; overflow-y: auto; padding: 24px; }
 
     .section-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -220,6 +221,7 @@
       <div class="topbar-sub">廠商進貨貨款、半月盤點自動算毛利率（未收款登記已移到日報表）</div>
     </div>
     <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
+    <span class="store-locked" id="store-locked" style="display:none;"></span>
   </div>
 
   <div class="content">
@@ -425,8 +427,15 @@
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
     const paramStore = new URLSearchParams(location.search).get('store');
-    currentStoreId = (paramStore && stores.some(s => s.id === paramStore)) ? paramStore : (stores[0]?.id || null);
+    const locked = paramStore && stores.some(s => s.id === paramStore);
+    currentStoreId = locked ? paramStore : (stores[0]?.id || null);
     sel.value = currentStoreId;
+    if (locked) {
+      sel.style.display = 'none';
+      const label = document.getElementById('store-locked');
+      label.textContent = esc(stores.find(s => s.id === currentStoreId)?.name || '');
+      label.style.display = '';
+    }
     await loadItemMaster();
     await loadAll();
     await checkPriceChangeBanner();

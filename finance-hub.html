@@ -74,6 +74,7 @@
     .article-arrow { margin-left: auto; color: var(--text-light); font-size: 14px; flex-shrink: 0; }
 
     .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .store-locked { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--brown-main); padding: 9px 14px; }
 
     .status-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
     .status-item { display: flex; flex-direction: column; gap: 3px; }
@@ -161,6 +162,7 @@
       <div class="topbar-sub">每日營收登記、應收應付與毛利結算</div>
     </div>
     <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
+    <span class="store-locked" id="store-locked" style="display:none;"></span>
   </div>
 
   <div class="content">
@@ -268,8 +270,15 @@
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
     const paramStore = new URLSearchParams(location.search).get('store');
-    currentStoreId = (paramStore && stores.some(s => s.id === paramStore)) ? paramStore : (stores[0]?.id || null);
+    const locked = paramStore && stores.some(s => s.id === paramStore);
+    currentStoreId = locked ? paramStore : (stores[0]?.id || null);
     sel.value = currentStoreId;
+    if (locked) {
+      sel.style.display = 'none';
+      const label = document.getElementById('store-locked');
+      label.textContent = esc(stores.find(s => s.id === currentStoreId)?.name || '');
+      label.style.display = '';
+    }
     updateArticleLinks();
     await loadStatus();
   }
