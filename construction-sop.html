@@ -78,6 +78,9 @@
   .gantt-bar{grid-row:1; border-radius:5px; height:16px; align-self:center; font-size:9.5px; color:#fff; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; padding:0 4px;}
   .gantt-bar.crit{outline:2px solid var(--red); outline-offset:1px;}
   .gantt-bar.float-tail{background:transparent !important; border:1.5px dashed var(--new); color:var(--new); height:12px;}
+  .gantt-axis{display:grid; grid-template-columns:170px 1fr; margin-bottom:4px;}
+  .gantt-axis-track{display:grid; grid-template-columns:repeat(32, 1fr); font-size:10px; color:var(--text-light);}
+  .gantt-axis-track span{border-left:1px solid var(--border); padding-left:2px;}
 
   .wbs-table-wrap{overflow-x:auto;}
   table.wbs{width:100%; border-collapse:collapse; font-size:12px; min-width:680px;}
@@ -117,10 +120,22 @@
   </div>
 
   <section>
-    <h2>建議工期甘特圖（長短示意相對比例，正確天數看下面的 WBS 表）</h2>
+    <h2>建議工期甘特圖（第1天～31天對齊參考，精確天數以下面的 WBS 表為準）</h2>
     <div class="diagram-card">
       <div class="gantt-wrap">
         <div class="gantt">
+          <div class="gantt-axis">
+            <div></div>
+            <div class="gantt-axis-track">
+              <span style="grid-column:1/2;">第1天</span>
+              <span style="grid-column:6/7;">6</span>
+              <span style="grid-column:11/12;">11</span>
+              <span style="grid-column:16/17;">16</span>
+              <span style="grid-column:21/22;">21</span>
+              <span style="grid-column:26/27;">26</span>
+              <span style="grid-column:31/32;">31天＝軟性開幕</span>
+            </div>
+          </div>
           <div class="gantt-row"><div class="gantt-label">聯合現場丈量勘查（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:1/4; background:#C17B4E;">丈量勘查</div></div></div>
           <div class="gantt-row"><div class="gantt-label">各工班報價／排班（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:3/8; background:#C17B4E;">報價排班</div></div></div>
           <div class="gantt-row"><div class="gantt-label">招牌設計製作</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/19; background:#E0A458;">招牌設計</div><div class="gantt-bar float-tail" style="grid-column:19/22;">浮時</div></div></div>
