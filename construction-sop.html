@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>開店工程流程圖 v3 － 展店工程傳承範本</title>
+<title>開店工程流程圖 v4 － 展店工程傳承範本</title>
 <style>
   :root{
     --brown-dark:#2C1A0E; --brown-mid:#5C3317; --brown-main:#8B5E3C;
@@ -71,17 +71,14 @@
   footer{margin-top:40px; font-size:11.5px; color:var(--text-light); text-align:center;}
 
   .gantt-wrap{overflow-x:auto;}
-  .gantt{min-width:760px; font-size:11.5px;}
-  .gantt-row{display:grid; grid-template-columns:150px 1fr; align-items:center; min-height:30px; border-bottom:1px solid var(--border);}
+  .gantt{min-width:640px; font-size:11.5px;}
+  .gantt-row{display:grid; grid-template-columns:170px 1fr; align-items:center; min-height:28px; border-bottom:1px solid var(--border);}
   .gantt-row:last-child{border-bottom:none;}
   .gantt-label{padding:4px 10px 4px 0; color:var(--text-dark); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .gantt-track{position:relative; display:grid; grid-template-columns:repeat(32, 1fr); height:22px; background-image:repeating-linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px, transparent calc(100%/32));}
-  .gantt-bar{grid-row:1; border-radius:5px; height:16px; align-self:center; font-size:9.5px; color:#fff; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; padding:0 3px;}
+  .gantt-track{position:relative; display:grid; grid-template-columns:repeat(32, 1fr); height:20px;}
+  .gantt-bar{grid-row:1; border-radius:5px; height:16px; align-self:center; font-size:9.5px; color:#fff; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; padding:0 4px;}
   .gantt-bar.crit{outline:2px solid var(--red); outline-offset:1px;}
   .gantt-bar.float-tail{background:transparent !important; border:1.5px dashed var(--new); color:var(--new); height:12px;}
-  .gantt-axis{display:grid; grid-template-columns:150px 1fr; margin-bottom:4px;}
-  .gantt-axis-track{display:grid; grid-template-columns:repeat(32, 1fr); font-size:10px; color:var(--text-light);}
-  .gantt-axis-track span{border-left:1px solid var(--border); padding-left:2px;}
 
   .wbs-table-wrap{overflow-x:auto;}
   table.wbs{width:100%; border-collapse:collapse; font-size:12px; min-width:680px;}
@@ -110,8 +107,8 @@
 <div class="wrap">
   <a class="back-link" href="stores.html">← 回展店管理系統</a>
   <header>
-    <div class="eyebrow">展店工程 · 傳承範本 · v3</div>
-    <h1>開店工程流程圖 v3</h1>
+    <div class="eyebrow">展店工程 · 傳承範本 · v4</div>
+    <h1>開店工程流程圖 v4</h1>
     <p class="sub">以仁武店複盤範本為基礎，補上富國店的工項，再往下扎根加一層 WBS／要徑（critical path）／浮時（float）分析——底層嚴謹算過，上層才能放心簡化。</p>
   </header>
 
@@ -121,30 +118,7 @@
   </div>
 
   <section>
-    <h2>教練回饋：下一階段壓縮目標</h2>
-    <p class="sub" style="margin-bottom:14px;">下面的流程圖／甘特圖／WBS 表，記錄的是<b>富國店實際發生的基準</b>——先有真實案例才能往下扎根。以下是顧問看過之後，給下一家店的壓縮方向，是<b>目標</b>，不是現況，兩者不要混著看。</p>
-    <div class="diagram-card">
-      <table class="wbs">
-        <tr><th>項目</th><th>目前基準（富國店）</th><th>壓縮目標（第二期起）</th></tr>
-        <tr><td>聯合丈量→正式動工</td><td>顧問經驗值：業界常見約 16 天</td><td>10 天以內</td></tr>
-        <tr><td>招牌（設計到完工）</td><td>18 天</td><td>7-10 天（固定配合廠商，爭取提前掛招牌行銷）</td></tr>
-        <tr><td>設備（確認到交貨）</td><td>20 天（含淘寶進貨，簽租約當天才下單）</td><td>10 天以內（見下方說明，不是放棄淘寶）</td></tr>
-        <tr><td>延誤緩衝</td><td>當作標準工期的一部分（5天）</td><td>視為非常態，目標壓到 0；真的發生要提前告知加盟業主</td></tr>
-        <tr><td>簽約→軟性開幕 總天數</td><td>約 31 天</td><td>21 天（第二期起）／16 天（第16家店起的長期目標，對照中國連鎖品牌可壓到 5-7 天的極限值）</td></tr>
-      </table>
-    </div>
-    <p class="sub" style="margin-top:10px;">「聯合丈量→正式動工」的16天是顧問憑產業經驗給的參考值，不是逐行對照這份文件的 WBS 數字算出來的，兩者不用強行對得起來，方向正確就好。連鎖品牌的展店標準本來就該往「精實壓縮＋模組化」走，這份文件會持續照每次真實案例修正基準，同時逐步往上面的目標靠近。</p>
-
-    <div class="callout" style="margin-top:16px;">
-      <h3 style="color:var(--brown-main);">💡 設備10天目標怎麼做到？——不是放棄淘寶，是把下單觸發點提前</h3>
-      <p>富國店的做法是「簽租約當天」才下單，淘寶長途海運的時間全部算在「簽約後」的時鐘裡，才會抓到20天還常常delay。</p>
-      <p>正確的做法：下單觸發點改成「<b>加盟合約／合夥人合約／經理人合約簽定</b>」——這比「找到地點、簽租約」發生得更早。合約一簽，總部就篤定這家店一定會開，馬上向淘寶叫貨到集運商倉庫備著，這段長途海運時間跟「找地點」同步進行、不佔用「簽約後」的時鐘。等真的找到地點、簽了租約，貨已經在集運倉等著了，剩下集運倉到台灣新店這段才是那「10天以內」。</p>
-      <p>這是<b>總部庫存管理</b>的問題，不是工程排程能解決的問題——要總部常態備著一批「常用品項」的庫存，靠加盟簽約的節奏去驅動叫貨，不是靠單一店的租約簽約日。</p>
-    </div>
-  </section>
-
-  <section>
-    <h2>工程流程圖（高階總覽——詳細天數看下面的甘特圖跟 WBS 表）</h2>
+    <h2>工程流程圖（順序示意——不寫死天數，正確數字看下面的 WBS 表）</h2>
     <div class="diagram-card">
       <pre class="mermaid">
 %%{init: {'theme':'base', 'themeVariables': {
@@ -152,23 +126,23 @@
   'lineColor':'#8B5E3C','fontFamily':'-apple-system,PingFang TC,Noto Sans TC,sans-serif','fontSize':'22px'
 }}}%%
 flowchart TD
-  Z["🖊️ 簽約<br/>Day 0<br/>同時支付：押租金／首月租金／仲介費<br/>當天發通知約現場丈量"]
-  WALK["聯合現場丈量勘查<br/>Day 2<br/>各工班先到場熟悉現場<br/>(名單見下方WBS表)"]
-  A0["各工班報價／排班／合約用印<br/>5天"]
-  SIGN["招牌設計<br/>18天"]
-  EQUIP["設備下單<br/>20天"]
-  POWER["台電外接電申請<br/>14天"]
-  TRAIN["人員招募＋訓練＋認證<br/>基礎人員10-12天／主管5-7天<br/>試營運前完成職能認證"]
-  B["拆除進場<br/>2天"]
-  STEEL["輕鋼架(天花板骨架)<br/>2天，需等拆除淨空才能進場"]
-  QUOTE["丈量報價<br/>5天"]
-  MID["裝潢工程期(同期進行)<br/>木工/玻璃/水電/冷氣/油漆/鐵工/地板<br/>最長9天"]
-  FINAL["設備裝機／招牌安裝／水塔<br/>監控音響裝機／斜坡鐵工／遮雨棚<br/>2天"]
-  DELAY["延誤緩衝<br/>玻璃重設計／設備晚到／等水電裝家具<br/>5天（真實案例）"]
-  TEST["全功率試車＋驗收<br/>2天"]
-  OPEN["🌤️ 軟性開幕<br/>Day 31"]
-  M["試營運<br/>約26天"]
-  OPEN2["🎉 正式開幕<br/>軟性開幕後約1個月"]
+  Z["🖊️ 簽約"]
+  WALK["聯合現場丈量勘查"]
+  A0["各工班報價／排班／合約用印"]
+  SIGN["招牌設計製作"]
+  EQUIP["設備下單"]
+  POWER["台電外接電申請"]
+  TRAIN["人員招募＋訓練＋認證"]
+  B["拆除進場"]
+  STEEL["輕鋼架（須等拆除淨空才能進場）"]
+  QUOTE["丈量報價"]
+  MID["裝潢工程期（同期進行）<br/>木工/玻璃/水電/冷氣/油漆/鐵工/地板"]
+  FINAL["設備裝機／招牌安裝／水塔<br/>監控音響裝機／斜坡鐵工／遮雨棚"]
+  DELAY["延誤緩衝（非標準，目標0）"]
+  TEST["全功率試車＋驗收"]
+  OPEN["🌤️ 軟性開幕"]
+  M["試營運期"]
+  OPEN2["🎉 正式開幕"]
 
   Z --> WALK --> A0 --> B --> STEEL --> QUOTE --> MID --> FINAL --> DELAY --> TEST --> OPEN --> M --> OPEN2
   Z -.並行.-> SIGN --> FINAL
@@ -193,45 +167,39 @@ flowchart TD
   </section>
 
   <section>
-    <h2>建議工期甘特圖（只看第一個月：簽約到軟性開幕）</h2>
+    <h2>建議工期甘特圖（長短示意相對比例，正確天數看下面的 WBS 表）</h2>
     <div class="diagram-card">
       <div class="gantt-wrap">
         <div class="gantt">
-          <div class="gantt-axis">
-            <div></div>
-            <div class="gantt-axis-track" id="gantt-axis"></div>
-          </div>
+          <div class="gantt-row"><div class="gantt-label">聯合現場丈量勘查（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:1/4; background:#C17B4E;">丈量勘查</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">各工班報價／排班（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:3/8; background:#C17B4E;">報價排班</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">招牌設計製作</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/19; background:#E0A458;">招牌設計</div><div class="gantt-bar float-tail" style="grid-column:19/22;">浮時</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">廚房設備下單</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/21; background:#B08968;">設備下單</div><div class="gantt-bar float-tail" style="grid-column:21/22;">浮時</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">台電外接電申請</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/15; background:#9E8BC7;">台電申請</div><div class="gantt-bar float-tail" style="grid-column:15/24;">浮時</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">人員招募（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/14; background:#7A8B6F;">招募</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">基礎／主管人員訓練（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:14/25; background:#7A8B6F;">訓練</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">職能認證考核（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:29/31; background:#7A8B6F;">認證</div></div></div>
 
-          <div class="gantt-row"><div class="gantt-label">聯合現場丈量勘查（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:1/4; background:#C17B4E;">1-3</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">各工班報價／排班（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:3/8; background:#C17B4E;">3-7</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">招牌設計製作</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/19; background:#E0A458;">1-18</div><div class="gantt-bar float-tail" style="grid-column:19/22;">浮3天</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">廚房設備下單</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/21; background:#B08968;">1-20（下單＝簽約當天）</div><div class="gantt-bar float-tail" style="grid-column:21/22;">浮1天</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">台電外接電申請</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/15; background:#9E8BC7;">1-14</div><div class="gantt-bar float-tail" style="grid-column:15/24;">浮9天</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">人員招募（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/14; background:#7A8B6F;">1-13</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">基礎人員訓練（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:14/25; background:#7A8B6F;">14-24（10-12天）</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">主管訓練（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:14/20; background:#9BAA8F;">14-19（5-7天）</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">職能認證考核（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:29/31; background:#7A8B6F;">29-30</div></div></div>
-
-          <div class="gantt-row"><div class="gantt-label">拆除進場（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:7/10; background:#C17B4E;">7-9</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">輕鋼架（天花板骨架）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:9/12; background:#8B5E3C;">9-11</div><div class="gantt-bar float-tail" style="grid-column:12/15;">浮3天</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">丈量報價＋排班（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:9/15; background:#D4A574;">9-14（含冷氣2家比較）</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">冷氣工程安裝</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:12/22; background:#6BA88F;">12-21</div><div class="gantt-bar float-tail" style="grid-column:22/25;">浮3天</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">木工進場（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:14/18; background:#8B5E3C;">14-17</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">玻璃工程（生產＋加工，要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:15/23; background:#5C8FA8;">15-22（跟木工同期，不等鐵工）</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">水電施工（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:17/23; background:#6B7FA8;">17-22</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">油漆（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:17/19; background:#4CAF7D;">17-18</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">鐵工／五金骨架（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:18/20; background:#2F7BB8;">18-19</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">地板工程（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:19/21; background:#2F7BB8;">19-20</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">設備到貨＋安裝定位</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:21/24; background:#B08968;">21-23</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">招牌／廣告輸出安裝</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:21/24; background:#E0A458;">21-23</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">監控／音響裝機（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:22/23; background:#2F7BB8;">22</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">招牌現場安裝＋POS</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:23/24; background:#E0A458;">23</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">斜坡鐵工（保護地上電線）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:22/23; background:#8B5E3C;">22</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">遮雨棚安裝</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:23/24; background:#E0A458;">23</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">延誤緩衝（玻璃重設計／設備晚到，要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:24/29; background:#C0524A;">24-28（真實案例）</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">全功率同時試車（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:29/31; background:#C0524A;">29-30</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">備料＋正式營運前驗收（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:30/32; background:#C0524A;">30-31</div></div></div>
-          <div class="gantt-row"><div class="gantt-label">🌤️ 軟性開幕／試營運起</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:31/32; background:#2C1A0E;">31</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">拆除進場（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:7/10; background:#C17B4E;">拆除</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">輕鋼架</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:9/12; background:#8B5E3C;">輕鋼架</div><div class="gantt-bar float-tail" style="grid-column:12/15;">浮時</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">丈量報價＋排班（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:9/15; background:#D4A574;">丈量報價</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">冷氣工程安裝</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:12/22; background:#6BA88F;">冷氣</div><div class="gantt-bar float-tail" style="grid-column:22/25;">浮時</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">木工進場（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:14/18; background:#8B5E3C;">木工</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">玻璃工程（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:15/23; background:#5C8FA8;">玻璃（跟木工同期，不等鐵工）</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">水電施工（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:17/23; background:#6B7FA8;">水電</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">油漆（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:17/19; background:#4CAF7D;">油漆</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">鐵工／五金骨架（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:18/20; background:#2F7BB8;">鐵工</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">地板工程（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:19/21; background:#2F7BB8;">地板</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">設備到貨＋安裝定位</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:21/24; background:#B08968;">設備裝機</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">招牌／廣告輸出安裝</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:21/24; background:#E0A458;">招牌安裝</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">監控／音響裝機（要徑）</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:22/23; background:#2F7BB8;">監控音響</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">招牌現場安裝＋POS</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:23/24; background:#E0A458;">POS</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">斜坡鐵工</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:22/23; background:#8B5E3C;">斜坡</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">遮雨棚安裝</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:23/24; background:#E0A458;">遮雨棚</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">延誤緩衝（非標準，要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:24/29; background:#C0524A;">延誤緩衝（真實案例，目標0）</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">全功率同時試車（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:29/31; background:#C0524A;">試車</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">備料＋正式營運前驗收（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:30/32; background:#C0524A;">驗收</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">🌤️ 軟性開幕／試營運起</div><div class="gantt-track"><div class="gantt-bar crit new" style="grid-column:31/32; background:#2C1A0E;">開幕</div></div></div>
         </div>
       </div>
     </div>
@@ -239,39 +207,30 @@ flowchart TD
       <span><i style="background:#C0524A;border:2px solid #C0524A"></i>要徑（紅框，0浮時，完全不能拖）</span>
       <span><i style="background:#2F7BB8"></i>本版新增（藍色）</span>
       <span><i style="background:#7A8B6F"></i>顧問建議目標（人員招募訓練，非富國店真實數字）</span>
-      <span style="border:1.5px dashed var(--new); background:transparent; padding:1px 6px; border-radius:4px; color:var(--new)">浮時 N 天＝可以晚開始這麼多天，仍不影響軟性開幕日</span>
+      <span style="border:1.5px dashed var(--new); background:transparent; padding:1px 6px; border-radius:4px; color:var(--new)">虛線＝有浮時，可以晚開始也不影響軟性開幕日</span>
     </div>
-    <p class="sub" style="margin-top:10px;">拆除到軟性開幕原本規劃約 18-19 天，但真實案例多了 5 天延誤（玻璃臨時重新設計、淘寶設備晚到、等水電協助裝家具），所以軟性開幕落在 Day 31（簽約後第 31 天，跟真實日期 7/8 拆除、8/1 試營運對得起來）。</p>
 
     <div class="callout" style="margin-top:16px;">
       <h3 style="color:var(--brown-main);">📅 軟性開幕之後（不用再按天看）</h3>
       <p>過了軟性開幕，「第幾天」對人來說已經沒有感覺了，接下來這樣走就好：</p>
-      <p><b>軟性開幕</b> → <b>試營運約 26 天</b>（真實抓出問題、調整動線） → <b>開幕促銷週約 5 天</b>（每人3碗特價活動） → <b>正式開幕</b>，整段大約再 1 個月。</p>
+      <p><b>軟性開幕</b> → <b>試營運</b>（真實抓出問題、調整動線） → <b>開幕促銷週</b>（每人3碗特價活動） → <b>正式開幕</b>。實際天數看下方 WBS 表。</p>
     </div>
   </section>
-  <script>
-    (function(){
-      const axis = document.getElementById('gantt-axis');
-      let html = '';
-      for(let d=1; d<=32; d++){ html += `<span>${d % 5 === 1 ? d : ''}</span>`; }
-      axis.innerHTML = html;
-    })();
-  </script>
 
   <section>
     <h2>關鍵提醒</h2>
     <div class="callout-grid">
       <div class="callout path">
         <h3>🎯 要徑（0浮時，完全不能拖）</h3>
-        <p>簽約 → 聯合現場丈量勘查 → 各工班報價排班 → 拆除進場 → 丈量報價 → 木工進場 → 玻璃工程（跟木工同期，不等鐵工）／水電施工／油漆 → 鐵工 → 地板 → 監控音響裝機 → 延誤緩衝 → 全功率試車 → 驗收 → 試營運（約26天）→ 開幕促銷週。<b>Day 31 軟性開幕</b>（原本規劃約 Day26，多了 5 天真實延誤）。</p>
+        <p>簽約 → 聯合現場丈量勘查 → 各工班報價排班 → 拆除進場 → 丈量報價 → 木工進場 → 玻璃工程（跟木工同期，不等鐵工）／水電施工／油漆 → 鐵工 → 地板 → 監控音響裝機 → 延誤緩衝 → 全功率試車 → 驗收 → 試營運 → 開幕促銷週。天數以下方 WBS 表為準。</p>
       </div>
       <div class="callout risk">
         <h3>⚠️ 延誤風險點</h3>
         <ul>
-          <li>玻璃要在拆除完就先估尺寸開始生產，等鐵工完工才開始等於平白多花 2 週——這是 v3.1 修正的重點</li>
-          <li>玻璃設計定案前要先讓廠商確認結構安全可行性，不是只確認尺寸——富國店就有廠商在最後一刻說設計不安全拒做，導致重新設計，多花了時間</li>
-          <li>廚房設備20天前置期只比需求時間早1天，等同沒有浮時，晚下單當天就會延誤開幕——長期解法是把叫貨觸發點提前到加盟合約簽定，而不是等租約簽約日（見上方教練回饋段落的說明）</li>
-          <li>淘寶來的設備／家具（電磁爐、桌子）常常卡在最後幾天才到貨，還要再等水電協助安裝，富國店這段實際多花了約5天——但顧問提醒：這不該當成標準工期的一部分，目標是想辦法壓到0（例如提早下單、備援供應商），真的發生要提前告知加盟業主，不要用「反正本來就會delay」的心態排時程</li>
+          <li>玻璃要在拆除完就先估尺寸開始生產，等鐵工完工才開始等於平白多花時間（詳見下方 KNOW-HOW）</li>
+          <li>玻璃設計定案前要先讓廠商確認結構安全可行性，不是只確認尺寸（詳見下方 KNOW-HOW）</li>
+          <li>廚房設備下單觸發點要提前到加盟合約簽定，不是等租約簽約日（詳見下方 KNOW-HOW）</li>
+          <li>淘寶來的設備／家具常卡在最後幾天到貨，這是延誤緩衝的主要來源，目標是壓到0（詳見下方 KNOW-HOW）</li>
         </ul>
       </div>
       <div class="callout coord">
@@ -279,22 +238,22 @@ flowchart TD
         <ul>
           <li>玻璃工程要提前跟廠商溝通：先用拆除後的粗估尺寸下單生產，最後現場微調再等鐵工，且設計階段就要問清楚結構安全性</li>
           <li>各工班進場前需完成圖面確認與現場交底，避免重工與等待</li>
-          <li>冷氣有3天浮時、招牌有3天浮時，優先順位可以排在要徑項目之後</li>
+          <li>冷氣、招牌都有浮時，優先順位可以排在要徑項目之後</li>
           <li>人員招募要跟工程同步啟動，不要等工程快完工才想到找人，不然人員訓練會變成真正的瓶頸</li>
         </ul>
       </div>
       <div class="callout goal">
         <h3>✅ 完成目標</h3>
         <ul>
-          <li>Day 31 完成試車＋驗收＋職能認證考核，軟性開幕／試營運開始</li>
-          <li>試營運實際抓約 26 天，接著約 5 天開幕促銷週，等於正式開幕</li>
+          <li>完成試車＋驗收＋職能認證考核後，軟性開幕／試營運開始</li>
+          <li>試營運結束、開幕促銷週跑完，等於正式開幕</li>
         </ul>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>WBS 編號與要徑／浮時分析表</h2>
+    <h2>WBS 編號與要徑／浮時分析表（唯一真相來源——上面的流程圖／甘特圖只是示意，這裡才是準的）</h2>
     <p class="sub" style="margin-bottom:14px;">天數以第1天＝簽約日計算，照富國店實際執行日期還原（不是憑感覺排的），實際展店時請照現場真實天數修正。紅色列＝要徑，藍色浮時徽章＝可以晚開始幾天都不影響軟性開幕日。</p>
     <div class="diagram-card wbs-table-wrap">
       <table class="wbs">
@@ -303,7 +262,7 @@ flowchart TD
         <tr class="crit"><td>1</td><td>聯合現場丈量勘查——全員到場熟悉現場：木工／水電／弱電／拆除／輕鋼架／招牌／地板／冷氣／台電／遮雨棚／斜坡鐵工／設計丈量人員；玻璃／鐵工／油漆／廚房設備商也一起叫來先熟悉環境（精確丈量仍要等拆除完隔間淨空才能定案）；房東／管委會視情況決定要不要到場</td><td>0</td><td>2天</td><td>1</td><td>3</td><td><span class="wbs-badge crit">要徑</span></td></tr>
         <tr class="crit"><td>2</td><td>各工班報價／排班／合約用印</td><td>1</td><td>4天</td><td>3</td><td>7</td><td><span class="wbs-badge crit">要徑</span></td></tr>
         <tr><td>3</td><td>招牌設計製作</td><td>0</td><td>18天</td><td>1</td><td>18</td><td><span class="wbs-badge float">浮時 3天</span></td></tr>
-        <tr><td>4</td><td>廚房設備下單（常用品項）</td><td>0</td><td>20天</td><td>1</td><td>20</td><td><span class="wbs-badge float">浮時 1天</span></td></tr>
+        <tr><td>4</td><td>廚房設備下單（常用品項，觸發點應提前到加盟合約簽定，見下方教練回饋）</td><td>0</td><td>20天</td><td>1</td><td>20</td><td><span class="wbs-badge float">浮時 1天</span></td></tr>
         <tr><td>5</td><td>台電外接電申請</td><td>0</td><td>14天</td><td>1</td><td>14</td><td><span class="wbs-badge float">浮時 9天</span></td></tr>
         <tr><td>6</td><td>人員招募（儲備待訓人力，目標：工程啟動前備妥）</td><td>0</td><td>13天</td><td>1</td><td>14</td><td><span class="wbs-badge float">顧問建議目標</span></td></tr>
         <tr><td>7</td><td>基礎門市人員技術訓練（顧問建議10-12天）</td><td>6</td><td>11天</td><td>14</td><td>25</td><td><span class="wbs-badge float">顧問建議目標</span></td></tr>
@@ -336,6 +295,22 @@ flowchart TD
   </section>
 
   <section>
+    <h2>教練回饋：下一階段壓縮目標</h2>
+    <p class="sub" style="margin-bottom:14px;">上面的流程圖／甘特圖／WBS 表，記錄的是<b>富國店實際發生的基準</b>——先有真實案例才能往下扎根。以下是顧問看過之後，給下一家店的壓縮方向，是<b>目標</b>，不是現況，兩者不要混著看。</p>
+    <div class="diagram-card">
+      <table class="wbs">
+        <tr><th>項目</th><th>目前基準（富國店）</th><th>壓縮目標（第二期起）</th></tr>
+        <tr><td>聯合丈量→正式動工</td><td>顧問經驗值：業界常見約 16 天</td><td>10 天以內</td></tr>
+        <tr><td>招牌（設計到完工）</td><td>18 天</td><td>7-10 天（固定配合廠商，爭取提前掛招牌行銷）</td></tr>
+        <tr><td>設備（確認到交貨）</td><td>20 天（含淘寶進貨，簽租約當天才下單）</td><td>10 天以內（見下方 KNOW-HOW，不是放棄淘寶）</td></tr>
+        <tr><td>延誤緩衝</td><td>當作標準工期的一部分（5天）</td><td>視為非常態，目標壓到 0；真的發生要提前告知加盟業主</td></tr>
+        <tr><td>簽約→軟性開幕 總天數</td><td>約 31 天</td><td>21 天（第二期起）／16 天（第16家店起的長期目標，對照中國連鎖品牌可壓到 5-7 天的極限值）</td></tr>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:10px;">「聯合丈量→正式動工」的16天是顧問憑產業經驗給的參考值，不是逐行對照這份文件的 WBS 數字算出來的，兩者不用強行對得起來，方向正確就好。連鎖品牌的展店標準本來就該往「精實壓縮＋模組化」走，這份文件會持續照每次真實案例修正基準，同時逐步往上面的目標靠近。</p>
+  </section>
+
+  <section>
     <h2>階段關卡確認清單（可列印貼在工地牆上，逐項打勾簽名）</h2>
     <div class="checklist-poster">
       <div class="cl-row"><div class="cl-box"></div><div class="cl-name">1. 聯合現場丈量勘查完成（各工班都到場看過現場）</div><div class="cl-signer">店長簽</div></div>
@@ -357,11 +332,11 @@ flowchart TD
   </section>
 
   <section>
-    <h2>為什麼要這樣排（KNOW-HOW 對照）</h2>
+    <h2>為什麼要這樣排（KNOW-HOW 對照——唯一詳細解釋來源，其他地方只提醒有這件事）</h2>
     <div class="knowhow-list">
       <div class="kh"><div class="kh-head"><h4>為什麼要先場勘？</h4></div>
         <p>簽約前先場勘，是為了確認樑柱、給排水、電力容量等硬體條件符不符合開店需求，也才能抓出拆除與裝潢的大概範圍與天數。</p></div>
-      <div class="kh"><div class="kh-head"><h4>為什麼簽約後2天要辦一場「聯合現場丈量勘查」？該找誰來？</h4></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼簽約後要辦一場「聯合現場丈量勘查」？該找誰來？</h4></div>
         <p>簽約當天就找木工、水電、弱電、拆除、輕鋼架、招牌、地板、冷氣、台電、遮雨棚、斜坡鐵工、負責畫設計圖的丈量人員全部一起到現場看一次，讓每個工班用同一份現場狀況去抓自己的粗估報價跟排班，不用各自約時間、各講各的、資訊兜不起來。玻璃、鐵工、油漆、廚房設備商也建議一起叫來——雖然隔間還沒拆、他們現場評估不出真正的施作安排，但先讓他們熟悉環境，之後排程會更順。房東或管委會要不要到場則看情況（有涉及外觀、招牌位置變動時比較需要）。這場是初步的共同認知，不是最終精確丈量——精確的尺寸還是要等拆除完現場淨空後才抓（見下一條）。</p></div>
       <div class="kh"><div class="kh-head"><h4>舊玻璃門、舊招牌要在簽約前先評估</h4></div>
         <p>能不能沿用，直接影響裝潢預算跟拆除範圍。簽約後才發現不能用，重做成本跟時間都會被打亂。</p></div>
@@ -384,7 +359,7 @@ flowchart TD
       <div class="kh"><div class="kh-head"><h4>為什麼設備要等地板鋪完才能進場？</h4></div>
         <p>餐飲設備通常很重，需要在平整完工的地面上定位抓水平。地板沒鋪完就搬設備進場，可能壓壞底材。</p></div>
       <div class="kh"><div class="kh-head"><h4>玻璃到底要不要等鐵工完工？</h4></div>
-        <p>不是整段都要等——玻璃廠商可以用拆除後的粗估尺寸提前開始生產（實務上跟木工同期就能動工），只有最後現場「精確丈量＋裝門」那一步，才需要等鐵工把門框骨架定案，這樣玻璃尺寸才對得上。把整段生產都排在鐵工之後，是 v3 第一版算錯的地方，會平白拖長將近 2 週。</p></div>
+        <p>不是整段都要等——玻璃廠商可以用拆除後的粗估尺寸提前開始生產（實務上跟木工同期就能動工），只有最後現場「精確丈量＋裝門」那一步，才需要等鐵工把門框骨架定案，這樣玻璃尺寸才對得上。把整段生產都排在鐵工之後會平白拖長將近 2 週。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼玻璃設計定案前要先確認結構安全，不是只確認尺寸？</h4></div>
         <p>尺寸量得出來，不代表結構做得出來——大面積無框玻璃、特殊懸空設計，廠商可能在最後現場丈量時才發現無法確保安全而拒做。富國店就遇到這個狀況。設計階段就該把設計圖拿給玻璃廠商過目確認可行，不要等到最後一刻才發現要改設計，臨時改動會直接衝擊已經排好的安裝時程。</p></div>
       <div class="kh"><div class="kh-head"><h4>水電為什麼要進場 2～3 次？</h4></div>
@@ -398,16 +373,11 @@ flowchart TD
       <div class="kh"><div class="kh-head"><h4>為什麼要抓「試營運」，不直接開幕？</h4></div>
         <p>備料、出餐、清洗、收銀的動線，只有真實客人上門才會暴露問題。試營運期間出的包還有時間修，留到開幕當天代價高很多。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼設備裝機完成後，還要抓一段「延誤緩衝」才試車？</h4></div>
-        <p>富國店實際發生的狀況：玻璃廠商最後一刻說設計不安全要重新設計、部分淘寶設備（工作台冰箱、電磁爐）晚到、買的桌子還要等水電幫忙裝好。這些不是特例，是展店常態——與其每次都當作意外延誤、打亂心理預期，不如直接把這 5 天緩衝排進標準時程，遇到了不驚慌，沒遇到就是提早。</p></div>
+        <p>富國店實際發生的狀況：玻璃廠商最後一刻說設計不安全要重新設計、部分淘寶設備（工作台冰箱、電磁爐）晚到、買的桌子還要等水電幫忙裝好。這段不是標準工期的一部分，是<b>非常態</b>——顧問的方向是把目標壓到0（例如設備叫貨觸發點提前、玻璃設計提前確認安全性），真的發生要提前告知加盟業主，不要用「反正本來就會delay」的心態排時程。這裡留著這一列，是誠實記錄富國店真實發生過的狀況，讓下一次展店知道這些坑在哪，不是鼓勵大家把它當標準流程照抄。</p></div>
     </div>
   </section>
 
   <footer>貴焿古早味麵線羹 · 展店工程傳承範本 · 以仁武店經驗為基礎，隨每次展店持續更新</footer>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script>
-  mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });
-</script>
 </body>
 </html>
