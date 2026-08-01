@@ -834,12 +834,15 @@
   }
 
   async function recordSurvey(id) {
+    const v = vendors.find(x => x.id === id);
     const today = new Date().toISOString().split('T')[0];
+    const input = prompt(`${v ? v.vendor_name : ''}\n實際場勘日（若不是今天，請改成正確日期 YYYY-MM-DD）`, today);
+    if (!input) return;
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
         method: 'PATCH',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({ survey_date: today })
+        body: JSON.stringify({ survey_date: input })
       });
       await loadAll();
       switchTab('vendors');
@@ -1141,9 +1144,12 @@
     const today = new Date().toISOString().split('T')[0];
     const v = vendors.find(x => x.id === id);
     if (!v) return;
+    const label = direction === 'in' ? '實際進場日' : '實際完工日';
+    const input = prompt(`${v.vendor_name}\n${label}（若不是今天，請改成正確日期 YYYY-MM-DD）`, today);
+    if (!input) return;
     const body = direction === 'in'
-      ? { actual_in: today, status: '進場中' }
-      : { actual_out: today, status: '已完工' };
+      ? { actual_in: input, status: '進場中' }
+      : { actual_out: input, status: '已完工' };
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/store_vendors?id=eq.${id}`, {
         method: 'PATCH',
