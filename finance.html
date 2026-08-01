@@ -51,10 +51,11 @@
 
     /* ── Main ── */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .topbar-icon { font-size: 22px; }
     .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
     .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
     .content { flex: 1; overflow-y: auto; padding: 24px; }
 
     /* ── Password Gate ── */
@@ -177,6 +178,7 @@
       <div class="topbar-title">營業儀表板</div>
       <div class="topbar-sub" id="last-update">載入中…</div>
     </div>
+    <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
   </div>
 
   <div class="content">
@@ -221,10 +223,10 @@
     </div>
 
     <div class="table-box">
-      <h3>營業額記錄</h3>
+      <h3>每日營業額</h3>
       <table>
-        <thead><tr><th>日期</th><th>備註</th><th>金額</th></tr></thead>
-        <tbody id="revenue-tbody"><tr><td colspan="3" class="loading">載入中…</td></tr></tbody>
+        <thead><tr><th>日期</th><th>整日營收總額</th></tr></thead>
+        <tbody id="revenue-tbody"><tr><td colspan="2" class="loading">載入中…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -235,34 +237,32 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
   const PASSWORD = '7594';
 
+  let stores = [];
+  let currentStoreId = null;
+
   function checkPw() {
     const val = document.getElementById('pw-input').value;
     if (val === PASSWORD) {
       sessionStorage.setItem('finance_auth', '1');
       document.getElementById('gate').style.display = 'none';
-      loadData();
+      init();
     } else {
       document.getElementById('pw-error').textContent = '密碼錯誤';
     }
   }
   if (sessionStorage.getItem('finance_auth') === '1') {
     document.getElementById('gate').style.display = 'none';
-    loadData();
+    init();
   }
 
-  const CATEGORY_COLORS = {
-    '餐飲': '#e07b39', '交通': '#6c8ebf', '購物': '#b5a642',
-    '孩子': '#82b366', '醫療': '#d6a4a4', '娛樂': '#9b59b6',
-    '店務': '#4a2e1a', '其他': '#aaa'
-  };
+  const CATEGORY_COLORS = { '費用': '#4a2e1a', '變動成本': '#e07b39', '其他': '#aaa' };
 
   let currentDate = new Date();
   let categoryChart = null;
   let revenueChart = null;
 
-  function changeMonth(delta) {
-    currentDate.setMonth(currentDate.getMonth() + delta);
-    loadData();
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   async function dbGet(table, filters) {
@@ -272,7 +272,39 @@
     return res.json();
   }
 
+  async function init() {
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    currentStoreId = stores[0]?.id || null;
+    await loadData();
+  }
+
+  function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    loadData();
+  }
+
+  function changeMonth(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    loadData();
+  }
+
+  // 跟日報表同一套公式：整日營收總額 = 現場營收 + line pay + UBER + 熊貓 + 當日未收款
+  function calcTotal(r) {
+    return (Number(r.morning_revenue) || 0) + (Number(r.evening_revenue) || 0) + (Number(r.line_pay) || 0)
+      + (Number(r.uber_amount) || 0) + (Number(r.foodpanda_amount) || 0) + (Number(r.uncollected) || 0);
+  }
+
+  // 支出的 category 欄位目前都存預設值，實際分類是寫在描述前面的【費用】／【變動成本】
+  function expenseCategory(desc) {
+    const m = /^【(.+?)】/.exec(desc || '');
+    return m ? m[1] : '其他';
+  }
+
   async function loadData() {
+    if (!currentStoreId) return;
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
     const start = `${year}-${month}-01`;
@@ -281,20 +313,25 @@
 
     document.getElementById('month-label').textContent = `${year} 年 ${parseInt(month)} 月`;
 
-    const [expenses, revenues] = await Promise.all([
-      dbGet('expenses', `date=gte.${start}&date=lte.${end}&order=date.desc`),
-      dbGet('revenue', `date=gte.${start}&date=lte.${end}&order=date.asc`)
+    const [expenses, reports] = await Promise.all([
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`),
+      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.asc`)
     ]);
+    const expList = Array.isArray(expenses) ? expenses : [];
+    const reportList = Array.isArray(reports) ? reports : [];
 
-    const totalExp = expenses.reduce((s, e) => s + parseFloat(e.amount), 0);
-    const totalRev = revenues.reduce((s, r) => s + parseFloat(r.amount), 0);
+    const totalExp = expList.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+    const totalRev = reportList.reduce((s, r) => s + calcTotal(r), 0);
     document.getElementById('total-expense').textContent = `$${totalExp.toLocaleString()}`;
     document.getElementById('total-revenue').textContent = `$${totalRev.toLocaleString()}`;
-    document.getElementById('total-count').textContent = `${expenses.length} 筆`;
+    document.getElementById('total-count').textContent = `${expList.length} 筆`;
     document.getElementById('last-update').textContent = `更新於 ${new Date().toLocaleTimeString('zh-TW')}`;
 
     const catMap = {};
-    expenses.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + parseFloat(e.amount); });
+    expList.forEach(e => {
+      const cat = expenseCategory(e.description);
+      catMap[cat] = (catMap[cat] || 0) + Number(e.amount || 0) + Number(e.shipping_amount || 0);
+    });
     const cats = Object.keys(catMap);
     if (categoryChart) categoryChart.destroy();
     categoryChart = new Chart(document.getElementById('categoryChart'), {
@@ -304,7 +341,7 @@
     });
 
     const revByDay = {};
-    revenues.forEach(r => { revByDay[r.date] = (revByDay[r.date] || 0) + parseFloat(r.amount); });
+    reportList.forEach(r => { revByDay[r.date] = calcTotal(r); });
     const days = Object.keys(revByDay).sort();
     if (revenueChart) revenueChart.destroy();
     revenueChart = new Chart(document.getElementById('revenueChart'), {
@@ -314,22 +351,21 @@
     });
 
     const etbody = document.getElementById('expense-tbody');
-    etbody.innerHTML = expenses.length === 0
+    etbody.innerHTML = expList.length === 0
       ? '<tr><td colspan="4" class="loading">本月尚無記錄</td></tr>'
-      : expenses.map(e => `<tr>
+      : expList.map(e => `<tr>
           <td>${e.date}</td>
-          <td>${e.description || '—'}</td>
-          <td><span class="tag">${e.category}</span></td>
-          <td>$${parseFloat(e.amount).toLocaleString()}</td>
+          <td>${esc(e.description) || '—'}</td>
+          <td><span class="tag">${esc(expenseCategory(e.description))}</span></td>
+          <td>$${(Number(e.amount || 0) + Number(e.shipping_amount || 0)).toLocaleString()}</td>
         </tr>`).join('');
 
     const rtbody = document.getElementById('revenue-tbody');
-    rtbody.innerHTML = revenues.length === 0
-      ? '<tr><td colspan="3" class="loading">本月尚無記錄</td></tr>'
-      : revenues.map(r => `<tr>
+    rtbody.innerHTML = reportList.length === 0
+      ? '<tr><td colspan="2" class="loading">本月尚無記錄</td></tr>'
+      : reportList.slice().reverse().map(r => `<tr>
           <td>${r.date}</td>
-          <td>${r.note || '—'}</td>
-          <td>$${parseFloat(r.amount).toLocaleString()}</td>
+          <td>$${calcTotal(r).toLocaleString()}</td>
         </tr>`).join('');
   }
 </script>
