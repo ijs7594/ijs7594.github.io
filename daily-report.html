@@ -425,7 +425,9 @@
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-    currentStoreId = stores[0]?.id || null;
+    const paramStore = new URLSearchParams(location.search).get('store');
+    currentStoreId = (paramStore && stores.some(s => s.id === paramStore)) ? paramStore : (stores[0]?.id || null);
+    sel.value = currentStoreId;
     await loadAndRender();
   }
   init();

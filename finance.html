@@ -58,6 +58,13 @@
     .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
     .content { flex: 1; overflow-y: auto; padding: 24px; }
 
+    .section-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .section-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
+    .section-tab.active { color: var(--brown-main); border-bottom-color: var(--brown-main); }
+    #overview-tbody td.flag { color: var(--red); font-weight: 700; }
+    #overview-tbody td.store-name { cursor: pointer; font-weight: 700; color: var(--brown-main); }
+    #overview-tbody td.store-name:hover { text-decoration: underline; }
+
     /* ── Password Gate ── */
     .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
     .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
@@ -178,10 +185,43 @@
       <div class="topbar-title">營業儀表板</div>
       <div class="topbar-sub" id="last-update">載入中…</div>
     </div>
-    <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
+    <select class="store-select" id="store-select" onchange="onStoreChange()" style="display:none;"></select>
   </div>
 
   <div class="content">
+    <div class="section-tabs">
+      <div class="section-tab active" data-tab="overview" onclick="switchSection('overview')">🏢 全店總覽</div>
+      <div class="section-tab" data-tab="single" onclick="switchSection('single')">📊 單店檢視</div>
+    </div>
+
+    <!-- ══ 全店總覽 ══ -->
+    <div id="section-overview">
+      <div class="table-box">
+        <h3>各店本月關鍵數據（點欄位標題排序，點店名看細節）</h3>
+        <table>
+          <thead>
+            <tr>
+              <th style="cursor:pointer" onclick="sortOverview('name')">店名</th>
+              <th style="cursor:pointer" onclick="sortOverview('days')">登載天數</th>
+              <th style="cursor:pointer" onclick="sortOverview('revenue')">本月營收</th>
+              <th style="cursor:pointer" onclick="sortOverview('net')">本月淨利</th>
+              <th style="cursor:pointer" onclick="sortOverview('margin')">毛利率（最新半月）</th>
+              <th style="cursor:pointer" onclick="sortOverview('receivable')">未收款餘額</th>
+              <th style="cursor:pointer" onclick="sortOverview('efficiency')">人效值</th>
+              <th style="cursor:pointer" onclick="sortOverview('perPot')">每鍋平均營收</th>
+              <th style="cursor:pointer" onclick="sortOverview('supervision')">督導合格率</th>
+            </tr>
+          </thead>
+          <tbody id="overview-tbody"><tr><td colspan="9" class="loading">載入中…</td></tr></tbody>
+        </table>
+      </div>
+      <div style="font-size:12px;color:var(--text-light);padding:0 4px;">
+        紅字代表：登載天數少於5天（資料可能不完整）、或毛利率明顯偏離48%的常態值。只列營運中的店，籌備中／已結束不顯示。
+      </div>
+    </div>
+
+    <!-- ══ 單店檢視 ══ -->
+    <div id="section-single" style="display:none;">
     <div class="month-nav">
       <button onclick="changeMonth(-1)">◀</button>
       <h2 id="month-label"></h2>
@@ -229,6 +269,7 @@
         <tbody id="revenue-tbody"><tr><td colspan="2" class="loading">載入中…</td></tr></tbody>
       </table>
     </div>
+    </div>
   </div>
 </div>
 
@@ -272,13 +313,29 @@
     return res.json();
   }
 
+  let currentSection = 'overview';
+
   async function init() {
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
     currentStoreId = stores[0]?.id || null;
-    await loadData();
+    await loadOverview();
+  }
+
+  function switchSection(tab) {
+    currentSection = tab;
+    document.querySelectorAll('.section-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    document.getElementById('section-overview').style.display = tab === 'overview' ? 'block' : 'none';
+    document.getElementById('section-single').style.display = tab === 'single' ? 'block' : 'none';
+    document.getElementById('store-select').style.display = tab === 'single' ? '' : 'none';
+    if (tab === 'single') loadData();
+    if (tab === 'overview') loadOverview();
+  }
+
+  function goToStore(storeId) {
+    location.href = `daily-report.html?store=${storeId}`;
   }
 
   function onStoreChange() {
@@ -367,6 +424,123 @@
           <td>${r.date}</td>
           <td>$${calcTotal(r).toLocaleString()}</td>
         </tr>`).join('');
+  }
+
+  // ══════════ 全店總覽 ══════════
+  let overviewRows = [];
+  let overviewSortKey = 'name';
+  let overviewSortDir = 1;
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function lastDayOfMonth(y, m) { return new Date(y, m, 0).getDate(); }
+  function periodRange(y, m, half) {
+    if (half === '上旬') return { start: `${y}-${pad2(m)}-01`, end: `${y}-${pad2(m)}-15` };
+    return { start: `${y}-${pad2(m)}-16`, end: `${y}-${pad2(m)}-${pad2(lastDayOfMonth(y, m))}` };
+  }
+  function periodEndDate(y, m, half) { return periodRange(y, m, half).end; }
+  function previousPeriod(y, m, half) {
+    if (half === '下旬') return { y, m, half: '上旬' };
+    const py = m === 1 ? y - 1 : y;
+    const pm = m === 1 ? 12 : m - 1;
+    return { y: py, m: pm, half: '下旬' };
+  }
+
+  async function loadOverview() {
+    const tbody = document.getElementById('overview-tbody');
+    const activeStores = stores.filter(s => s.status === '營運中');
+    if (activeStores.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">目前沒有營運中的店</td></tr>';
+      return;
+    }
+    const ids = activeStores.map(s => s.id).join(',');
+
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth() + 1;
+    const monthStart = `${y}-${pad2(m)}-01`;
+    const monthEnd = `${y}-${pad2(m)}-${pad2(lastDayOfMonth(y, m))}`;
+    const half = now.getDate() <= 15 ? '上旬' : '下旬';
+    const endKey = periodEndDate(y, m, half);
+    const prev = previousPeriod(y, m, half);
+    const prevEndKey = periodEndDate(prev.y, prev.m, prev.half);
+    const periodRangeVal = periodRange(y, m, half);
+
+    const [reports, expenses, receivables, invCounts, vendorPays, supRecords] = await Promise.all([
+      dbGet('store_daily_report', `store_id=in.(${ids})&date=gte.${monthStart}&date=lte.${monthEnd}`),
+      dbGet('store_daily_expenses', `store_id=in.(${ids})&date=gte.${monthStart}&date=lte.${monthEnd}`),
+      dbGet('store_receivables', `store_id=in.(${ids})&collected=eq.false`),
+      dbGet('store_inventory_counts', `store_id=in.(${ids})&period_end_date=in.(${endKey},${prevEndKey})`),
+      dbGet('store_vendor_payments', `store_id=in.(${ids})&period_end_date=eq.${endKey}`),
+      dbGet('supervision_records', `store_id=in.(${ids})&order=created_at.desc`)
+    ]);
+
+    const byStore = id => ({
+      reports: (Array.isArray(reports) ? reports : []).filter(r => r.store_id === id),
+      expenses: (Array.isArray(expenses) ? expenses : []).filter(e => e.store_id === id),
+      receivables: (Array.isArray(receivables) ? receivables : []).filter(r => r.store_id === id),
+      begin: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_end_date === prevEndKey),
+      end: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_end_date === endKey),
+      vendorTotal: (Array.isArray(vendorPays) ? vendorPays : []).filter(v => v.store_id === id).reduce((s, v) => s + Number(v.amount || 0), 0),
+      latestSupervision: (Array.isArray(supRecords) ? supRecords : []).find(r => r.store_id === id)
+    });
+
+    overviewRows = activeStores.map(s => {
+      const d = byStore(s.id);
+      const revenue = d.reports.reduce((sum, r) => sum + calcTotal(r), 0);
+      const cost = d.expenses.reduce((sum, e) => sum + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+      const receivableBalance = d.receivables.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+      const effs = d.reports.map(r => Number(r.labor_hours) ? calcTotal(r) / Number(r.labor_hours) : null).filter(v => v != null);
+      const avgEff = effs.length ? effs.reduce((a, b) => a + b, 0) / effs.length : null;
+      const pots = d.reports.map(r => Number(r.pot_count) ? calcTotal(r) / Number(r.pot_count) : null).filter(v => v != null);
+      const avgPot = pots.length ? pots.reduce((a, b) => a + b, 0) / pots.length : null;
+
+      let margin = null;
+      if (d.begin && d.end) {
+        const periodRevenue = d.reports
+          .filter(r => r.date >= periodRangeVal.start && r.date <= periodRangeVal.end)
+          .reduce((sum, r) => sum + calcTotal(r), 0);
+        const usage = Number(d.begin.inventory_value) + d.vendorTotal - Number(d.end.inventory_value);
+        margin = periodRevenue > 0 ? (periodRevenue - usage) / periodRevenue * 100 : null;
+      }
+
+      return {
+        id: s.id, name: s.name,
+        days: d.reports.length,
+        revenue, net: revenue - cost, margin,
+        receivable: receivableBalance,
+        efficiency: avgEff, perPot: avgPot,
+        supervision: d.latestSupervision ? Number(d.latestSupervision.score) : null
+      };
+    });
+
+    renderOverview();
+  }
+
+  function sortOverview(key) {
+    overviewSortDir = overviewSortKey === key ? -overviewSortDir : 1;
+    overviewSortKey = key;
+    renderOverview();
+  }
+
+  function renderOverview() {
+    const tbody = document.getElementById('overview-tbody');
+    const rows = overviewRows.slice().sort((a, b) => {
+      const av = a[overviewSortKey], bv = b[overviewSortKey];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === 'string') return av.localeCompare(bv) * overviewSortDir;
+      return (av - bv) * overviewSortDir;
+    });
+    tbody.innerHTML = rows.map(r => `<tr>
+      <td class="store-name" onclick="goToStore('${r.id}')">${esc(r.name)}</td>
+      <td class="${r.days < 5 ? 'flag' : ''}">${r.days} 天</td>
+      <td>$${Math.round(r.revenue).toLocaleString()}</td>
+      <td>$${Math.round(r.net).toLocaleString()}</td>
+      <td class="${r.margin != null && Math.abs(r.margin - 48) > 15 ? 'flag' : ''}">${r.margin != null ? r.margin.toFixed(1) + '%' : '—'}</td>
+      <td>$${Math.round(r.receivable).toLocaleString()}</td>
+      <td>${r.efficiency != null ? r.efficiency.toFixed(1) : '—'}</td>
+      <td>${r.perPot != null ? Math.round(r.perPot).toLocaleString() : '—'}</td>
+      <td>${r.supervision != null ? r.supervision.toFixed(0) + '%' : '—'}</td>
+    </tr>`).join('');
   }
 </script>
 
