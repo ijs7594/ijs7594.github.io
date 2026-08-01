@@ -45,7 +45,6 @@
     background:var(--card); border:1px solid var(--border); border-radius:14px;
     padding:18px; box-shadow:var(--shadow); overflow-x:auto;
   }
-  .diagram-card pre.mermaid{margin:0; display:flex; justify-content:center; min-width:640px;}
 
   .legend{display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:14px; font-size:12px; color:var(--text-mid);}
   .legend span{display:inline-flex; align-items:center; gap:6px;}
@@ -116,49 +115,6 @@
     <p>把這份文件當基準，遇到現場跟文件對不上，就回頭質疑。</p>
     <span>這不是一份照著做就好的清單，是給你判斷用的參考點。</span>
   </div>
-
-  <section>
-    <h2>工程流程圖（順序示意——不寫死天數，正確數字看下面的 WBS 表）</h2>
-    <div class="diagram-card">
-      <pre class="mermaid">
-%%{init: {'theme':'base', 'flowchart': {'htmlLabels': true, 'padding': 12}, 'themeVariables': {
-  'primaryColor':'#F5EDE0','primaryTextColor':'#2C1A0E','primaryBorderColor':'#D4A574',
-  'lineColor':'#8B5E3C','fontFamily':'-apple-system,PingFang TC,Noto Sans TC,sans-serif','fontSize':'22px'
-}}}%%
-flowchart TD
-  Z["簽約"]
-  WALK["聯合現場丈量勘查"]
-  A0["各工班報價／排班／合約用印"]
-  PREP["招牌設計製作／設備下單<br/>台電外接電申請／人員招募＋訓練＋認證<br/>（簽約當天同步啟動）"]
-  B["拆除進場"]
-  STEEL["輕鋼架（須等拆除淨空才能進場）"]
-  QUOTE["丈量報價"]
-  MID["裝潢工程期（同期進行）<br/>木工/玻璃/水電/冷氣/油漆/鐵工/地板"]
-  FINAL["設備裝機／招牌安裝／水塔<br/>監控音響裝機／斜坡鐵工／遮雨棚"]
-  DELAY["延誤緩衝（非標準，目標0）"]
-  TEST["全功率試車＋驗收"]
-  OPEN["軟性開幕"]
-  M["試營運期"]
-  OPEN2["正式開幕"]
-
-  Z --> WALK --> A0 --> B --> STEEL --> QUOTE --> MID --> FINAL --> DELAY --> TEST --> OPEN --> M --> OPEN2
-  Z -.並行.-> PREP
-
-  classDef milestone fill:#2C1A0E,stroke:#2C1A0E,color:#fff;
-  classDef critical fill:#F7DAD6,stroke:#C0524A,color:#2C1A0E,stroke-width:4px;
-  classDef float fill:#E7F1F8,stroke:#2F7BB8,color:#2C1A0E,stroke-width:3px,stroke-dasharray: 5 4;
-
-  class Z,OPEN,OPEN2 milestone
-  class WALK,A0,B,STEEL,QUOTE,MID,FINAL,DELAY,TEST,M critical
-  class PREP float
-      </pre>
-    </div>
-    <div class="legend">
-      <span><i style="background:#2C1A0E"></i>里程碑</span>
-      <span><i style="background:#F7DAD6;border:2px solid #C0524A"></i>要徑（0浮時，完全不能拖）</span>
-      <span><i style="background:#E7F1F8;border:2px dashed #2F7BB8"></i>有浮時（可以晚一點沒關係）</span>
-    </div>
-  </section>
 
   <section>
     <h2>建議工期甘特圖（長短示意相對比例，正確天數看下面的 WBS 表）</h2>
@@ -373,10 +329,5 @@ flowchart TD
 
   <footer>貴焿古早味麵線羹 · 展店工程傳承範本 · 以仁武店經驗為基礎，隨每次展店持續更新</footer>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script>
-  mermaid.initialize({ startOnLoad: true, securityLevel: "loose" });
-</script>
 </body>
 </html>
