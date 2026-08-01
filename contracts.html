@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>合約管理 · 今年貴焿助理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --green-online:#4CAF7D;
+      --border:      #EDE0D0;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: var(--brown-dark);
+      display: flex; flex-direction: column;
+      padding: 20px 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .avatar-sq {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--caramel), var(--brown-main));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: white; font-weight: 700;
+    }
+    .brand-text h2 { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    .brand-text span { font-size: 11px; color: var(--sand); }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; cursor: pointer;
+      transition: background 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.active { background: rgba(193,123,78,0.25); border-left: 3px solid var(--caramel); padding-left: 13px; }
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+    .nav-text { font-size: 12px; color: #fff; }
+    .nav-sub  { font-size: 10px; color: var(--text-light); }
+
+    .sidebar-bottom { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; background: var(--warm-white); }
+
+    .main-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: var(--warm-white); z-index: 10;
+    }
+    .main-header-left h1 { font-size: 20px; font-weight: 700; color: var(--text-dark); }
+    .main-header-left .sync-info { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .main-header-left .sync-info span { color: var(--text-mid); font-weight: 600; }
+
+    .access-badge {
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .access-badge.full { background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.3); color: var(--green-online); }
+    .access-badge.summary { background: rgba(158,123,96,0.12); border: 1px solid rgba(158,123,96,0.3); color: var(--text-light); }
+
+    .content { padding: 24px 28px 40px; }
+
+    .store-group { margin-bottom: 28px; }
+    .store-group-title { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 10px; letter-spacing: 0.5px; }
+
+    .card-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .doc-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .doc-card:hover { border-color: var(--caramel); }
+
+    .doc-card-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 18px; cursor: pointer;
+    }
+    .doc-icon { font-size: 20px; flex-shrink: 0; }
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-title { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
+    .doc-meta { font-size: 11px; color: var(--text-light); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .status-pill { padding: 2px 9px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .status-草案 { background: rgba(158,123,96,0.15); color: var(--text-mid); }
+    .status-待公告 { background: rgba(193,123,78,0.15); color: var(--caramel); }
+    .status-生效中 { background: rgba(76,175,125,0.15); color: var(--green-online); }
+    .status-已作廢 { background: rgba(0,0,0,0.08); color: #999; text-decoration: line-through; }
+    .doc-chevron { font-size: 12px; color: var(--text-light); transition: transform 0.15s; flex-shrink: 0; }
+    .doc-card.open .doc-chevron { transform: rotate(90deg); }
+
+    .doc-body {
+      display: none; padding: 0 18px 18px 50px;
+      font-size: 12px; line-height: 1.9; color: var(--text-mid);
+      white-space: pre-wrap; word-break: break-word;
+      border-top: 1px solid var(--border);
+      max-height: 480px; overflow-y: auto;
+    }
+    .doc-card.open .doc-body { display: block; padding-top: 16px; }
+
+    .lock-note {
+      font-size: 11px; color: var(--text-light); padding: 0 18px 16px 50px;
+    }
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; padding: 60px 0; color: var(--text-light); text-align: center;
+    }
+    .empty-icon { font-size: 36px; opacity: 0.4; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text-mid); }
+    .empty-sub { font-size: 13px; line-height: 1.7; }
+
+    /* ── Mobile ── */
+    .mobile-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px; justify-content: space-around; align-items: center;
+      z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">焿</div>
+    <div class="brand-text">
+      <h2>共好中樞</h2>
+      <span>今年貴焿助理系統</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">○</span>
+      <div><div class="nav-text">貴焿共好系統</div><div class="nav-sub">管理中樞</div></div>
+    </a>
+    <a class="nav-item" href="sop.html">
+      <span class="nav-icon">📖</span>
+      <div><div class="nav-text">一日流程</div><div class="nav-sub">作業手冊</div></div>
+    </a>
+    <a class="nav-item" href="inbox.html">
+      <span class="nav-icon">📋</span>
+      <div><div class="nav-text">待辦</div><div class="nav-sub">Inbox</div></div>
+    </a>
+    <a class="nav-item" href="chronicle.html">
+      <span class="nav-icon">📜</span>
+      <div><div class="nav-text">建制里程碑</div><div class="nav-sub">進化歷程</div></div>
+    </a>
+    <a class="nav-item active" href="contracts.html">
+      <span class="nav-icon">📄</span>
+      <div><div class="nav-text">合約管理</div><div class="nav-sub">加盟／合夥／經理人</div></div>
+    </a>
+    <a class="nav-item" href="personal.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">個人管理</div><div class="nav-sub">漢柏的空間</div></div>
+    </a>
+    <a class="nav-item" href="stores.html">
+      <span class="nav-icon">🏪</span>
+      <div><div class="nav-text">展店紀錄</div><div class="nav-sub">經驗值系統</div></div>
+    </a>
+    <a class="nav-item" href="supervision.html">
+      <span class="nav-icon">🔍</span>
+      <div><div class="nav-text">督導管理</div><div class="nav-sub">TYP 稽核</div></div>
+    </a>
+    <a class="nav-item" href="finance.html">
+      <span class="nav-icon">📊</span>
+      <div><div class="nav-text">營業儀表板</div><div class="nav-sub">財務數據</div></div>
+    </a>
+    <a class="nav-item" href="scripts.html">
+      <span class="nav-icon">✍️</span>
+      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
+    </a>
+  </nav>
+  <div class="sidebar-bottom"></div>
+</aside>
+
+<main class="main">
+  <div class="main-header">
+    <div class="main-header-left">
+      <h1>合約管理</h1>
+      <div class="sync-info" id="sync-info">載入中…</div>
+    </div>
+    <span class="access-badge summary" id="access-badge">摘要檢視</span>
+  </div>
+
+  <div class="content" id="content">
+    <div class="empty-state">
+      <div class="empty-icon">📄</div>
+      <div class="empty-title">載入合約資料中</div>
+    </div>
+  </div>
+</main>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item" href="inbox.html"><span class="mn-icon">📋</span><span>待辦</span></a>
+  <a class="mobile-nav-item active" href="contracts.html"><span class="mn-icon">📄</span><span>合約</span></a>
+  <a class="mobile-nav-item" href="stores.html"><span class="mn-icon">🏪</span><span>展店</span></a>
+  <a class="mobile-nav-item" href="supervision.html"><span class="mn-icon">🔍</span><span>督導</span></a>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_X3HEDV1lG1ZYf1SQ3Lvc2A_huzbsrGb';
+
+const params = new URLSearchParams(window.location.search);
+const token = params.get('token');
+
+const contentEl = document.getElementById('content');
+const syncInfoEl = document.getElementById('sync-info');
+const badgeEl = document.getElementById('access-badge');
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function docIcon(category) {
+  if (category === '加盟契約') return '🤝';
+  if (category === '合夥契約') return '👥';
+  if (category === '經理人合約') return '🧑‍💼';
+  return '📘';
+}
+
+function renderCard(doc, hasContent) {
+  const store = doc.store_name || '總部政策';
+  const meta = `${escapeHtml(doc.category)} · v${doc.version}` + (doc.effective_date ? ` · 生效 ${doc.effective_date}` : '');
+  const bodyHtml = hasContent
+    ? `<div class="doc-body">${escapeHtml(doc.content)}</div>`
+    : `<div class="lock-note">🔒 完整內容需透過該店專屬連結查看，請洽漢柏取得連結。</div>`;
+  return `
+    <div class="doc-card">
+      <div class="doc-card-head" onclick="this.parentElement.classList.toggle('open')">
+        <span class="doc-icon">${docIcon(doc.category)}</span>
+        <div class="doc-info">
+          <div class="doc-title">${escapeHtml(doc.title)}</div>
+          <div class="doc-meta">
+            <span class="status-pill status-${doc.status}">${doc.status}</span>
+            <span>${meta}</span>
+          </div>
+        </div>
+        <span class="doc-chevron">▶</span>
+      </div>
+      ${bodyHtml}
+    </div>
+  `;
+}
+
+function groupByStore(docs) {
+  const groups = {};
+  for (const d of docs) {
+    const key = d.store_name || '總部政策';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(d);
+  }
+  return groups;
+}
+
+function render(docs, hasContent) {
+  if (!docs.length) {
+    contentEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <div class="empty-title">${token ? '這組連結查不到任何合約' : '目前沒有合約資料'}</div>
+        <div class="empty-sub">${token ? '連結可能已失效，請跟漢柏確認。' : ''}</div>
+      </div>`;
+    return;
+  }
+  const groups = groupByStore(docs);
+  let html = '';
+  for (const store in groups) {
+    html += `<div class="store-group">
+      <div class="store-group-title">${escapeHtml(store)}</div>
+      <div class="card-list">${groups[store].map(d => renderCard(d, hasContent)).join('')}</div>
+    </div>`;
+  }
+  contentEl.innerHTML = html;
+}
+
+async function load() {
+  try {
+    if (token) {
+      badgeEl.textContent = '完整檢視';
+      badgeEl.className = 'access-badge full';
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_contracts_by_token`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_token: token })
+      });
+      const docs = await res.json();
+      if (!res.ok || !Array.isArray(docs)) throw new Error('讀取失敗');
+      syncInfoEl.textContent = `共 ${docs.length} 份合約 · 完整內容`;
+      render(docs, true);
+    } else {
+      badgeEl.textContent = '摘要檢視';
+      badgeEl.className = 'access-badge summary';
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/contract_summaries?select=*&order=created_at.asc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const docs = await res.json();
+      if (!res.ok || !Array.isArray(docs)) throw new Error('讀取失敗');
+      syncInfoEl.textContent = `共 ${docs.length} 份合約 · 摘要（完整內容需密鑰連結）`;
+      render(docs, false);
+    }
+  } catch (err) {
+    contentEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">讀取失敗</div>
+        <div class="empty-sub">${escapeHtml(err.message)}</div>
+      </div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
