@@ -495,17 +495,15 @@
       return;
     }
 
-    const signedIds = new Set((storeSigs || []).map(s => s.contract_id));
-    const pendingIds = new Set((storeSigs || []).filter(s => s.status === 'pending').map(s => s.contract_id));
+    const approvedIds = new Set((storeSigs || []).filter(s => s.status === 'approved').map(s => s.contract_id));
+    const pendingIds  = new Set((storeSigs || []).filter(s => s.status === 'pending').map(s => s.contract_id));
 
     const typeIcon = { franchise: '📜', partnership: '🤝', manager: '👤', policy: '📋' };
 
     list.innerHTML = all.map(c => {
-      const signed = signedIds.has(c.id);
-      const pending = pendingIds.has(c.id);
       let badgeClass = 'unsigned', badgeText = '未簽署';
-      if (signed && !pending) { badgeClass = 'signed'; badgeText = '已核可'; }
-      else if (pending) { badgeClass = 'pending'; badgeText = '待核可'; }
+      if (approvedIds.has(c.id))     { badgeClass = 'signed';  badgeText = '已核可'; }
+      else if (pendingIds.has(c.id)) { badgeClass = 'pending'; badgeText = '待核可'; }
       return `
         <div class="contract-item" onclick="openContract(${c.id})">
           <div class="c-icon">${typeIcon[c.contract_type] || '📄'}</div>
@@ -533,7 +531,7 @@
 
     // Check if already signed
     const sigs = await dbGet('contract_signatures',
-      `contract_id=eq.${id}&store_id=eq.${currentStoreId}&signer_line_uid=eq.${currentUser.uid}&order=created_at.desc&limit=1`);
+      `contract_id=eq.${id}&store_id=eq.${currentStoreId}&signer_line_uid=eq.${currentUser.uid}&status=in.(pending,approved)&order=created_at.desc&limit=1`);
     isSigned = sigs && sigs.length > 0;
 
     if (isSigned) {
