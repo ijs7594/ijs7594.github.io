@@ -121,6 +121,22 @@
   </div>
 
   <section>
+    <h2>教練回饋：下一階段壓縮目標</h2>
+    <p class="sub" style="margin-bottom:14px;">下面的流程圖／甘特圖／WBS 表，記錄的是<b>富國店實際發生的基準</b>——先有真實案例才能往下扎根。以下是顧問看過之後，給下一家店的壓縮方向，是<b>目標</b>，不是現況，兩者不要混著看。</p>
+    <div class="diagram-card">
+      <table class="wbs">
+        <tr><th>項目</th><th>目前基準（富國店）</th><th>壓縮目標（第二期起）</th></tr>
+        <tr><td>簽約→聯合丈量→正式動工</td><td>約 16 天</td><td>10 天以內</td></tr>
+        <tr><td>招牌（設計到完工）</td><td>18 天</td><td>7-10 天（固定配合廠商，爭取提前掛招牌行銷）</td></tr>
+        <tr><td>設備（確認到交貨）</td><td>20 天</td><td>10 天以內</td></tr>
+        <tr><td>延誤緩衝</td><td>當作標準工期的一部分（5天）</td><td>視為非常態，目標壓到 0；真的發生要提前告知加盟業主</td></tr>
+        <tr><td>簽約→軟性開幕 總天數</td><td>約 31 天</td><td>21 天（第二期起）／16 天（第16家店起的長期目標，對照中國連鎖品牌可壓到 5-7 天的極限值）</td></tr>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:10px;">連鎖品牌的展店標準本來就該往「精實壓縮＋模組化」走，這份文件會持續照每次真實案例修正基準，同時逐步往上面的目標靠近。</p>
+  </section>
+
+  <section>
     <h2>工程流程圖（高階總覽——詳細天數看下面的甘特圖跟 WBS 表）</h2>
     <div class="diagram-card">
       <pre class="mermaid">
@@ -135,6 +151,7 @@ flowchart TD
   SIGN["招牌設計<br/>18天"]
   EQUIP["設備下單<br/>20天"]
   POWER["台電外接電申請<br/>14天"]
+  TRAIN["人員招募＋訓練＋認證<br/>基礎人員10-12天／主管5-7天<br/>試營運前完成職能認證"]
   B["拆除進場<br/>2天"]
   STEEL["輕鋼架(天花板骨架)<br/>2天，需等拆除淨空才能進場"]
   QUOTE["丈量報價<br/>5天"]
@@ -150,6 +167,7 @@ flowchart TD
   Z -.並行.-> SIGN --> FINAL
   Z -.並行.-> EQUIP --> FINAL
   Z -.並行.-> POWER --> TEST
+  Z -.並行.-> TRAIN --> TEST
 
   classDef milestone fill:#2C1A0E,stroke:#2C1A0E,color:#fff;
   classDef critical fill:#F7DAD6,stroke:#C0524A,color:#2C1A0E,stroke-width:4px;
@@ -157,7 +175,7 @@ flowchart TD
 
   class Z,OPEN,OPEN2 milestone
   class WALK,A0,B,STEEL,QUOTE,MID,FINAL,DELAY,TEST,M critical
-  class SIGN,EQUIP,POWER float
+  class SIGN,EQUIP,POWER,TRAIN float
       </pre>
     </div>
     <div class="legend">
@@ -182,6 +200,10 @@ flowchart TD
           <div class="gantt-row"><div class="gantt-label">招牌設計製作</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/19; background:#E0A458;">1-18</div><div class="gantt-bar float-tail" style="grid-column:19/22;">浮3天</div></div></div>
           <div class="gantt-row"><div class="gantt-label">廚房設備下單</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/21; background:#B08968;">1-20（下單＝簽約當天）</div><div class="gantt-bar float-tail" style="grid-column:21/22;">浮1天</div></div></div>
           <div class="gantt-row"><div class="gantt-label">台電外接電申請</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/15; background:#9E8BC7;">1-14</div><div class="gantt-bar float-tail" style="grid-column:15/24;">浮9天</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">人員招募（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:1/14; background:#7A8B6F;">1-13</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">基礎人員訓練（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:14/25; background:#7A8B6F;">14-24（10-12天）</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">主管訓練（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:14/20; background:#9BAA8F;">14-19（5-7天）</div></div></div>
+          <div class="gantt-row"><div class="gantt-label">職能認證考核（顧問目標）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:29/31; background:#7A8B6F;">29-30</div></div></div>
 
           <div class="gantt-row"><div class="gantt-label">拆除進場（要徑）</div><div class="gantt-track"><div class="gantt-bar crit" style="grid-column:7/10; background:#C17B4E;">7-9</div></div></div>
           <div class="gantt-row"><div class="gantt-label">輕鋼架（天花板骨架）</div><div class="gantt-track"><div class="gantt-bar" style="grid-column:9/12; background:#8B5E3C;">9-11</div><div class="gantt-bar float-tail" style="grid-column:12/15;">浮3天</div></div></div>
@@ -209,6 +231,7 @@ flowchart TD
     <div class="legend">
       <span><i style="background:#C0524A;border:2px solid #C0524A"></i>要徑（紅框，0浮時，完全不能拖）</span>
       <span><i style="background:#2F7BB8"></i>本版新增（藍色）</span>
+      <span><i style="background:#7A8B6F"></i>顧問建議目標（人員招募訓練，非富國店真實數字）</span>
       <span style="border:1.5px dashed var(--new); background:transparent; padding:1px 6px; border-radius:4px; color:var(--new)">浮時 N 天＝可以晚開始這麼多天，仍不影響軟性開幕日</span>
     </div>
     <p class="sub" style="margin-top:10px;">拆除到軟性開幕原本規劃約 18-19 天，但真實案例多了 5 天延誤（玻璃臨時重新設計、淘寶設備晚到、等水電協助裝家具），所以軟性開幕落在 Day 31（簽約後第 31 天，跟真實日期 7/8 拆除、8/1 試營運對得起來）。</p>
@@ -241,7 +264,7 @@ flowchart TD
           <li>玻璃要在拆除完就先估尺寸開始生產，等鐵工完工才開始等於平白多花 2 週——這是 v3.1 修正的重點</li>
           <li>玻璃設計定案前要先讓廠商確認結構安全可行性，不是只確認尺寸——富國店就有廠商在最後一刻說設計不安全拒做，導致重新設計，多花了時間</li>
           <li>廚房設備20天前置期只比需求時間早1天，等同沒有浮時，晚下單當天就會延誤開幕</li>
-          <li>淘寶來的設備／家具（電磁爐、桌子）常常卡在最後幾天才到貨，還要再等水電協助安裝，富國店這段實際多花了約5天，排時程時建議直接抓進去，不要當作意外</li>
+          <li>淘寶來的設備／家具（電磁爐、桌子）常常卡在最後幾天才到貨，還要再等水電協助安裝，富國店這段實際多花了約5天——但顧問提醒：這不該當成標準工期的一部分，目標是想辦法壓到0（例如提早下單、備援供應商），真的發生要提前告知加盟業主，不要用「反正本來就會delay」的心態排時程</li>
         </ul>
       </div>
       <div class="callout coord">
@@ -250,12 +273,13 @@ flowchart TD
           <li>玻璃工程要提前跟廠商溝通：先用拆除後的粗估尺寸下單生產，最後現場微調再等鐵工，且設計階段就要問清楚結構安全性</li>
           <li>各工班進場前需完成圖面確認與現場交底，避免重工與等待</li>
           <li>冷氣有3天浮時、招牌有3天浮時，優先順位可以排在要徑項目之後</li>
+          <li>人員招募要跟工程同步啟動，不要等工程快完工才想到找人，不然人員訓練會變成真正的瓶頸</li>
         </ul>
       </div>
       <div class="callout goal">
         <h3>✅ 完成目標</h3>
         <ul>
-          <li>Day 31 完成試車＋驗收，軟性開幕／試營運開始</li>
+          <li>Day 31 完成試車＋驗收＋職能認證考核，軟性開幕／試營運開始</li>
           <li>試營運實際抓約 26 天，接著約 5 天開幕促銷週，等於正式開幕</li>
         </ul>
       </div>
@@ -274,28 +298,32 @@ flowchart TD
         <tr><td>3</td><td>招牌設計製作</td><td>0</td><td>18天</td><td>1</td><td>18</td><td><span class="wbs-badge float">浮時 3天</span></td></tr>
         <tr><td>4</td><td>廚房設備下單（常用品項）</td><td>0</td><td>20天</td><td>1</td><td>20</td><td><span class="wbs-badge float">浮時 1天</span></td></tr>
         <tr><td>5</td><td>台電外接電申請</td><td>0</td><td>14天</td><td>1</td><td>14</td><td><span class="wbs-badge float">浮時 9天</span></td></tr>
-        <tr class="crit"><td>6</td><td>拆除進場</td><td>2</td><td>2天</td><td>7</td><td>9</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr><td>7</td><td>輕鋼架（天花板骨架，須等拆除淨空才能進場，避免工安風險）</td><td>6</td><td>2天</td><td>9</td><td>11</td><td><span class="wbs-badge float">浮時 3天</span></td></tr>
-        <tr class="crit"><td>8</td><td>丈量報價＋工班排程（含冷氣2家比較）</td><td>6</td><td>5天</td><td>9</td><td>14</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr><td>9</td><td>冷氣工程安裝</td><td>8</td><td>9天</td><td>12</td><td>21</td><td><span class="wbs-badge float">浮時 3天</span></td></tr>
-        <tr class="crit"><td>10</td><td>木工進場</td><td>8</td><td>3天</td><td>14</td><td>17</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>11</td><td>玻璃工程（生產＋現場加工）</td><td>8</td><td>7天</td><td>15</td><td>22</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>12</td><td>水電施工</td><td>8</td><td>5天</td><td>17</td><td>22</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>13</td><td>油漆</td><td>10</td><td>1天</td><td>17</td><td>18</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>14</td><td>鐵工／五金骨架</td><td>13</td><td>1天</td><td>18</td><td>19</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>15</td><td>地板工程</td><td>14</td><td>1天</td><td>19</td><td>20</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr><td>16</td><td>設備到貨＋安裝定位</td><td>4,15</td><td>2天</td><td>21</td><td>23</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
-        <tr><td>17</td><td>招牌現場安裝＋廣告輸出＋POS（吊車一併吊裝水塔）</td><td>3,11</td><td>2天</td><td>21</td><td>23</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
-        <tr class="crit"><td>18</td><td>監控／音響裝機</td><td>11,12</td><td>1天</td><td>22</td><td>22</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr><td>19</td><td>斜坡鐵工（保護地上電線）</td><td>12</td><td>1天</td><td>22</td><td>23</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
-        <tr><td>20</td><td>遮雨棚安裝</td><td>17</td><td>1天</td><td>23</td><td>24</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
-        <tr class="crit"><td>21</td><td>延誤緩衝（玻璃臨時重新設計／淘寶設備晚到／等水電協助裝家具，真實案例）</td><td>16,17,18,19,20</td><td>5天</td><td>24</td><td>29</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>22</td><td>全功率同時試車</td><td>5,9,21</td><td>1天</td><td>29</td><td>30</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>23</td><td>備料＋正式營運前驗收</td><td>22</td><td>1天</td><td>30</td><td>31</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr><td>24</td><td>🌤️ 軟性開幕／試營運開始</td><td>23</td><td>里程碑</td><td>31</td><td>31</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>25</td><td>試營運期（真實案例：約26天）</td><td>24</td><td>26天</td><td>31</td><td>57</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr class="crit"><td>26</td><td>開幕促銷週（每人3碗特價活動）</td><td>25</td><td>5天</td><td>57</td><td>62</td><td><span class="wbs-badge crit">要徑</span></td></tr>
-        <tr><td>27</td><td>🎉 正式開幕</td><td>25</td><td>里程碑</td><td>57</td><td>57</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>6</td><td>人員招募（儲備待訓人力，目標：工程啟動前備妥）</td><td>0</td><td>13天</td><td>1</td><td>14</td><td><span class="wbs-badge float">顧問建議目標</span></td></tr>
+        <tr><td>7</td><td>基礎門市人員技術訓練（顧問建議10-12天）</td><td>6</td><td>11天</td><td>14</td><td>25</td><td><span class="wbs-badge float">顧問建議目標</span></td></tr>
+        <tr><td>8</td><td>主管訓練（顧問建議5-7天，可與新人訓練重疊）</td><td>6</td><td>6天</td><td>14</td><td>20</td><td><span class="wbs-badge float">顧問建議目標</span></td></tr>
+        <tr><td>9</td><td>職能認證考核（試營運前完成）</td><td>7,8</td><td>1天</td><td>29</td><td>30</td><td><span class="wbs-badge float">顧問建議目標</span></td></tr>
+        <tr class="crit"><td>10</td><td>拆除進場</td><td>2</td><td>2天</td><td>7</td><td>9</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>11</td><td>輕鋼架（天花板骨架，須等拆除淨空才能進場，避免工安風險）</td><td>10</td><td>2天</td><td>9</td><td>11</td><td><span class="wbs-badge float">浮時 3天</span></td></tr>
+        <tr class="crit"><td>12</td><td>丈量報價＋工班排程（含冷氣2家比較）</td><td>10</td><td>5天</td><td>9</td><td>14</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>13</td><td>冷氣工程安裝</td><td>12</td><td>9天</td><td>12</td><td>21</td><td><span class="wbs-badge float">浮時 3天</span></td></tr>
+        <tr class="crit"><td>14</td><td>木工進場</td><td>12</td><td>3天</td><td>14</td><td>17</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>15</td><td>玻璃工程（生產＋現場加工）</td><td>12</td><td>7天</td><td>15</td><td>22</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>16</td><td>水電施工</td><td>12</td><td>5天</td><td>17</td><td>22</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>17</td><td>油漆</td><td>14</td><td>1天</td><td>17</td><td>18</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>18</td><td>鐵工／五金骨架</td><td>17</td><td>1天</td><td>18</td><td>19</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>19</td><td>地板工程</td><td>18</td><td>1天</td><td>19</td><td>20</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>20</td><td>設備到貨＋安裝定位</td><td>4,19</td><td>2天</td><td>21</td><td>23</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
+        <tr><td>21</td><td>招牌現場安裝＋廣告輸出＋POS（吊車一併吊裝水塔）</td><td>3,15</td><td>2天</td><td>21</td><td>23</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
+        <tr class="crit"><td>22</td><td>監控／音響裝機</td><td>15,16</td><td>1天</td><td>22</td><td>22</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>23</td><td>斜坡鐵工（保護地上電線）</td><td>16</td><td>1天</td><td>22</td><td>23</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
+        <tr><td>24</td><td>遮雨棚安裝</td><td>21</td><td>1天</td><td>23</td><td>24</td><td><span class="wbs-badge float">浮時 少量</span></td></tr>
+        <tr class="crit"><td>25</td><td>延誤緩衝（真實案例：玻璃臨時重新設計／淘寶設備晚到／等水電協助裝家具——非標準步驟，目標壓到0，真的發生要提前告知加盟業主）</td><td>20,21,22,23,24</td><td>5天</td><td>24</td><td>29</td><td><span class="wbs-badge crit">要徑（非常態）</span></td></tr>
+        <tr class="crit"><td>26</td><td>全功率同時試車</td><td>5,9,13,25</td><td>1天</td><td>29</td><td>30</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>27</td><td>備料＋正式營運前驗收</td><td>26</td><td>1天</td><td>30</td><td>31</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>28</td><td>🌤️ 軟性開幕／試營運開始</td><td>27</td><td>里程碑</td><td>31</td><td>31</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>29</td><td>試營運期（真實案例：約26天）</td><td>28</td><td>26天</td><td>31</td><td>57</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr class="crit"><td>30</td><td>開幕促銷週（每人3碗特價活動）</td><td>29</td><td>5天</td><td>57</td><td>62</td><td><span class="wbs-badge crit">要徑</span></td></tr>
+        <tr><td>31</td><td>🎉 正式開幕</td><td>29</td><td>里程碑</td><td>57</td><td>57</td><td><span class="wbs-badge crit">要徑</span></td></tr>
       </table>
     </div>
   </section>
@@ -305,16 +333,19 @@ flowchart TD
     <div class="checklist-poster">
       <div class="cl-row"><div class="cl-box"></div><div class="cl-name">1. 聯合現場丈量勘查完成（各工班都到場看過現場）</div><div class="cl-signer">店長簽</div></div>
       <div class="cl-row"><div class="cl-box"></div><div class="cl-name">2. 各工班報價／排班／合約用印完成，可以拆除進場</div><div class="cl-signer">店長簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">6. 拆除完成，現場淨空可進輕鋼架／丈量報價</div><div class="cl-signer">店長簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">8. 丈量報價完成（含冷氣2家比較），木工／玻璃／水電可進場</div><div class="cl-signer">店長簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">10,12,13. 木工／水電／油漆完成，可進行鐵工</div><div class="cl-signer">督導簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">14. 鐵工完成，可鋪地板</div><div class="cl-signer">店長簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">11. 玻璃工程完成，可安裝招牌／搬進設備</div><div class="cl-signer">督導簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">6. 人員招募完成，可安排新人／主管訓練</div><div class="cl-signer">督導簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">10. 拆除完成，現場淨空可進輕鋼架／丈量報價</div><div class="cl-signer">店長簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">12. 丈量報價完成（含冷氣2家比較），木工／玻璃／水電可進場</div><div class="cl-signer">店長簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">14,16,17. 木工／水電／油漆完成，可進行鐵工</div><div class="cl-signer">督導簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">18. 鐵工完成，可鋪地板</div><div class="cl-signer">店長簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">15. 玻璃工程完成，可安裝招牌／搬進設備</div><div class="cl-signer">督導簽</div></div>
       <div class="cl-row"><div class="cl-box"></div><div class="cl-name">5. 台電外接電完成，才能進行全功率試車</div><div class="cl-signer">督導簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">16,17,18,19,20. 設備／招牌水塔／監控音響／斜坡鐵工／遮雨棚完成，可試車</div><div class="cl-signer">督導簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">21. 全功率同時試車通過，可驗收</div><div class="cl-signer">你本人簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">22. 正式營運前驗收合格，可軟性開幕／試營運</div><div class="cl-signer">你本人簽</div></div>
-      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">24. 試營運期無重大缺失，可正式開幕</div><div class="cl-signer">你本人簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">7,8. 新人／主管訓練完成，可進行職能認證考核</div><div class="cl-signer">督導簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">20,21,22,23,24. 設備／招牌水塔／監控音響／斜坡鐵工／遮雨棚完成，可試車</div><div class="cl-signer">督導簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">9. 職能認證考核通過，人員可以上線</div><div class="cl-signer">你本人簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">26. 全功率同時試車通過，可驗收</div><div class="cl-signer">你本人簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">27. 正式營運前驗收合格，可軟性開幕／試營運</div><div class="cl-signer">你本人簽</div></div>
+      <div class="cl-row"><div class="cl-box"></div><div class="cl-name">29. 試營運期無重大缺失，可正式開幕</div><div class="cl-signer">你本人簽</div></div>
     </div>
   </section>
 
@@ -331,6 +362,8 @@ flowchart TD
         <p>拆除前現場還有舊隔間擋著，管線走向、樑柱位置都看不清楚。太早丈量，抓的是不準的數字。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼台電外接電要簽約當天就申請？</h4></div>
         <p>電力公司拉線進來大概要 1-2 週，是店家自己完全排不上的外部時間，晚申請不會因為你趕工就變快。簽約當天跟招牌、設備一樣馬上申請，才不會卡在最後全功率試車那一關。</p></div>
+      <div class="kh"><div class="kh-head"><h4>為什麼人員招募要簽約當天就啟動，不是等工程快完工才找？</h4></div>
+        <p>訓練跟認證需要時間（基礎人員10-12天、主管5-7天），如果等工程完工才開始招募，人員訓練會變成整條時程最後、也最沒人注意的瓶頸——工程準時完工，但沒有訓練好的人可以上線，一樣沒辦法準時軟性開幕。目標是工程正式啟動前，人就已經找齊、開始待訓，讓「工程」跟「人」兩條線並行推進，最後在職能認證考核那一關會合。</p></div>
       <div class="kh"><div class="kh-head"><h4>為什麼輕鋼架不能跟拆除同時進場？</h4></div>
         <p>輕鋼架是做天花板骨架的另一組工班，拆除現場還有清運中的雜物、鋭利邊角，這時候讓輕鋼架師傅進來施工，容易割傷手。要等拆除完、現場淨空之後才能讓輕鋼架進場，雖然都排在同一週，順序還是要分開。</p></div>
       <div class="kh"><div class="kh-head"><h4>水塔為什麼要跟招牌一起裝？</h4></div>
