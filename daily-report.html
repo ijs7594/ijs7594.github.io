@@ -293,6 +293,16 @@
       </div>
 
       <div class="field-group">
+        <div class="field-group-label">現金與其他</div>
+        <div class="field-row">
+          <div class="field"><label>實存現金</label><input type="number" id="f-cash-counted" oninput="updatePreview()" /></div>
+          <div class="field"><label>未存（零錢）</label><input type="number" id="f-cash-undeposited" /></div>
+          <div class="field"><label>整日鍋數</label><input type="number" step="0.01" id="f-pot-count" /></div>
+          <div class="field"><label>時數</label><input type="number" step="0.01" id="f-labor-hours" oninput="updatePreview()" /></div>
+        </div>
+      </div>
+
+      <div class="field-group">
         <div class="field-group-label">未收款登記（機關／團體訂購，還沒收到錢，可新增多筆）</div>
         <div class="rcv-row">
           <input class="rcv-unit" id="rcv-unit" placeholder="單位（機關／團體）" />
@@ -304,16 +314,6 @@
         <div id="today-receivable-list"></div>
         <div class="rcv-note">今日未收款合計：<b id="today-receivable-total">$0</b>（會自動算進整日營收總額，不用另外填）</div>
         <div class="rcv-note">想確認之前登記的錢收到了沒、標記已收，請到「應收應付與毛利」頁面查看整份清單。</div>
-      </div>
-
-      <div class="field-group">
-        <div class="field-group-label">現金與其他</div>
-        <div class="field-row">
-          <div class="field"><label>實存現金</label><input type="number" id="f-cash-counted" oninput="updatePreview()" /></div>
-          <div class="field"><label>未存（零錢）</label><input type="number" id="f-cash-undeposited" /></div>
-          <div class="field"><label>整日鍋數</label><input type="number" step="0.01" id="f-pot-count" /></div>
-          <div class="field"><label>時數</label><input type="number" step="0.01" id="f-labor-hours" oninput="updatePreview()" /></div>
-        </div>
       </div>
 
       <div class="live-preview" id="live-preview"></div>
