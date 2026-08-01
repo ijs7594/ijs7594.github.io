@@ -224,9 +224,11 @@
 
   <div class="content">
     <div class="price-banner" id="price-banner" style="display:none;"></div>
+    <div class="price-banner" id="overdue-banner" style="display:none;"></div>
     <div class="section-tabs">
       <div class="section-tab active" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
       <div class="section-tab" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
+      <div class="section-tab" data-tab="receivable" onclick="switchSection('receivable')">📋 未收款清單</div>
     </div>
 
     <!-- ══ 毛利結算 ══ -->
@@ -312,6 +314,15 @@
       </div>
     </div>
 
+    <!-- ══ 未收款清單 ══ -->
+    <div id="section-receivable" style="display:none;">
+      <div class="card">
+        <h3>未收款清單（未收餘額：<span id="receivable-balance" style="color:var(--red)">—</span>）</h3>
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:14px;">新增未收款請到「日報表」登記，這裡只負責查看跟標記已收。</p>
+        <div id="receivable-table-wrap"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -371,6 +382,7 @@
 
   let inventoryCounts = [];
   let vendorPayments = [];
+  let receivables = [];
   let dailyReports = [];
   let itemMaster = [];
   let currentCountQty = {};
@@ -407,13 +419,14 @@
     document.getElementById('period-month').onchange = () => { mMonth = Number(document.getElementById('period-month').value); loadMargin(); };
     document.getElementById('vperiod-year').onchange = () => { vYear = Number(document.getElementById('vperiod-year').value); loadVendor(); };
     document.getElementById('vperiod-month').onchange = () => { vMonth = Number(document.getElementById('vperiod-month').value); loadVendor(); };
-    document.getElementById('r-date').value = new Date().toISOString().split('T')[0];
 
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-    currentStoreId = stores[0]?.id || null;
+    const paramStore = new URLSearchParams(location.search).get('store');
+    currentStoreId = (paramStore && stores.some(s => s.id === paramStore)) ? paramStore : (stores[0]?.id || null);
+    sel.value = currentStoreId;
     await loadItemMaster();
     await loadAll();
     await checkPriceChangeBanner();
@@ -430,6 +443,7 @@
     document.querySelectorAll('.section-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
     document.getElementById('section-margin').style.display = tab === 'margin' ? 'block' : 'none';
     document.getElementById('section-vendor').style.display = tab === 'vendor' ? 'block' : 'none';
+    document.getElementById('section-receivable').style.display = tab === 'receivable' ? 'block' : 'none';
   }
 
   function setHalf(half) {
@@ -461,14 +475,18 @@
 
   async function loadAll() {
     if (!currentStoreId) return;
-    [inventoryCounts, vendorPayments] = await Promise.all([
+    [inventoryCounts, vendorPayments, receivables] = await Promise.all([
       dbGet('store_inventory_counts', `store_id=eq.${currentStoreId}&order=period_end_date.asc`),
-      dbGet('store_vendor_payments', `store_id=eq.${currentStoreId}&order=period_end_date.desc`)
+      dbGet('store_vendor_payments', `store_id=eq.${currentStoreId}&order=period_end_date.desc`),
+      dbGet('store_receivables', `store_id=eq.${currentStoreId}&order=date.desc`)
     ]);
     if (!Array.isArray(inventoryCounts)) inventoryCounts = [];
     if (!Array.isArray(vendorPayments)) vendorPayments = [];
+    if (!Array.isArray(receivables)) receivables = [];
     await loadMargin();
     renderVendorTable();
+    renderReceivableTable();
+    checkOverdueBanner();
   }
 
   // ── 盤點與毛利率 ──
@@ -754,6 +772,87 @@
       });
       await loadAll();
     } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 未收款清單（查看＋標記已收，新增在日報表做）──
+  function renderReceivableTable() {
+    const el = document.getElementById('receivable-table-wrap');
+    const balance = receivables.filter(r => !r.collected).reduce((s, r) => s + Number(r.amount || 0), 0);
+    document.getElementById('receivable-balance').textContent = fmt(balance);
+    if (receivables.length === 0) {
+      el.innerHTML = '<div class="empty">還沒有未收款紀錄</div>';
+      return;
+    }
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>日期</th><th>單位</th><th>聯絡人</th><th>電話</th><th>金額</th><th>入賬</th><th></th></tr></thead>
+      <tbody>
+        ${receivables.map(r => `<tr class="${r.collected ? 'paid-row' : ''}">
+          <td>${r.date}</td>
+          <td>${esc(r.unit_name)}</td>
+          <td>${esc(r.contact_person || '—')}</td>
+          <td>${esc(r.phone || '—')}</td>
+          <td>${fmt(r.amount)}</td>
+          <td><span class="status-badge ${r.collected ? 'badge-yes' : 'badge-no'}" onclick="toggleReceivableCollected('${r.id}', ${!r.collected})">${r.collected ? '✅ 已收' : '未收'}</span></td>
+          <td class="row-actions"><button onclick="deleteReceivable('${r.id}')">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  async function toggleReceivableCollected(id, collected) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ collected, collected_date: collected ? new Date().toISOString().split('T')[0] : null })
+      });
+      await loadAll();
+    } catch { alert('更新失敗，請再試一次'); }
+  }
+
+  async function deleteReceivable(id) {
+    if (!confirm('確定要刪除這筆未收款紀錄嗎？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_receivables?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      await loadAll();
+    } catch { alert('刪除失敗，請再試一次'); }
+  }
+
+  // ── 未收款逾期提醒（14天／30天兩個門檻）──
+  function checkOverdueBanner() {
+    const banner = document.getElementById('overdue-banner');
+    const today = new Date();
+    const overdue = receivables
+      .filter(r => !r.collected)
+      .map(r => ({ ...r, days: Math.floor((today - new Date(r.date)) / 86400000) }))
+      .filter(r => r.days >= 14)
+      .sort((a, b) => b.days - a.days);
+
+    const dismissedUntil = localStorage.getItem(`overdue_dismissed_${currentStoreId}`);
+    if (dismissedUntil && new Date(dismissedUntil) > today) { banner.style.display = 'none'; return; }
+
+    if (overdue.length === 0) { banner.style.display = 'none'; return; }
+
+    const lines = overdue.map(r => {
+      const level = r.days >= 30 ? '🔴 超過30天' : '🟡 超過14天';
+      return `${level}：${esc(r.unit_name)}，${fmt(r.amount)}，已經 ${r.days} 天沒收到`;
+    });
+    banner.innerHTML = `<div class="price-banner-inner">
+      <div class="price-banner-title">📢 有 ${overdue.length} 筆未收款逾期，該追一下了</div>
+      ${lines.map(l => `<div class="price-banner-line">${l}</div>`).join('')}
+      <button onclick="dismissOverdueBanner()">知道了</button>
+    </div>`;
+    banner.style.display = 'block';
+  }
+
+  function dismissOverdueBanner() {
+    const until = new Date();
+    until.setDate(until.getDate() + 3);
+    localStorage.setItem(`overdue_dismissed_${currentStoreId}`, until.toISOString());
+    document.getElementById('overdue-banner').style.display = 'none';
   }
 
 </script>

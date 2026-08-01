@@ -73,6 +73,14 @@
     .article-desc { font-size: 12.5px; color: var(--text-light); }
     .article-arrow { margin-left: auto; color: var(--text-light); font-size: 14px; flex-shrink: 0; }
 
+    .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+
+    .status-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .status-item { display: flex; flex-direction: column; gap: 3px; }
+    .status-label { font-size: 11px; color: var(--text-light); }
+    .status-value { font-size: 18px; font-weight: 800; color: var(--text-dark); }
+    .status-value.warn { color: #C0392B; }
+
     /* ── Mobile ── */
     .mobile-nav {
       display: none;
@@ -152,9 +160,21 @@
       <div class="topbar-title">營收帳務</div>
       <div class="topbar-sub">每日營收登記、應收應付與毛利結算</div>
     </div>
+    <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
   </div>
 
   <div class="content">
+    <div class="status-card">
+      <div class="status-item">
+        <div class="status-label">本店未收款餘額</div>
+        <div class="status-value" id="status-receivable">—</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">逾期14天以上</div>
+        <div class="status-value" id="status-overdue">—</div>
+      </div>
+    </div>
+
     <div class="group-label">日常登記</div>
     <div class="article-list">
       <a class="article-card" href="daily-report.html">
@@ -173,7 +193,19 @@
         <div class="article-icon">📒</div>
         <div>
           <div class="article-title">應收應付與毛利</div>
-          <div class="article-desc">未收款登記、廠商進貨貨款、逐項盤點自動算毛利率</div>
+          <div class="article-desc">未收款清單、廠商進貨貨款、逐項盤點自動算毛利率</div>
+        </div>
+        <div class="article-arrow">→</div>
+      </a>
+    </div>
+
+    <div class="group-label">經營狀況</div>
+    <div class="article-list">
+      <a class="article-card" href="store-trend.html">
+        <div class="article-icon">📈</div>
+        <div>
+          <div class="article-title">本店經營趨勢</div>
+          <div class="article-desc">每日營收走勢、支出分類，看自己這間店有沒有在進步</div>
         </div>
         <div class="article-arrow">→</div>
       </a>
@@ -190,7 +222,11 @@
 </nav>
 
 <script>
-  if (new URLSearchParams(location.search).get('from') === 'staff') {
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const isStaff = new URLSearchParams(location.search).get('from') === 'staff';
+
+  if (isStaff) {
     document.querySelector('.nav-list').innerHTML = `
       <a class="nav-item" href="staff.html">
         <span class="nav-icon">←</span>
@@ -198,9 +234,64 @@
       </a>`;
     document.querySelector('.mobile-nav').innerHTML = `
       <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>`;
-    document.querySelectorAll('.article-card').forEach(a => {
-      a.href = a.getAttribute('href') + '?from=staff';
+  }
+
+  let stores = [];
+  let currentStoreId = null;
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmt(n) {
+    return n == null || isNaN(n) ? '—' : `$${Math.round(n).toLocaleString()}`;
+  }
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
+    return res.json();
+  }
+
+  function updateArticleLinks() {
+    document.querySelectorAll('.article-card').forEach(a => {
+      const base = a.getAttribute('href').split('?')[0];
+      const params = new URLSearchParams();
+      if (isStaff) params.set('from', 'staff');
+      if (currentStoreId) params.set('store', currentStoreId);
+      a.href = params.toString() ? `${base}?${params}` : base;
+    });
+  }
+
+  async function init() {
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    const paramStore = new URLSearchParams(location.search).get('store');
+    currentStoreId = (paramStore && stores.some(s => s.id === paramStore)) ? paramStore : (stores[0]?.id || null);
+    sel.value = currentStoreId;
+    updateArticleLinks();
+    await loadStatus();
+  }
+  init();
+
+  function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    updateArticleLinks();
+    loadStatus();
+  }
+
+  async function loadStatus() {
+    if (!currentStoreId) return;
+    const receivables = await dbGet('store_receivables', `store_id=eq.${currentStoreId}&collected=eq.false`);
+    const list = Array.isArray(receivables) ? receivables : [];
+    const total = list.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const today = new Date();
+    const overdueCount = list.filter(r => Math.floor((today - new Date(r.date)) / 86400000) >= 14).length;
+    document.getElementById('status-receivable').textContent = fmt(total);
+    const overdueEl = document.getElementById('status-overdue');
+    overdueEl.textContent = `${overdueCount} 筆`;
+    overdueEl.classList.toggle('warn', overdueCount > 0);
   }
 </script>
 
