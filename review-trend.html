@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>顧客評論總覽 · 今年貴焿助理</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+      --red:         #C0392B;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .card { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
+    .card-label { font-size: 11px; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 8px; }
+    .card-value { font-size: 26px; font-weight: 700; color: var(--text-dark); }
+    .card-value.red { color: var(--red); }
+    .card-value.green { color: var(--green); }
+
+    .chart-box { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .chart-box h3 { font-size: 13px; color: var(--text-mid); margin-bottom: 14px; }
+
+    .table-box { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .table-box h3 { font-size: 13px; color: var(--text-mid); margin-bottom: 4px; }
+    .table-box .hint { font-size: 11px; color: var(--text-light); margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; background: var(--cream); color: var(--text-mid); font-weight: 600; }
+    td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr.below-line td { color: var(--red); font-weight: 700; }
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; background: var(--cream); color: var(--text-mid); }
+    .loading { text-align: center; padding: 32px; color: var(--text-light); }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">⭐</div>
+    <div class="brand-text">
+      <div class="brand-name">今年貴焿助理</div>
+      <div class="brand-sub">貴焿共好系統</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">←</span>
+      <div><div class="nav-text">返回總覽</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">⭐</span>
+    <div>
+      <div class="topbar-title">顧客評論總覽</div>
+      <div class="topbar-sub" id="last-update">載入中…</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">平均評分（各店平均）</div>
+        <div class="card-value" id="avg-rating">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">評論總則數</div>
+        <div class="card-value" id="total-count">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">待加強店數（低於4.0分）</div>
+        <div class="card-value red" id="below-count">—</div>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <h3>各店目前評分</h3>
+      <canvas id="ratingChart" height="90"></canvas>
+    </div>
+
+    <div class="table-box">
+      <h3>目前各店排名</h3>
+      <div class="hint">跟月報寄出的排名邏輯相同：紅字＝低於 4.0 分；長期趨勢是跟資料庫裡最舊一筆快照比較，快照累積愈多月愈準。</div>
+      <table>
+        <thead><tr><th>名次</th><th>店</th><th>評分</th><th>等級</th><th>則數</th><th>較上次快照</th><th>長期趨勢</th></tr></thead>
+        <tbody id="rank-tbody"><tr><td colspan="7" class="loading">載入中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+  function tier(rating) {
+    if (rating == null) return '—';
+    if (rating < 4.0) return '待加強';
+    if (rating < 4.5) return '穩定';
+    return '標竿';
+  }
+
+  async function init() {
+    const [stores, snapshots] = await Promise.all([
+      dbGet('stores', 'select=id,name,status&order=created_at.asc'),
+      dbGet('store_review_snapshots', 'select=store_id,rating,user_rating_count,snapshot_date&order=snapshot_date.desc')
+    ]);
+    const storeList = (Array.isArray(stores) ? stores : []).filter(s => s.status !== '籌備中');
+    const snapList = Array.isArray(snapshots) ? snapshots : [];
+
+    const byStore = {};
+    snapList.forEach(s => {
+      if (!byStore[s.store_id]) byStore[s.store_id] = [];
+      byStore[s.store_id].push(s);
+    });
+
+    const rows = storeList.map(store => {
+      const snaps = byStore[store.id] || [];
+      const latest = snaps[0] || null;
+      const prev = snaps[1] || null;
+      const oldest = snaps.length > 1 ? snaps[snaps.length - 1] : null;
+      const rating = latest ? Number(latest.rating) : null;
+      const count = latest ? Number(latest.user_rating_count) : null;
+      const deltaPrev = (latest && prev) ? Math.round((rating - Number(prev.rating)) * 100) / 100 : null;
+      let trendMonths = null, trendDelta = null;
+      if (oldest && oldest !== latest) {
+        const days = (new Date(latest.snapshot_date) - new Date(oldest.snapshot_date)) / 86400000;
+        trendMonths = Math.max(1, Math.round(days / 30));
+        trendDelta = Math.round((rating - Number(oldest.rating)) * 100) / 100;
+      }
+      return { name: store.name, rating, count, deltaPrev, trendMonths, trendDelta, hasData: !!latest };
+    });
+
+    rows.sort((a, b) => (a.rating ?? 99) - (b.rating ?? 99));
+
+    document.getElementById('last-update').textContent =
+      snapList.length ? `最新快照：${snapList[0].snapshot_date}` : '尚無快照資料';
+
+    const withData = rows.filter(r => r.hasData);
+    const avgRating = withData.length ? withData.reduce((s, r) => s + r.rating, 0) / withData.length : null;
+    const totalCount = withData.reduce((s, r) => s + (r.count || 0), 0);
+    const belowCount = withData.filter(r => r.rating < 4.0).length;
+    document.getElementById('avg-rating').textContent = avgRating ? avgRating.toFixed(2) : '—';
+    document.getElementById('total-count').textContent = totalCount.toLocaleString();
+    document.getElementById('below-count').textContent = belowCount;
+
+    const tbody = document.getElementById('rank-tbody');
+    tbody.innerHTML = rows.length === 0 ? '<tr><td colspan="7" class="loading">尚無資料</td></tr>' : rows.map((r, i) => {
+      const below = r.rating != null && r.rating < 4.0;
+      const deltaPrevText = r.deltaPrev == null ? '—' : (r.deltaPrev > 0 ? `+${r.deltaPrev}` : `${r.deltaPrev}`);
+      const trendText = r.trendMonths == null ? '—' :
+        `${r.trendDelta > 0 ? '↑' : (r.trendDelta < 0 ? '↓' : '→')} 近${r.trendMonths}個月 ${r.trendDelta > 0 ? '+' : ''}${r.trendDelta}`;
+      return `<tr class="${below ? 'below-line' : ''}">
+        <td>${i + 1}</td>
+        <td>${esc(r.name)}</td>
+        <td>${r.rating ?? '—'}</td>
+        <td><span class="tag">${tier(r.rating)}</span></td>
+        <td>${r.count ?? '—'}</td>
+        <td>${deltaPrevText}</td>
+        <td>${trendText}</td>
+      </tr>`;
+    }).join('');
+
+    const chartRows = rows.filter(r => r.hasData);
+    new Chart(document.getElementById('ratingChart'), {
+      type: 'bar',
+      data: {
+        labels: chartRows.map(r => r.name),
+        datasets: [{
+          data: chartRows.map(r => r.rating),
+          backgroundColor: chartRows.map(r => r.rating < 4.0 ? '#C0392B' : '#8B5E3C'),
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, suggestedMax: 5 } }
+      }
+    });
+  }
+  init();
+</script>
+
+</body>
+</html>
