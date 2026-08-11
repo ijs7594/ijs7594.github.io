@@ -73,13 +73,22 @@ def rating_tier(rating):
 
 
 def save_snapshot(store_id, place_id, rating, count):
+    today = date.today().isoformat()
+    # 沒有 DB 層級的唯一約束，手動觸發或重跑很容易同一天寫進重複快照，
+    # 進而讓「最舊一筆快照」抓錯趨勢基準。這裡先清掉同一家店同一天的舊快照再寫入，
+    # 等於用程式邏輯做 upsert。
+    del_url = (
+        f"{SUPABASE_URL}/rest/v1/store_review_snapshots"
+        f"?store_id=eq.{store_id}&snapshot_date=eq.{today}"
+    )
+    http_json(del_url, method="DELETE", headers=supa_headers())
     url = f"{SUPABASE_URL}/rest/v1/store_review_snapshots"
     body = {
         "store_id": store_id,
         "place_id": place_id,
         "rating": rating,
         "user_rating_count": count,
-        "snapshot_date": date.today().isoformat(),
+        "snapshot_date": today,
     }
     http_json(url, method="POST", headers=supa_headers(), body=body)
 
