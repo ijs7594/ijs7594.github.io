@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日工事 · 今年貴焿助理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --blue:        #4338CA; --blue-lt: #EEF2FF; --blue-bd: #C7D2FE;
+      --red:         #B91C1C; --red-lt:  #FEF2F2; --red-bd:  #FECACA;
+      --green:       #166534; --green-lt:#F0FDF4; --green-bd:#BBF7D0;
+      --amber:       #92400E; --amber-lt:#FFFBEB; --amber-bd:#FDE68A;
+    }
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-name { font-size: 14px; font-weight: 600; color: #fff; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.5); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub-text { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px 40px; }
+
+    /* ── Stat cards ── */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+    .stat-num { font-size: 24px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+    .stat-card.total .stat-num { color: var(--text-dark); }
+    .stat-card.teach .stat-num { color: var(--blue); }
+    .stat-card.stop .stat-num { color: var(--red); }
+    .stat-card.self .stat-num { color: var(--brown-main); }
+
+    /* ── Section ── */
+    .section { margin-bottom: 32px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .section-title { font-size: 15px; font-weight: 700; }
+    .section-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .filter-pill { padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--warm-white); font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-light); cursor: pointer; }
+    .filter-pill.active { background: var(--brown-main); color: #fff; border-color: var(--brown-main); }
+
+    /* ── Log list ── */
+    .log-list { display: flex; flex-direction: column; gap: 10px; }
+    .log-item { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .log-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .log-content { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.5; flex: 1; }
+    .log-value { font-size: 11px; font-weight: 700; color: var(--text-light); white-space: nowrap; padding-top: 1px; }
+    .log-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .pill { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px; border: 1px solid; }
+    .pill.label-教得會 { background: var(--blue-lt); color: var(--blue); border-color: var(--blue-bd); }
+    .pill.label-不該做 { background: var(--red-lt); color: var(--red); border-color: var(--red-bd); }
+    .pill.label-親力親為 { background: var(--amber-lt); color: var(--amber); border-color: var(--amber-bd); }
+    .tag { font-size: 10px; color: var(--text-light); }
+    .log-time { font-size: 10px; color: var(--text-light); margin-left: auto; }
+    .log-reply { font-size: 12px; color: var(--text-mid); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-style: italic; }
+    .empty { text-align: center; padding: 40px 20px; font-size: 13px; color: var(--text-light); }
+    .empty .big { font-size: 30px; margin-bottom: 10px; }
+
+    /* ── SOP candidate list ── */
+    .sop-list { display: flex; flex-direction: column; gap: 10px; }
+    .sop-item { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    .sop-count { width: 40px; height: 40px; border-radius: 10px; background: var(--warm-white); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--brown-main); flex-shrink: 0; }
+    .sop-body { flex: 1; }
+    .sop-topic { font-size: 13px; font-weight: 600; }
+    .sop-status { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+    .status-pending { color: var(--text-light); }
+    .status-triggered { color: var(--red); font-weight: 700; }
+    .status-done { color: var(--green); }
+
+    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1); height: 60px; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px; flex: 1; padding: 6px 4px; }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding: 16px 16px 80px; }
+      .mobile-nav { display: flex; }
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div>
+      <div class="brand-name">今年貴焿助理</div>
+      <div class="brand-sub">貴焿共好系統</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span><div><div class="nav-text">總覽</div><div class="nav-sub-text">Dashboard</div></div></a>
+    <a class="nav-item" href="personal.html"><span class="nav-icon">🧍</span><div><div class="nav-text">個人管理</div><div class="nav-sub-text">漢柏的空間</div></div></a>
+    <a class="nav-item active" href="worklog.html"><span class="nav-icon">📋</span><div><div class="nav-text">每日工事</div><div class="nav-sub-text">分類與SOP候選</div></div></a>
+    <a class="nav-item" href="sop.html"><span class="nav-icon">📖</span><div><div class="nav-text">一日流程</div><div class="nav-sub-text">作業手冊</div></div></a>
+    <a class="nav-item" href="inbox.html"><span class="nav-icon">✅</span><div><div class="nav-text">待辦</div><div class="nav-sub-text">Inbox</div></div></a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📋</span>
+    <div>
+      <div class="topbar-title">每日工事</div>
+      <div class="topbar-sub">LINE傳「7」記錄 → 這裡看分類與SOP候選</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="stat-row">
+      <div class="stat-card total"><div class="stat-num" id="stat-total">–</div><div class="stat-label">累積總筆數</div></div>
+      <div class="stat-card teach"><div class="stat-num" id="stat-teach">–</div><div class="stat-label">📚 教得會</div></div>
+      <div class="stat-card stop"><div class="stat-num" id="stat-stop">–</div><div class="stat-label">🚫 不該做</div></div>
+      <div class="stat-card self"><div class="stat-num" id="stat-self">–</div><div class="stat-label">🔑 親力親為</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">📚 候選SOP</div>
+          <div class="section-sub">同一件教得會的事累積到3次自動列在這裡，紅字代表LINE已經提醒過</div>
+        </div>
+      </div>
+      <div class="sop-list" id="sop-list"><div class="empty"><div class="big">⏳</div>載入中…</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">工事紀錄</div>
+          <div class="section-sub">由內而外：人 → 事 → 時地物</div>
+        </div>
+      </div>
+      <div class="filter-row" id="filter-row">
+        <button class="filter-pill active" data-label="全部" onclick="switchFilter('全部')">全部</button>
+        <button class="filter-pill" data-label="教得會" onclick="switchFilter('教得會')">教得會</button>
+        <button class="filter-pill" data-label="不該做" onclick="switchFilter('不該做')">不該做</button>
+        <button class="filter-pill" data-label="親力親為" onclick="switchFilter('親力親為')">親力親為</button>
+      </div>
+      <div class="log-list" id="log-list"><div class="empty"><div class="big">⏳</div>載入中…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="personal.html"><span class="mn-icon">🧍</span><span>個人</span></a>
+  <a class="mobile-nav-item active" href="worklog.html"><span class="mn-icon">📋</span><span>工事</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>流程</span></a>
+  <a class="mobile-nav-item" href="inbox.html"><span class="mn-icon">✅</span><span>待辦</span></a>
+</nav>
+
+<script>
+  const SB_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  let allLogs = [];
+  let currentFilter = '全部';
+
+  async function sb(path, opts = {}) {
+    return fetch(SB_URL + '/rest/v1/' + path, {
+      headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        ...(opts.headers || {})
+      }, ...opts
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return '剛剛';
+    if (diff < 3600000) return Math.floor(diff / 60000) + ' 分鐘前';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小時前';
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function renderStats() {
+    const byLabel = { 教得會: 0, 不該做: 0, 親力親為: 0 };
+    for (const l of allLogs) byLabel[l.label] = (byLabel[l.label] || 0) + 1;
+    document.getElementById('stat-total').textContent = allLogs.length;
+    document.getElementById('stat-teach').textContent = byLabel.教得會;
+    document.getElementById('stat-stop').textContent = byLabel['不該做'];
+    document.getElementById('stat-self').textContent = byLabel.親力親為;
+  }
+
+  function renderLogs() {
+    const list = currentFilter === '全部' ? allLogs : allLogs.filter(l => l.label === currentFilter);
+    const el = document.getElementById('log-list');
+    if (!list.length) {
+      el.innerHTML = '<div class="empty"><div class="big">📭</div>還沒有紀錄，對 LINE Bot 傳「4」開始記每日工事</div>';
+      return;
+    }
+    el.innerHTML = list.map(l => {
+      const tags = [];
+      if (l.who) tags.push(`<span class="tag">👤${escHtml(l.who)}</span>`);
+      if (l.place) tags.push(`<span class="tag">📍${escHtml(l.place)}</span>`);
+      if (l.thing) tags.push(`<span class="tag">📦${escHtml(l.thing)}</span>`);
+      return `
+        <div class="log-item">
+          <div class="log-top">
+            <div class="log-content">${escHtml(l.content)}</div>
+            <div class="log-value">價值 ${l.value}/5</div>
+          </div>
+          <div class="log-tags">
+            <span class="pill label-${l.label}">${l.label}</span>
+            ${tags.join('')}
+            <span class="log-time">${fmtTime(l.created_at)}</span>
+          </div>
+          ${l.reply ? `<div class="log-reply">${escHtml(l.reply)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function switchFilter(label) {
+    currentFilter = label;
+    document.querySelectorAll('.filter-pill').forEach(b => {
+      b.className = 'filter-pill' + (b.dataset.label === label ? ' active' : '');
+    });
+    renderLogs();
+  }
+
+  async function loadLogs() {
+    const res = await sb('hanbo_work_logs?order=created_at.desc&limit=200');
+    if (!res.ok) {
+      document.getElementById('log-list').innerHTML = '<div class="empty"><div class="big">⚠️</div>請先在 Supabase 執行 supabase-worklog-schema.sql</div>';
+      document.getElementById('stat-total').textContent = '–';
+      return;
+    }
+    allLogs = await res.json();
+    renderStats();
+    renderLogs();
+  }
+
+  function statusLabel(status) {
+    if (status === 'triggered') return { cls: 'status-triggered', txt: '🔔 已提醒，等你傳「SOP」' };
+    if (status === 'done') return { cls: 'status-done', txt: '✅ 已完成' };
+    return { cls: 'status-pending', txt: '累積中' };
+  }
+
+  async function loadSopCandidates() {
+    const res = await sb('hanbo_sop_candidates?order=count.desc&limit=50');
+    const el = document.getElementById('sop-list');
+    if (!res.ok) {
+      el.innerHTML = '<div class="empty"><div class="big">⚠️</div>請先在 Supabase 執行 supabase-worklog-schema.sql</div>';
+      return;
+    }
+    const data = await res.json();
+    if (!data.length) {
+      el.innerHTML = '<div class="empty"><div class="big">🌱</div>還沒有累積中的候選SOP</div>';
+      return;
+    }
+    el.innerHTML = data.map(c => {
+      const s = statusLabel(c.status);
+      return `
+        <div class="sop-item">
+          <div class="sop-count">${c.count}</div>
+          <div class="sop-body">
+            <div class="sop-topic">${escHtml(c.topic)}</div>
+            <div class="sop-status ${s.cls}">${s.txt}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  loadLogs();
+  loadSopCandidates();
+  setInterval(() => { loadLogs(); loadSopCandidates(); }, 30000);
+</script>
+</body>
+</html>
