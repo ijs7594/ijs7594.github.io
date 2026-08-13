@@ -141,6 +141,7 @@
     .exp-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-right: 4px; vertical-align: middle; }
     .exp-badge.cost { background: #EEF2FF; color: #4338CA; }
     .exp-badge.var  { background: #FEF3C7; color: #B45309; }
+    .exp-badge.monthly { background: #FEF3C7; color: #B45309; }
 
     /* ── 未收款登記 ── */
     .rcv-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
@@ -611,7 +612,8 @@
     row.innerHTML = `
       <select class="f-preset" onchange="onPresetChange(this,'${id}')">${opts}</select>
       <input class="f-custom" placeholder="請輸入項目" />
-      ${hasShipping ? `<select class="f-vendor">${vendorOpts}</select>` : ''}
+      ${hasShipping ? `<select class="f-vendor" onchange="onVendorChange(this,'${id}')">${vendorOpts}</select>` : ''}
+      ${hasShipping ? `<span class="exp-badge monthly" id="tag-${id}" style="display:none;">月結</span>` : ''}
       <input class="f-amt" type="number" placeholder="金額" />
       ${hasShipping ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
       <button onclick="document.getElementById('${id}').remove()">✕</button>
@@ -625,6 +627,12 @@
     const isCustom = select.value === '__custom';
     customInput.style.display = isCustom ? 'block' : 'none';
     if (isCustom) customInput.focus();
+  }
+
+  function onVendorChange(select, rowId) {
+    const vendorRecord = vendorMaster.find(v => v.vendor_name === select.value);
+    const tag = document.getElementById(`tag-${rowId}`);
+    tag.style.display = vendorRecord && vendorRecord.monthly_settlement ? 'inline-block' : 'none';
   }
 
   // ── 防呆：費用欄位打了看起來像食材/耗材的自訂項目，提醒可能該放變動成本 ──
@@ -760,8 +768,9 @@
             const m = (e.description || '').match(/^【(費用|變動成本)】(.+)$/);
             const badge = m ? `<span class="exp-badge ${m[1] === '費用' ? 'cost' : 'var'}">${m[1]}</span>` : '';
             const name = m ? m[2] : esc(e.description || '雜項支出');
+            const vendorTag = e.vendor_name ? `${esc(e.vendor_name)}${e.paid === false ? '<span class="exp-badge monthly">月結未付</span>' : ''}` : '';
             return `<div class="exp-detail-row">
-              <span>${badge}${name}</span>
+              <span>${badge}${name}${vendorTag ? ` · ${vendorTag}` : ''}</span>
               <span class="exp-detail-amt">${fmt(Number(e.amount || 0) + Number(e.shipping_amount || 0))}${e.shipping_amount ? `（含運費 $${e.shipping_amount}）` : ''}</span>
               <div class="row-actions"><button onclick="deleteExpense('${e.id}')">🗑</button></div>
             </div>`;
