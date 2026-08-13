@@ -724,10 +724,8 @@
 
   function renderVendorTable() {
     const el = document.getElementById('vendor-table-wrap');
-    const endKey = periodEndDate(vYear, vMonth, vHalf);
-    const legacyList = vendorPayments.filter(v => v.period_end_date === endKey);
 
-    if (vendorDailyExpenses.length === 0 && legacyList.length === 0) {
+    if (vendorDailyExpenses.length === 0) {
       el.innerHTML = '<div class="empty">這個期間還沒有廠商應付帳款</div>';
       return;
     }
@@ -750,33 +748,13 @@
 
     const total = Object.values(groups).reduce((s, g) => s + g.amount, 0);
 
-    let html = `<table class="data-table">
+    el.innerHTML = `<table class="data-table">
       <thead><tr><th>廠商</th><th>本期金額</th><th>已付款</th></tr></thead>
       <tbody>
         ${rows}
         <tr class="total-row"><td>整期加總</td><td>${fmt(total)}</td><td></td></tr>
       </tbody>
     </table>`;
-
-    if (legacyList.length > 0) {
-      const legacyTotal = legacyList.reduce((s, v) => s + Number(v.amount || 0), 0);
-      html += `<div style="font-size:11px;color:var(--text-light);margin:14px 0 6px;">舊制紀錄（改版前手動輸入的進貨，僅供查閱）</div>
-      <table class="data-table">
-        <thead><tr><th>廠商</th><th>金額</th><th>付款方式</th><th>已付款</th><th></th></tr></thead>
-        <tbody>
-          ${legacyList.map(v => `<tr class="${v.paid ? 'paid-row' : ''}">
-            <td>${esc(v.vendor_name)}</td>
-            <td>${fmt(v.amount)}</td>
-            <td>${esc(v.payment_method)}</td>
-            <td><span class="status-badge ${v.paid ? 'badge-yes' : 'badge-no'}" onclick="toggleVendorPaid('${v.id}', ${!v.paid})">${v.paid ? '✅ 已付' : '未付'}</span></td>
-            <td class="row-actions"><button onclick="deleteVendorPayment('${v.id}')">🗑</button></td>
-          </tr>`).join('')}
-          <tr class="total-row"><td>整期加總</td><td>${fmt(legacyTotal)}</td><td colspan="3"></td></tr>
-        </tbody>
-      </table>`;
-    }
-
-    el.innerHTML = html;
   }
 
   async function markVendorGroupPaid(idsCsv, paid) {
@@ -789,28 +767,6 @@
       })));
       await loadVendor();
     } catch { alert('更新失敗，請再試一次'); }
-  }
-
-  async function toggleVendorPaid(id, paid) {
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_payments?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({ paid })
-      });
-      await loadAll();
-    } catch { alert('更新失敗，請再試一次'); }
-  }
-
-  async function deleteVendorPayment(id) {
-    if (!confirm('確定要刪除這筆進貨紀錄嗎？')) return;
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_payments?id=eq.${id}`, {
-        method: 'DELETE',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      await loadAll();
-    } catch { alert('刪除失敗，請再試一次'); }
   }
 
   // ── 未收款清單（查看＋標記已收，新增在日報表做）──
