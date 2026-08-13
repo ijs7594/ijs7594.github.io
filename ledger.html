@@ -228,13 +228,13 @@
     <div class="price-banner" id="price-banner" style="display:none;"></div>
     <div class="price-banner" id="overdue-banner" style="display:none;"></div>
     <div class="section-tabs">
-      <div class="section-tab" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
-      <div class="section-tab active" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
+      <div class="section-tab active" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
+      <div class="section-tab" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
       <div class="section-tab" data-tab="receivable" onclick="switchSection('receivable')">📋 未收款清單</div>
     </div>
 
     <!-- ══ 毛利結算 ══ -->
-    <div id="section-margin" style="display:none;">
+    <div id="section-margin">
       <div class="card">
         <h3>選擇結算期間</h3>
         <div class="period-picker">
@@ -261,7 +261,7 @@
             <div class="margin-value" id="m-end">—</div>
           </div>
           <div class="margin-cell">
-            <div class="margin-label">本期進貨（廠商加總）</div>
+            <div class="margin-label">本期進貨（日報表食材成本＋廠商登記）</div>
             <div class="margin-value" id="m-purchase">—</div>
           </div>
           <div class="margin-cell">
@@ -290,7 +290,7 @@
     </div>
 
     <!-- ══ 廠商進貨／貨款 ══ -->
-    <div id="section-vendor">
+    <div id="section-vendor" style="display:none;">
       <div class="card">
         <h3>選擇結算期間</h3>
         <div class="period-picker">
@@ -303,6 +303,7 @@
 
       <div class="card">
         <h3>🚚 新增廠商進貨</h3>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:12px;">這裡是選填的。日報表裡按日填的「變動成本」金額，系統已經自動算進本期進貨、毛利率也會用到，不用重複輸入。只有想額外標記「欠哪個廠商多少、付了沒」的時候，才需要在這裡多記一筆。</div>
         <div class="form-row">
           <input id="v-name" class="f-name" placeholder="廠商名稱" />
           <input id="v-amount" class="f-amt" type="number" placeholder="金額" />
@@ -373,7 +374,7 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
   let stores = [];
   let currentStoreId = null;
-  let currentSection = 'vendor';
+  let currentSection = 'margin';
 
   // margin period state
   let mYear = new Date().getFullYear();
@@ -508,10 +509,16 @@
 
     const beginCount = inventoryCounts.find(c => c.period_end_date === prevKey);
     const endCount = inventoryCounts.find(c => c.period_end_date === endKey);
-    const purchaseTotal = vendorPayments.filter(v => v.period_end_date === endKey).reduce((s, v) => s + Number(v.amount || 0), 0);
+    const vendorTotal = vendorPayments.filter(v => v.period_end_date === endKey).reduce((s, v) => s + Number(v.amount || 0), 0);
 
     dailyReports = await dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${range.start}&date=lte.${range.end}`);
     if (!Array.isArray(dailyReports)) dailyReports = [];
+
+    const dailyExpenseRows = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${range.start}&date=lte.${range.end}`);
+    const dailyVariableCostTotal = (Array.isArray(dailyExpenseRows) ? dailyExpenseRows : [])
+      .filter(e => (e.description || '').startsWith('【變動成本】'))
+      .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+    const purchaseTotal = vendorTotal + dailyVariableCostTotal;
     const revenueTotal = dailyReports.reduce((s, r) => {
       const onsite = (Number(r.morning_revenue)||0) + (Number(r.evening_revenue)||0) + (Number(r.line_pay)||0);
       const total = onsite + (Number(r.uber_amount)||0) + (Number(r.foodpanda_amount)||0) + (Number(r.uncollected)||0);
