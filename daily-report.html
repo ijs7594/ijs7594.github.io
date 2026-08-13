@@ -250,7 +250,7 @@
         <div class="stat-value red" id="stat-expense">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">本月淨利</div>
+        <div class="stat-label">本月毛利</div>
         <div class="stat-value brown" id="stat-net">—</div>
       </div>
       <div class="stat-card">
@@ -747,7 +747,7 @@
           <span class="day-figure">整日營收總額 <b style="color:var(--green)">${fmt(total)}</b></span>
           <span class="day-figure">支出 <b style="color:var(--red)">${fmt(expTotal)}</b></span>
           ${perPot != null ? `<span class="day-figure">每鍋 <b style="color:${perPotAnomalyColor(perPot)}">${Math.round(perPot).toLocaleString()}</b>${perPotHint(perPot)}</span>` : ''}
-          <span class="day-net" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">淨 ${fmt(net)}</span>
+          <span class="day-net" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">毛利 ${fmt(net)}</span>
         </div>
         <div class="day-detail ${isOpen ? 'open' : ''}">
           ${r ? `<div class="detail-grid">
