@@ -499,9 +499,19 @@
   function loadExistingDay() {
     const date = document.getElementById('f-date').value;
     const existing = reportRows.find(r => r.date === date);
-    const fields = ['morning_customers','morning_revenue','line_pay','pot_count','cash_counted','cash_undeposited','uber_amount','foodpanda_amount','labor_hours'];
-    fields.forEach(f => {
-      document.getElementById(`f-${f.replace(/_/g, '-')}`).value = existing ? (existing[f] ?? '') : '';
+    const fieldToId = {
+      morning_customers: 'f-morning-customers',
+      morning_revenue: 'f-morning-revenue',
+      line_pay: 'f-line-pay',
+      pot_count: 'f-pot-count',
+      cash_counted: 'f-cash-counted',
+      cash_undeposited: 'f-cash-undeposited',
+      uber_amount: 'f-uber',
+      foodpanda_amount: 'f-foodpanda',
+      labor_hours: 'f-labor-hours'
+    };
+    Object.entries(fieldToId).forEach(([f, id]) => {
+      document.getElementById(id).value = existing ? (existing[f] ?? '') : '';
     });
     renderTodayReceivables();
     updatePreview();
