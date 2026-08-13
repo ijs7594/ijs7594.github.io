@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>月底自我盤點 · 今年貴焿</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --brown:   #2C1A0E;
+      --caramel: #C17B4E;
+      --seal:    #C8102E;
+      --cream:   #F5EDE0;
+      --bg:      #F2EDE7;
+      --card:    #FFFFFF;
+      --border:  rgba(0,0,0,0.06);
+      --text:    #1A1A1A;
+      --sub:     #888;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      color: var(--text);
+      padding-bottom: 40px;
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, var(--brown), #3D2410);
+      padding: 22px 20px 26px;
+      color: #fff;
+    }
+    .app-header .eyebrow { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+    .app-header h1 { font-size: 19px; font-weight: 700; }
+    .store-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: rgba(255,255,255,0.12); border-radius: 20px; padding: 6px 14px; font-size: 13px; }
+
+    .content { padding: 16px; }
+
+    .card {
+      background: var(--card); border-radius: 16px; padding: 18px;
+      border: 1px solid var(--border); margin-bottom: 14px;
+    }
+    .q-label { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .q-hint { font-size: 12px; color: var(--sub); margin-bottom: 12px; }
+
+    .star-row { display: flex; gap: 8px; }
+    .star-btn {
+      flex: 1; aspect-ratio: 1; border-radius: 12px; border: 1.5px solid var(--border);
+      background: var(--cream); font-size: 22px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.1s, background 0.15s, border-color 0.15s;
+    }
+    .star-btn.active { background: var(--caramel); border-color: var(--caramel); transform: scale(1.08); }
+    .star-btn:active { transform: scale(0.94); }
+    .scale-caption { display: flex; justify-content: space-between; font-size: 11px; color: var(--sub); margin-top: 8px; }
+
+    textarea {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 12px; padding: 12px;
+      font-family: inherit; font-size: 14px; resize: vertical; min-height: 64px; outline: none;
+    }
+    textarea:focus { border-color: var(--caramel); }
+    .optional-tag { font-size: 11px; color: var(--sub); font-weight: 400; }
+
+    .already-banner {
+      background: var(--cream); border-radius: 12px; padding: 10px 14px; font-size: 12.5px;
+      color: var(--brown); margin-bottom: 14px; display: none;
+    }
+
+    .submit-btn {
+      width: 100%; background: var(--brown); color: #fff; border: none; border-radius: 14px;
+      padding: 16px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    .submit-btn:disabled { opacity: 0.5; }
+
+    .success-screen {
+      display: none; text-align: center; padding: 60px 24px;
+    }
+    .success-screen .big-emoji { font-size: 56px; margin-bottom: 16px; animation: pop 0.4s ease; }
+    @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+    .success-screen h2 { font-size: 18px; margin-bottom: 8px; }
+    .success-screen p { font-size: 13px; color: var(--sub); line-height: 1.6; }
+    .success-screen a { display: inline-block; margin-top: 24px; color: var(--caramel); font-weight: 700; text-decoration: none; font-size: 13px; }
+
+    .store-gate {
+      position: fixed; inset: 0; background: var(--brown); z-index: 50;
+      display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    .store-gate-box { background: var(--card); border-radius: 18px; padding: 22px; width: 100%; max-width: 380px; }
+    .store-gate-box h3 { font-size: 16px; margin-bottom: 4px; }
+    .store-gate-box p { font-size: 12px; color: var(--sub); margin-bottom: 16px; }
+    .store-gate-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; }
+    .store-gate-btn {
+      padding: 13px 16px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--cream); cursor: pointer; text-align: left; font-family: inherit; font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="eyebrow">店長 · 月底自我盤點</div>
+  <h1>這個月，過得怎麼樣？</h1>
+  <div class="store-chip">🏪 <span id="store-name-chip">—</span></div>
+</div>
+
+<div class="content" id="form-content">
+  <div class="already-banner" id="already-banner"></div>
+
+  <div class="card">
+    <div class="q-label">這個月心情打幾分？</div>
+    <div class="q-hint">最誠實的那種，不用美化</div>
+    <div class="star-row" data-field="mood_score">
+      <button class="star-btn" data-value="1">😞</button>
+      <button class="star-btn" data-value="2">😐</button>
+      <button class="star-btn" data-value="3">🙂</button>
+      <button class="star-btn" data-value="4">😄</button>
+      <button class="star-btn" data-value="5">🤩</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q-label">團隊氣氛打幾分？</div>
+    <div class="star-row" data-field="team_score">
+      <button class="star-btn" data-value="1">1</button>
+      <button class="star-btn" data-value="2">2</button>
+      <button class="star-btn" data-value="3">3</button>
+      <button class="star-btn" data-value="4">4</button>
+      <button class="star-btn" data-value="5">5</button>
+    </div>
+    <div class="scale-caption"><span>低迷</span><span>超讚</span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-label">營收 / 來客表現滿意度？</div>
+    <div class="star-row" data-field="revenue_score">
+      <button class="star-btn" data-value="1">1</button>
+      <button class="star-btn" data-value="2">2</button>
+      <button class="star-btn" data-value="3">3</button>
+      <button class="star-btn" data-value="4">4</button>
+      <button class="star-btn" data-value="5">5</button>
+    </div>
+    <div class="scale-caption"><span>不滿意</span><span>很滿意</span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-label">這個月最驕傲的一件事</div>
+    <div class="q-hint">一句話就好</div>
+    <textarea id="proud_moment" rows="2" placeholder="例如：新人終於能獨當一面了"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="q-label">印象最深刻的一則顧客評論 <span class="optional-tag">選填</span></div>
+    <div class="q-hint">正評負評都可以，貼上來就好</div>
+    <textarea id="memorable_review" rows="3" placeholder="貼上評論內容…"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="q-label">你怎麼處理／回應的？ <span class="optional-tag">選填</span></div>
+    <textarea id="review_response" rows="2" placeholder="有做什麼就寫，沒有也沒關係"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="q-label">想跟總部說的話 <span class="optional-tag">選填</span></div>
+    <textarea id="message_to_hq" rows="2" placeholder="任何回饋都歡迎"></textarea>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" onclick="submitCheckin()">送出這個月的盤點</button>
+</div>
+
+<div class="success-screen" id="success-screen">
+  <div class="big-emoji">🎉</div>
+  <h2>謝謝你的反思！</h2>
+  <p>這份紀錄會跟這個月的顧客評論數據一起，<br>整理成給執行長看的月報。<br>辛苦這個月了。</p>
+  <a href="staff.html">← 回夥伴入口</a>
+</div>
+
+<div class="store-gate" id="store-gate">
+  <div class="store-gate-box">
+    <h3>你是哪一家店？</h3>
+    <p>選一次之後會記住，不用每次都選</p>
+    <div class="store-gate-list" id="store-gate-list"></div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  let storeId = null;
+  let storeName = null;
+  const period = new Date().toISOString().slice(0, 7); // YYYY-MM
+
+  document.querySelectorAll('.star-row').forEach(row => {
+    row.addEventListener('click', e => {
+      const btn = e.target.closest('.star-btn');
+      if (!btn) return;
+      row.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+      const value = Number(btn.dataset.value);
+      row.querySelectorAll('.star-btn').forEach(b => {
+        if (Number(b.dataset.value) <= value) b.classList.add('active');
+      });
+      row.dataset.selected = value;
+    });
+  });
+
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const paramStore = params.get('store');
+    const savedId = localStorage.getItem('staff_store_id');
+    const savedName = localStorage.getItem('staff_store_name');
+
+    if (paramStore) {
+      storeId = paramStore;
+      storeName = savedId === paramStore ? savedName : null;
+    } else if (savedId) {
+      storeId = savedId;
+      storeName = savedName;
+    }
+
+    if (!storeId) {
+      const stores = await dbGet('stores', 'select=id,name,status&order=created_at.asc');
+      const list = (Array.isArray(stores) ? stores : []).filter(s => s.status === '營運中');
+      document.getElementById('store-gate-list').innerHTML = list.map(s =>
+        `<button class="store-gate-btn" onclick="pickStore('${s.id}', '${esc(s.name)}')">${esc(s.name)}</button>`
+      ).join('');
+      document.getElementById('store-gate').style.display = 'flex';
+      return;
+    }
+
+    if (!storeName) {
+      const rows = await dbGet('stores', `id=eq.${storeId}&select=name`);
+      storeName = Array.isArray(rows) && rows[0] ? rows[0].name : '未知門店';
+    }
+    document.getElementById('store-name-chip').textContent = storeName;
+    checkAlreadySubmitted();
+  }
+
+  function pickStore(id, name) {
+    localStorage.setItem('staff_store_id', id);
+    localStorage.setItem('staff_store_name', name);
+    storeId = id; storeName = name;
+    document.getElementById('store-gate').style.display = 'none';
+    document.getElementById('store-name-chip').textContent = name;
+    checkAlreadySubmitted();
+  }
+
+  async function checkAlreadySubmitted() {
+    const rows = await dbGet('store_monthly_checkin', `store_id=eq.${storeId}&period=eq.${period}&select=created_at&order=created_at.desc&limit=1`);
+    if (Array.isArray(rows) && rows.length) {
+      const banner = document.getElementById('already-banner');
+      banner.textContent = `你這個月已經填過一次了（${new Date(rows[0].created_at).toLocaleDateString('zh-TW')}），這次送出會存成最新版本。`;
+      banner.style.display = 'block';
+    }
+  }
+
+  async function submitCheckin() {
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '送出中…';
+
+    const getScore = field => {
+      const row = document.querySelector(`.star-row[data-field="${field}"]`);
+      return row && row.dataset.selected ? Number(row.dataset.selected) : null;
+    };
+
+    const body = {
+      store_id: storeId,
+      period,
+      mood_score: getScore('mood_score'),
+      team_score: getScore('team_score'),
+      revenue_score: getScore('revenue_score'),
+      proud_moment: document.getElementById('proud_moment').value.trim() || null,
+      memorable_review: document.getElementById('memorable_review').value.trim() || null,
+      review_response: document.getElementById('review_response').value.trim() || null,
+      message_to_hq: document.getElementById('message_to_hq').value.trim() || null,
+    };
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_monthly_checkin`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json', Prefer: 'return=minimal'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      document.getElementById('form-content').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+    } catch (err) {
+      alert('送出失敗，請再試一次');
+      btn.disabled = false;
+      btn.textContent = '送出這個月的盤點';
+    }
+  }
+
+  init();
+</script>
+
+</body>
+</html>

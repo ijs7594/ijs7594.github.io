@@ -194,6 +194,15 @@
       <div class="menu-arrow">›</div>
     </a>
 
+    <a class="menu-item" href="checkin.html?from=staff" id="link-checkin">
+      <div class="menu-icon orange">🪞</div>
+      <div class="menu-text">
+        <div class="menu-name">月底自我盤點</div>
+        <div class="menu-desc">心情 · 團隊氣氛 · 印象最深的評論</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </a>
+
   </div>
 </div>
 
@@ -258,7 +267,7 @@
   function applyStore(id, name) {
     document.getElementById('current-store-bar').style.display = 'flex';
     document.getElementById('current-store-name').textContent = name;
-    ['link-finance'].forEach(linkId => {
+    ['link-finance', 'link-checkin'].forEach(linkId => {
       const a = document.getElementById(linkId);
       if (!a) return;
       const base = a.getAttribute('href').split('?')[0];
