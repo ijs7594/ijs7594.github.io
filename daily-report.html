@@ -611,9 +611,9 @@
     row.innerHTML = `
       <select class="f-preset" onchange="onPresetChange(this,'${id}')">${opts}</select>
       <input class="f-custom" placeholder="請輸入項目" />
+      ${hasShipping ? `<select class="f-vendor">${vendorOpts}</select>` : ''}
       <input class="f-amt" type="number" placeholder="金額" />
       ${hasShipping ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
-      ${hasShipping ? `<select class="f-vendor">${vendorOpts}</select>` : ''}
       <button onclick="document.getElementById('${id}').remove()">✕</button>
     `;
     el.appendChild(row);
