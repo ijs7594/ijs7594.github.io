@@ -228,13 +228,13 @@
     <div class="price-banner" id="price-banner" style="display:none;"></div>
     <div class="price-banner" id="overdue-banner" style="display:none;"></div>
     <div class="section-tabs">
-      <div class="section-tab active" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
-      <div class="section-tab" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
+      <div class="section-tab" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
+      <div class="section-tab active" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
       <div class="section-tab" data-tab="receivable" onclick="switchSection('receivable')">📋 未收款清單</div>
     </div>
 
     <!-- ══ 毛利結算 ══ -->
-    <div id="section-margin">
+    <div id="section-margin" style="display:none;">
       <div class="card">
         <h3>選擇結算期間</h3>
         <div class="period-picker">
@@ -290,7 +290,7 @@
     </div>
 
     <!-- ══ 廠商進貨／貨款 ══ -->
-    <div id="section-vendor" style="display:none;">
+    <div id="section-vendor">
       <div class="card">
         <h3>選擇結算期間</h3>
         <div class="period-picker">
@@ -373,7 +373,7 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
   let stores = [];
   let currentStoreId = null;
-  let currentSection = 'margin';
+  let currentSection = 'vendor';
 
   // margin period state
   let mYear = new Date().getFullYear();
