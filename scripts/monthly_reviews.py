@@ -93,7 +93,16 @@ def save_snapshot(store_id, place_id, rating, count):
     http_json(url, method="POST", headers=supa_headers(), body=body)
 
 
-def search_place(query):
+def road_key(address):
+    # 取地址裡真正的路名（去掉縣市區里前綴、去掉門牌號），用來驗證 Google
+    # 搜尋回來的地點是不是真的同一家店，不是靠店名文字相似度亂猜的。
+    parts = re.split(r"[市縣區鄉鎮里村]", address or "")
+    tail = parts[-1] if parts else (address or "")
+    m = re.match(r"^([^\d]+)", tail)
+    return m.group(1) if m and m.group(1) else None
+
+
+def search_place(query, expected_address):
     res = http_json(
         "https://places.googleapis.com/v1/places:searchText",
         method="POST",
@@ -105,7 +114,16 @@ def search_place(query):
         body={"textQuery": query, "languageCode": "zh-TW"},
     )
     places = res.get("places", [])
-    return places[0] if places else None
+    if not places:
+        return None, None
+    top = places[0]
+    road = road_key(expected_address)
+    # 新店剛開幕、Google 地圖上還沒有自己的商家頁面時，文字搜尋常常會
+    # 抓到附近文字相似的舊店（例如店名同樣有「左營」），路名對不起來就
+    # 直接當作「還沒有自己的頁面」，不要把別家店的評論資料誤植進來。
+    if road and road not in (top.get("formattedAddress") or ""):
+        return None, f"Google 搜尋到「{top['displayName']['text']}」（{top.get('formattedAddress')}），跟登記地址的路名對不起來，可能是還沒有自己的 Google 商家頁面"
+    return top, None
 
 
 def place_details(place_id):
@@ -145,9 +163,9 @@ def collect_store_data():
         if s["status"] == "籌備中":
             continue
         query = f"貴焿古早味麵線羹 {s['name']} {s['address']}"
-        top = search_place(query)
+        top, mismatch_error = search_place(query, s["address"])
         if not top:
-            collected.append({"store": s, "error": "找不到 Google 商家頁面"})
+            collected.append({"store": s, "error": mismatch_error or "找不到 Google 商家頁面"})
             continue
         details = place_details(top["id"])
         rating = details.get("rating")
