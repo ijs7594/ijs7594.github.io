@@ -320,10 +320,12 @@
       <div class="live-preview" id="live-preview"></div>
 
       <div class="exp-category-label">📌 費用（水電、房租、薪資等固定支出）</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">跟做麵線羹、賣東西沒有直接關係的支出都放這裡：水電、房租、薪資／獎金、設備維修、保險費、外送平台月費，以及其他臨時雜項支出（例如修東西、買非食材用品）。</div>
       <div class="exp-rows" id="cost-rows"></div>
       <button class="add-exp-row-btn" onclick="addCostRow('cost')">+ 新增費用</button>
 
       <div class="exp-category-label" style="margin-top:18px">📦 變動成本（食材、耗材等）</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">會被算進毛利率的食材成本，放這裡：麵線、大腸、蚵仔等食材原料，以及包裝、清潔用品等消耗品——只要是用來煮、包、賣這道麵線羹的東西，都算這裡，不要放到上面的費用。</div>
       <div class="exp-rows" id="variable-rows"></div>
       <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
@@ -625,6 +627,15 @@
     if (isCustom) customInput.focus();
   }
 
+  // ── 防呆：費用欄位打了看起來像食材/耗材的自訂項目，提醒可能該放變動成本 ──
+  function findMiscategorizedFoodCost() {
+    const keywords = COST_PRESETS.variable.flatMap(p => p.split('/'));
+    return Array.from(document.querySelectorAll('#cost-rows .exp-row'))
+      .filter(row => row.querySelector('.f-preset').value === '__custom')
+      .map(row => row.querySelector('.f-custom').value.trim())
+      .filter(text => text && keywords.some(k => text.includes(k)));
+  }
+
   function collectExpenses(category) {
     return Array.from(document.querySelectorAll(`#${category}-rows .exp-row`)).map(row => {
       const preset = row.querySelector('.f-preset').value;
@@ -652,6 +663,12 @@
     if (!currentStoreId) return;
     const date = document.getElementById('f-date').value;
     if (!date) { alert('請選擇日期'); return; }
+
+    const suspects = findMiscategorizedFoodCost();
+    if (suspects.length > 0) {
+      const ok = confirm(`「費用」欄位裡打了「${suspects.join('、')}」，看起來像食材或耗材，但放在費用不會被算進毛利率的食材成本裡。\n\n確定要放在費用嗎？（按取消可以回去改成放到下面的變動成本）`);
+      if (!ok) return;
+    }
 
     const report = {
       store_id: currentStoreId,
