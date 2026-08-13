@@ -136,6 +136,7 @@
 
     .exp-category-label { font-size: 11px; font-weight: 700; color: var(--brown-main); margin: 14px 0 8px; }
     .exp-row .f-preset { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); }
+    .exp-row .f-vendor { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); }
     .exp-row .f-custom { flex: 1; min-width: 120px; display: none; border: 1px solid var(--caramel); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
     .exp-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-right: 4px; vertical-align: middle; }
     .exp-badge.cost { background: #EEF2FF; color: #4338CA; }
@@ -362,6 +363,7 @@
   let reportRows = [];
   let expenseRows = [];
   let receivables = [];
+  let vendorMaster = [];
   let currentStoreId = null;
   let currentMonth = new Date();
   let costRowCount = 0;
@@ -394,6 +396,8 @@
   async function init() {
     document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
     updatePreview();
+    vendorMaster = await dbGet('vendor_master', 'order=vendor_name.asc');
+    if (!Array.isArray(vendorMaster)) vendorMaster = [];
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
@@ -601,11 +605,13 @@
     row.className = 'exp-row';
     row.id = id;
     const hasShipping = category === 'variable';
+    const vendorOpts = '<option value="">廠商（選填）</option>' + vendorMaster.map(v => `<option value="${esc(v.vendor_name)}">${esc(v.vendor_name)}</option>`).join('');
     row.innerHTML = `
       <select class="f-preset" onchange="onPresetChange(this,'${id}')">${opts}</select>
       <input class="f-custom" placeholder="請輸入項目" />
       <input class="f-amt" type="number" placeholder="金額" />
       ${hasShipping ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
+      ${hasShipping ? `<select class="f-vendor">${vendorOpts}</select>` : ''}
       <button onclick="document.getElementById('${id}').remove()">✕</button>
     `;
     el.appendChild(row);
@@ -626,12 +632,19 @@
       const desc = preset === '__custom' ? custom : preset;
       const amount = row.querySelector('.f-amt').value;
       const shipEl = row.querySelector('.f-ship');
-      return { desc, amount, shipping: shipEl ? shipEl.value : '' };
-    }).filter(e => e.amount && Number(e.amount) > 0).map(e => ({
-      description: `【${CATEGORY_LABEL[category]}】${e.desc || '未命名'}`,
-      amount: Number(e.amount),
-      shipping_amount: e.shipping ? Number(e.shipping) : null
-    }));
+      const vendorEl = row.querySelector('.f-vendor');
+      return { desc, amount, shipping: shipEl ? shipEl.value : '', vendor: vendorEl ? vendorEl.value : '' };
+    }).filter(e => e.amount && Number(e.amount) > 0).map(e => {
+      const vendorRecord = vendorMaster.find(v => v.vendor_name === e.vendor);
+      const isMonthly = vendorRecord ? vendorRecord.monthly_settlement : false;
+      return {
+        description: `【${CATEGORY_LABEL[category]}】${e.desc || '未命名'}`,
+        amount: Number(e.amount),
+        shipping_amount: e.shipping ? Number(e.shipping) : null,
+        vendor_name: e.vendor || null,
+        paid: e.vendor ? !isMonthly : null
+      };
+    });
   }
 
   // ── 送出今日日報表（同一天同一店會覆蓋更新）──
