@@ -25,4 +25,5 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           REPORT_TO_EMAIL: ${{ secrets.REPORT_TO_EMAIL }}
           REVIEW_LOOKBACK_MONTHS: ${{ github.event.inputs.lookback_months || '1' }}
+          NOTIFY_SECRET: ${{ secrets.NOTIFY_SECRET }}
         run: python scripts/monthly_reviews.py
