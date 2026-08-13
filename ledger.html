@@ -510,10 +510,11 @@
       .filter(e => (e.description || '').startsWith('【變動成本】'))
       .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
     const purchaseTotal = vendorTotal + dailyVariableCostTotal;
-    // 店長回報的「日營收（現場現金）」是付完當天現金採買後剩下的錢，要把當天變動成本加回來才是真正營收
+    // 店長回報的「日營收（現場現金）」是付完當天現金支出後剩下的錢，要把當天所有現金支出
+    // （費用＋變動成本，月結未付的除外）加回來才是真正營收——跟本期進貨的 COGS 計算是分開的兩件事
     const variableCostByDate = {};
     (Array.isArray(dailyExpenseRows) ? dailyExpenseRows : [])
-      .filter(e => (e.description || '').startsWith('【變動成本】'))
+      .filter(e => e.paid !== false)
       .forEach(e => { variableCostByDate[e.date] = (variableCostByDate[e.date] || 0) + Number(e.amount || 0) + Number(e.shipping_amount || 0); });
     const revenueTotal = dailyReports.reduce((s, r) => {
       const vc = variableCostByDate[r.date] || 0;

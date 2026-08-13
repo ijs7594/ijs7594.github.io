@@ -212,10 +212,11 @@
     loadData();
   }
 
-  // 店長回報的「現場營收」是付完當天現金採買後剩下的錢，要把當天變動成本加回來才是真正營收
+  // 店長回報的「現場營收」是付完當天現金支出後剩下的錢，要把當天所有現金支出（費用＋變動
+  // 成本）加回來才是真正營收；月結未付的不能加回去，那筆錢沒從現金裡拿出去過。
   function variableCostForDate(expRows, date) {
     return (expRows || [])
-      .filter(e => e.date === date && (e.description || '').startsWith('【變動成本】'))
+      .filter(e => e.date === date && e.paid !== false)
       .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
   }
   function calcTotal(r, vc = 0) {

@@ -429,11 +429,12 @@
   }
 
   // ── 公式：現場營收合計 / 整日營收總額 / 人效值 ──
-  // 店長回報的「日營收（現場現金）」是付完當天現金採買後剩下的錢，不是真正營收，
-  // 要把當天的變動成本（現金買食材的錢）加回來才是真正的營業總額。
+  // 店長回報的「日營收（現場現金）」是付完當天現金支出後剩下的錢，不是真正營收，
+  // 要把當天所有從現金付掉的支出（費用＋變動成本）加回來才是真正的營業總額。
+  // 月結未付的變動成本不能加回去——那筆錢根本沒從收銀機拿出去過。
   function variableCostForDate(expRows, date) {
     return (expRows || [])
-      .filter(e => e.date === date && (e.description || '').startsWith('【變動成本】'))
+      .filter(e => e.date === date && e.paid !== false)
       .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
   }
   function calcOnsite(r, vc = 0) {
@@ -465,7 +466,9 @@
     };
     draft.pot_count = document.getElementById('f-pot-count').value;
     const dailyCustomers = Number(document.getElementById('f-morning-customers').value) || 0;
-    const vc = collectExpenses('variable').reduce((s, e) => s + e.amount + Number(e.shipping_amount || 0), 0);
+    const vc = [...collectExpenses('cost'), ...collectExpenses('variable')]
+      .filter(e => e.paid !== false)
+      .reduce((s, e) => s + e.amount + Number(e.shipping_amount || 0), 0);
     const onsite = calcOnsite(draft, vc);
     const total = calcTotal(draft, vc);
     const eff = calcEfficiency(draft, vc);
