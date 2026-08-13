@@ -18,6 +18,9 @@ ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
 RESEND_KEY = os.environ["RESEND_API_KEY"]
 REPORT_TO = os.environ.get("REPORT_TO_EMAIL") or "ijs7594@gmail.com"
 
+LINEBOT_URL = "https://guijong-linebot-production.up.railway.app"
+NOTIFY_SECRET = os.environ.get("NOTIFY_SECRET")
+
 
 def load_known_constraints():
     path = os.path.join(os.path.dirname(__file__), "known_constraints.txt")
@@ -379,6 +382,55 @@ def build_email_html(collected, ai_text):
     """
 
 
+def build_line_message(collected, ai_text):
+    exec_part = extract_tag(ai_text, "exec")
+    manager_part = extract_tag(ai_text, "manager")
+    period_label = date.today().strftime("%Y年%m月")
+
+    ranked = sorted(
+        (c for c in collected if not c.get("error") and c.get("rating") is not None),
+        key=lambda c: c["rating"],
+    )
+    below = [c for c in ranked if c["rating"] < 4.0]
+
+    lines = [f"⭐ 今年貴焿 {period_label} 評論月報", ""]
+    if below:
+        lines.append("⚠️ 評分低於4.0分，需要留意：")
+        for c in below:
+            lines.append(f"　{c['store']['name']} {c['rating']}分")
+        lines.append("")
+    lines.append("📊 整體趨勢")
+    lines.append(exec_part)
+    lines.append("")
+    lines.append("💬 給各店店長")
+    lines.append(manager_part)
+    lines.append("")
+    lines.append("完整排名／長期趨勢：")
+    lines.append("https://ijs7594.github.io/review-trend.html")
+
+    text = "\n".join(lines)
+    if len(text) > 4500:
+        text = text[:4480] + "\n…（內容太長，完整版請看信箱）"
+    return text
+
+
+def send_line_notify(message):
+    if not NOTIFY_SECRET:
+        print("沒有設定 NOTIFY_SECRET，跳過 LINE 推播", file=sys.stderr)
+        return
+    try:
+        http_json(
+            f"{LINEBOT_URL}/api/notify",
+            method="POST",
+            headers={"Content-Type": "application/json"},
+            body={"secret": NOTIFY_SECRET, "message": message},
+        )
+    except urllib.error.HTTPError as e:
+        # LINE 推播失敗不該讓整支程式掛掉、連信都不寄——email 才是主要管道，
+        # LINE 只是加碼的快速通知。
+        print(f"LINE 推播失敗，但不影響寄信: {e}", file=sys.stderr)
+
+
 def send_email(html):
     body = {
         "from": "今年貴焿月報 <onboarding@resend.dev>",
@@ -403,6 +455,7 @@ def main():
     ai_text = ask_claude(prompt)
     html = build_email_html(collected, ai_text)
     send_email(html)
+    send_line_notify(build_line_message(collected, ai_text))
     print("月報寄出完成")
 
 
