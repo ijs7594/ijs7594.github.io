@@ -86,6 +86,11 @@
     .menu-text { flex: 1; }
     .menu-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
     .menu-desc { font-size: 12px; color: var(--sub); }
+    .menu-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; color: #fff;
+      background: var(--seal); border-radius: 8px; padding: 1px 7px; margin-left: 6px;
+      vertical-align: middle;
+    }
 
     .menu-arrow { font-size: 14px; color: #C0C0C0; flex-shrink: 0; }
 
@@ -197,8 +202,8 @@
     <a class="menu-item" href="checkin.html?from=staff" id="link-checkin">
       <div class="menu-icon orange">🪞</div>
       <div class="menu-text">
-        <div class="menu-name">月底自我盤點</div>
-        <div class="menu-desc">心情 · 團隊氣氛 · 印象最深的評論</div>
+        <div class="menu-name">月底自我盤點 <span class="menu-badge">店長專屬</span></div>
+        <div class="menu-desc">每月一次 · 心情 · 團隊氣氛 · 印象最深的評論</div>
       </div>
       <div class="menu-arrow">›</div>
     </a>
