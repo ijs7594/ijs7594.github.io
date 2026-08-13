@@ -429,21 +429,28 @@
   }
 
   // ── 公式：現場營收合計 / 整日營收總額 / 人效值 ──
-  function calcOnsite(r) {
-    return (Number(r.morning_revenue) || 0) + (Number(r.evening_revenue) || 0) + (Number(r.line_pay) || 0);
+  // 店長回報的「日營收（現場現金）」是付完當天現金採買後剩下的錢，不是真正營收，
+  // 要把當天的變動成本（現金買食材的錢）加回來才是真正的營業總額。
+  function variableCostForDate(expRows, date) {
+    return (expRows || [])
+      .filter(e => e.date === date && (e.description || '').startsWith('【變動成本】'))
+      .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
   }
-  function calcTotal(r) {
-    return calcOnsite(r) + (Number(r.uber_amount) || 0) + (Number(r.foodpanda_amount) || 0) + (Number(r.uncollected) || 0);
+  function calcOnsite(r, vc = 0) {
+    return (Number(r.morning_revenue) || 0) + (Number(r.evening_revenue) || 0) + (Number(r.line_pay) || 0) + vc;
   }
-  function calcEfficiency(r) {
+  function calcTotal(r, vc = 0) {
+    return calcOnsite(r, vc) + (Number(r.uber_amount) || 0) + (Number(r.foodpanda_amount) || 0) + (Number(r.uncollected) || 0);
+  }
+  function calcEfficiency(r, vc = 0) {
     const hours = Number(r.labor_hours);
     if (!hours) return null;
-    return calcTotal(r) / hours;
+    return calcTotal(r, vc) / hours;
   }
-  function calcPerPot(r) {
+  function calcPerPot(r, vc = 0) {
     const pots = Number(r.pot_count);
     if (!pots) return null;
-    return calcTotal(r) / pots;
+    return calcTotal(r, vc) / pots;
   }
 
   function updatePreview() {
@@ -458,10 +465,11 @@
     };
     draft.pot_count = document.getElementById('f-pot-count').value;
     const dailyCustomers = Number(document.getElementById('f-morning-customers').value) || 0;
-    const onsite = calcOnsite(draft);
-    const total = calcTotal(draft);
-    const eff = calcEfficiency(draft);
-    const perPot = calcPerPot(draft);
+    const vc = collectExpenses('variable').reduce((s, e) => s + e.amount + Number(e.shipping_amount || 0), 0);
+    const onsite = calcOnsite(draft, vc);
+    const total = calcTotal(draft, vc);
+    const eff = calcEfficiency(draft, vc);
+    const perPot = calcPerPot(draft, vc);
     const cashCounted = document.getElementById('f-cash-counted').value;
     const cashDiff = cashCounted !== '' ? Number(cashCounted) - (Number(draft.morning_revenue)||0) : null;
     const perPotFlag = perPot != null ? perPotAnomalyColor(perPot) : 'var(--brown-main)';
@@ -478,7 +486,7 @@
 
   // ── 每鍋平均營收異常判斷（跟這間店本月平均比，偏離超過 15% 視為異常）──
   function monthAvgPerPot() {
-    const vals = reportRows.map(calcPerPot).filter(v => v != null);
+    const vals = reportRows.map(r => calcPerPot(r, variableCostForDate(expenseRows, r.date))).filter(v => v != null);
     if (vals.length === 0) return null;
     return vals.reduce((a, b) => a + b, 0) / vals.length;
   }
@@ -594,7 +602,7 @@
   }
 
   function renderStats() {
-    const totalRev = reportRows.reduce((s, r) => s + calcTotal(r), 0);
+    const totalRev = reportRows.reduce((s, r) => s + calcTotal(r, variableCostForDate(expenseRows, r.date)), 0);
     const totalExp = expenseRows.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
     const effs = reportRows.map(calcEfficiency).filter(e => e != null);
     const avgEff = effs.length ? effs.reduce((a, b) => a + b, 0) / effs.length : null;
@@ -746,10 +754,11 @@
     el.innerHTML = dates.map(date => {
       const r = reportRows.find(x => x.date === date);
       const exps = expenseRows.filter(e => e.date === date);
-      const total = r ? calcTotal(r) : 0;
+      const vc = variableCostForDate(expenseRows, date);
+      const total = r ? calcTotal(r, vc) : 0;
       const expTotal = exps.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
       const net = total - expTotal;
-      const perPot = r ? calcPerPot(r) : null;
+      const perPot = r ? calcPerPot(r, vc) : null;
       const isOpen = openDayKey === date;
       return `<div class="day-row">
         <div class="day-row-top" onclick="toggleDay('${date}')">
@@ -765,11 +774,11 @@
             <div><span>line pay</span><b>${fmt(r.line_pay)}</b></div>
             <div><span>UBER／熊貓</span><b>${fmt(r.uber_amount)} / ${fmt(r.foodpanda_amount)}</b></div>
             <div><span>當日未收款</span><b>${fmt(r.uncollected)}</b></div>
-            <div><span>現場營收合計</span><b>${fmt(calcOnsite(r))}</b></div>
+            <div><span>現場營收合計</span><b>${fmt(calcOnsite(r, vc))}</b></div>
             <div><span>實存現金</span><b>${fmt(r.cash_counted)}</b></div>
             <div><span>未存（零錢）</span><b>${fmt(r.cash_undeposited)}</b></div>
-            <div><span>整日鍋數／每鍋平均</span><b>${r.pot_count ?? '—'} / ${calcPerPot(r) != null ? Math.round(calcPerPot(r)).toLocaleString() : '—'}</b></div>
-            <div><span>時數／人效值</span><b>${r.labor_hours ?? '—'} / ${calcEfficiency(r) != null ? calcEfficiency(r).toFixed(1) : '—'}</b></div>
+            <div><span>整日鍋數／每鍋平均</span><b>${r.pot_count ?? '—'} / ${calcPerPot(r, vc) != null ? Math.round(calcPerPot(r, vc)).toLocaleString() : '—'}</b></div>
+            <div><span>時數／人效值</span><b>${r.labor_hours ?? '—'} / ${calcEfficiency(r, vc) != null ? calcEfficiency(r, vc).toFixed(1) : '—'}</b></div>
             <div><div class="row-actions"><button onclick="editDay('${date}')">✏️ 修改</button><button onclick="deleteReport('${r.id}')">🗑 刪除本日</button></div></div>
           </div>` : ''}
           ${exps.map(e => {
