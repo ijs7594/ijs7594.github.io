@@ -615,7 +615,7 @@
     const row = document.getElementById(rowId);
     const customInput = row.querySelector('.f-custom');
     const isCustom = select.value === '__custom';
-    customInput.style.display = isCustom ? '' : 'none';
+    customInput.style.display = isCustom ? 'block' : 'none';
     if (isCustom) customInput.focus();
   }
 
