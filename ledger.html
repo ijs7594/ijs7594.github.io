@@ -510,8 +510,14 @@
       .filter(e => (e.description || '').startsWith('【變動成本】'))
       .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
     const purchaseTotal = vendorTotal + dailyVariableCostTotal;
+    // 店長回報的「日營收（現場現金）」是付完當天現金採買後剩下的錢，要把當天變動成本加回來才是真正營收
+    const variableCostByDate = {};
+    (Array.isArray(dailyExpenseRows) ? dailyExpenseRows : [])
+      .filter(e => (e.description || '').startsWith('【變動成本】'))
+      .forEach(e => { variableCostByDate[e.date] = (variableCostByDate[e.date] || 0) + Number(e.amount || 0) + Number(e.shipping_amount || 0); });
     const revenueTotal = dailyReports.reduce((s, r) => {
-      const onsite = (Number(r.morning_revenue)||0) + (Number(r.evening_revenue)||0) + (Number(r.line_pay)||0);
+      const vc = variableCostByDate[r.date] || 0;
+      const onsite = (Number(r.morning_revenue)||0) + (Number(r.evening_revenue)||0) + (Number(r.line_pay)||0) + vc;
       const total = onsite + (Number(r.uber_amount)||0) + (Number(r.foodpanda_amount)||0) + (Number(r.uncollected)||0);
       return s + total;
     }, 0);

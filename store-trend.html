@@ -212,8 +212,14 @@
     loadData();
   }
 
-  function calcTotal(r) {
-    return (Number(r.morning_revenue) || 0) + (Number(r.evening_revenue) || 0) + (Number(r.line_pay) || 0)
+  // 店長回報的「現場營收」是付完當天現金採買後剩下的錢，要把當天變動成本加回來才是真正營收
+  function variableCostForDate(expRows, date) {
+    return (expRows || [])
+      .filter(e => e.date === date && (e.description || '').startsWith('【變動成本】'))
+      .reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+  }
+  function calcTotal(r, vc = 0) {
+    return (Number(r.morning_revenue) || 0) + (Number(r.evening_revenue) || 0) + (Number(r.line_pay) || 0) + vc
       + (Number(r.uber_amount) || 0) + (Number(r.foodpanda_amount) || 0) + (Number(r.uncollected) || 0);
   }
   function expenseCategory(desc) {
@@ -239,7 +245,7 @@
     const reportList = Array.isArray(reports) ? reports : [];
 
     const totalExp = expList.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
-    const totalRev = reportList.reduce((s, r) => s + calcTotal(r), 0);
+    const totalRev = reportList.reduce((s, r) => s + calcTotal(r, variableCostForDate(expList, r.date)), 0);
     document.getElementById('total-expense').textContent = `$${totalExp.toLocaleString()}`;
     document.getElementById('total-revenue').textContent = `$${totalRev.toLocaleString()}`;
     document.getElementById('total-count').textContent = `${expList.length} 筆`;
@@ -259,7 +265,7 @@
     });
 
     const revByDay = {};
-    reportList.forEach(r => { revByDay[r.date] = calcTotal(r); });
+    reportList.forEach(r => { revByDay[r.date] = calcTotal(r, variableCostForDate(expList, r.date)); });
     const days = Object.keys(revByDay).sort();
     if (revenueChart) revenueChart.destroy();
     revenueChart = new Chart(document.getElementById('revenueChart'), {
