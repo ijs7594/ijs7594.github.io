@@ -254,8 +254,11 @@
 <script>
   const SB_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  const BOT_URL = 'https://guijong-linebot-production.up.railway.app';
+  const BOT_SECRET = '1JslYVY1N9-HE7xvoOMf1SU8rTDMNMLu';
 
   let currentTab = 'pending';
+  let currentTasks = [];
 
   async function sb(path, opts = {}) {
     const res = await fetch(SB_URL + '/rest/v1/' + path, {
@@ -293,6 +296,7 @@
       return;
     }
     const data = await res.json();
+    currentTasks = data;
 
     // update badge
     if (currentTab === 'pending') {
@@ -333,7 +337,19 @@
     await sb(`tasks?id=eq.${id}`, {
       method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal'
     });
+    if (newStatus === 'done') notifyTaskCompleted(id);
     await loadTasks();
+  }
+
+  // 標記完成時順便讓分身用「每日工事」同一套 AI 判斷歸類，不用另外再輸入一次
+  function notifyTaskCompleted(id) {
+    const task = currentTasks.find(t => t.id === id);
+    if (!task) return;
+    fetch(`${BOT_URL}/api/task-completed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: BOT_SECRET, content: task.content })
+    }).catch(() => {});
   }
 
   async function addTask() {
