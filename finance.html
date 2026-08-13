@@ -204,7 +204,7 @@
               <th style="cursor:pointer" onclick="sortOverview('name')">店名</th>
               <th style="cursor:pointer" onclick="sortOverview('days')">登載天數</th>
               <th style="cursor:pointer" onclick="sortOverview('revenue')">本月營收</th>
-              <th style="cursor:pointer" onclick="sortOverview('net')">本月淨利</th>
+              <th style="cursor:pointer" onclick="sortOverview('net')">本月毛利</th>
               <th style="cursor:pointer" onclick="sortOverview('margin')">毛利率（最新半月）</th>
               <th style="cursor:pointer" onclick="sortOverview('receivable')">未收款餘額</th>
               <th style="cursor:pointer" onclick="sortOverview('efficiency')">人效值</th>
@@ -498,7 +498,11 @@
         const periodRevenue = d.reports
           .filter(r => r.date >= periodRangeVal.start && r.date <= periodRangeVal.end)
           .reduce((sum, r) => sum + calcTotal(r), 0);
-        const usage = Number(d.begin.inventory_value) + d.vendorTotal - Number(d.end.inventory_value);
+        const periodVariableCost = d.expenses
+          .filter(e => e.date >= periodRangeVal.start && e.date <= periodRangeVal.end)
+          .filter(e => (e.description || '').startsWith('【變動成本】'))
+          .reduce((sum, e) => sum + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
+        const usage = Number(d.begin.inventory_value) + d.vendorTotal + periodVariableCost - Number(d.end.inventory_value);
         margin = periodRevenue > 0 ? (periodRevenue - usage) / periodRevenue * 100 : null;
       }
 
