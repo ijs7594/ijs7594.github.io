@@ -136,7 +136,6 @@
 
     .exp-category-label { font-size: 11px; font-weight: 700; color: var(--brown-main); margin: 14px 0 8px; }
     .exp-row .f-preset { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); }
-    .exp-row .f-vendor { flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--warm-white); }
     .exp-row .f-custom { flex: 1; min-width: 120px; display: none; border: 1px solid var(--caramel); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
     .exp-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-right: 4px; vertical-align: middle; }
     .exp-badge.cost { background: #EEF2FF; color: #4338CA; }
@@ -326,7 +325,7 @@
       <button class="add-exp-row-btn" onclick="addCostRow('cost')">+ 新增費用</button>
 
       <div class="exp-category-label" style="margin-top:18px">📦 變動成本（食材、耗材等）</div>
-      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">會被算進毛利率的食材成本，放這裡：麵線、大腸、蚵仔等食材原料，以及包裝、清潔用品等每天／常態要重複採買、用掉就沒有的耗材——跟上面不同，這裡是會消耗掉的東西，不是重複使用的器具設備。</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">會被算進毛利率的食材成本，放這裡：直接選這批貨是跟哪個廠商進的，不用另外選品項。<b style="color:var(--brown-main);">就算是月結、今天不用付現金，只要貨進來了就要照實填金額</b>——這裡記的是「今天進了多少貨」，不是「今天付了多少錢」，沒填的話毛利率會算不準。沒有固定往來廠商的零星採買，選「自訂…」打買了什麼就好。</div>
       <div class="exp-rows" id="variable-rows"></div>
       <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
@@ -601,21 +600,21 @@
   // ── 分類支出列表輸入 ──
   function addCostRow(category) {
     const id = `${category}-${++costRowCount}`;
-    const presets = COST_PRESETS[category];
-    const opts = presets.map(p => `<option value="${p}">${p}</option>`).join('') + '<option value="__custom">自訂…</option>';
+    const isVariable = category === 'variable';
+    const presetNames = isVariable ? vendorMaster.map(v => v.vendor_name) : COST_PRESETS[category];
+    const opts = (isVariable ? '<option value="">選擇廠商</option>' : '')
+      + presetNames.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('')
+      + '<option value="__custom">自訂…</option>';
     const el = document.getElementById(`${category}-rows`);
     const row = document.createElement('div');
     row.className = 'exp-row';
     row.id = id;
-    const hasShipping = category === 'variable';
-    const vendorOpts = '<option value="">廠商（選填）</option>' + vendorMaster.map(v => `<option value="${esc(v.vendor_name)}">${esc(v.vendor_name)}</option>`).join('');
     row.innerHTML = `
       <select class="f-preset" onchange="onPresetChange(this,'${id}')">${opts}</select>
       <input class="f-custom" placeholder="請輸入項目" />
-      ${hasShipping ? `<select class="f-vendor" onchange="onVendorChange(this,'${id}')">${vendorOpts}</select>` : ''}
-      ${hasShipping ? `<span class="exp-badge monthly" id="tag-${id}" style="display:none;">月結</span>` : ''}
+      ${isVariable ? `<span class="exp-badge monthly" id="tag-${id}" style="display:none;">月結</span>` : ''}
       <input class="f-amt" type="number" placeholder="金額" />
-      ${hasShipping ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
+      ${isVariable ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
       <button onclick="document.getElementById('${id}').remove()">✕</button>
     `;
     el.appendChild(row);
@@ -627,12 +626,11 @@
     const isCustom = select.value === '__custom';
     customInput.style.display = isCustom ? 'block' : 'none';
     if (isCustom) customInput.focus();
-  }
-
-  function onVendorChange(select, rowId) {
-    const vendorRecord = vendorMaster.find(v => v.vendor_name === select.value);
     const tag = document.getElementById(`tag-${rowId}`);
-    tag.style.display = vendorRecord && vendorRecord.monthly_settlement ? 'inline-block' : 'none';
+    if (tag) {
+      const vendorRecord = vendorMaster.find(v => v.vendor_name === select.value);
+      tag.style.display = vendorRecord && vendorRecord.monthly_settlement ? 'inline-block' : 'none';
+    }
   }
 
   // ── 防呆：費用欄位打了看起來像食材/耗材的自訂項目，提醒可能該放變動成本 ──
@@ -651,8 +649,8 @@
       const desc = preset === '__custom' ? custom : preset;
       const amount = row.querySelector('.f-amt').value;
       const shipEl = row.querySelector('.f-ship');
-      const vendorEl = row.querySelector('.f-vendor');
-      return { desc, amount, shipping: shipEl ? shipEl.value : '', vendor: vendorEl ? vendorEl.value : '' };
+      const vendor = category === 'variable' && preset !== '__custom' ? preset : '';
+      return { desc, amount, shipping: shipEl ? shipEl.value : '', vendor };
     }).filter(e => e.amount && Number(e.amount) > 0).map(e => {
       const vendorRecord = vendorMaster.find(v => v.vendor_name === e.vendor);
       const isMonthly = vendorRecord ? vendorRecord.monthly_settlement : false;
@@ -768,9 +766,9 @@
             const m = (e.description || '').match(/^【(費用|變動成本)】(.+)$/);
             const badge = m ? `<span class="exp-badge ${m[1] === '費用' ? 'cost' : 'var'}">${m[1]}</span>` : '';
             const name = m ? m[2] : esc(e.description || '雜項支出');
-            const vendorTag = e.vendor_name ? `${esc(e.vendor_name)}${e.paid === false ? '<span class="exp-badge monthly">月結未付</span>' : ''}` : '';
+            const unpaidTag = e.paid === false ? '<span class="exp-badge monthly">月結未付</span>' : '';
             return `<div class="exp-detail-row">
-              <span>${badge}${name}${vendorTag ? ` · ${vendorTag}` : ''}</span>
+              <span>${badge}${name}${unpaidTag}</span>
               <span class="exp-detail-amt">${fmt(Number(e.amount || 0) + Number(e.shipping_amount || 0))}${e.shipping_amount ? `（含運費 $${e.shipping_amount}）` : ''}</span>
               <div class="row-actions"><button onclick="deleteExpense('${e.id}')">🗑</button></div>
             </div>`;
