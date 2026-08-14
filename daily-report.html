@@ -303,7 +303,19 @@
         </div>
       </div>
 
-      <div class="field-group">
+      <div class="live-preview" id="live-preview"></div>
+
+      <div class="exp-category-label">📌 費用</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">水電、房租、薪資、維修、設備等支出填這裡。找不到項目就選「自訂」。</div>
+      <div class="exp-rows" id="cost-rows"></div>
+      <button class="add-exp-row-btn" onclick="addCostRow('cost')">+ 新增費用</button>
+
+      <div class="exp-category-label" style="margin-top:18px">📦 變動成本</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">食材、耗材進貨填這裡。選廠商、填金額；月結或現結由系統判斷。沒有固定廠商就選「自訂」。</div>
+      <div class="exp-rows" id="variable-rows"></div>
+      <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
+
+      <div class="field-group" style="margin-top:18px">
         <div class="field-group-label">未收款登記（機關／團體訂購，還沒收到錢，可新增多筆）</div>
         <div class="rcv-row">
           <input class="rcv-unit" id="rcv-unit" placeholder="單位（機關／團體）" />
@@ -317,17 +329,6 @@
         <div class="rcv-note">想確認之前登記的錢收到了沒、標記已收，請到「應收應付與毛利」頁面查看整份清單。</div>
       </div>
 
-      <div class="live-preview" id="live-preview"></div>
-
-      <div class="exp-category-label">📌 費用</div>
-      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">水電、房租、薪資、維修、設備等支出填這裡。找不到項目就選「自訂」。</div>
-      <div class="exp-rows" id="cost-rows"></div>
-      <button class="add-exp-row-btn" onclick="addCostRow('cost')">+ 新增費用</button>
-
-      <div class="exp-category-label" style="margin-top:18px">📦 變動成本</div>
-      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">食材、耗材進貨填這裡。選廠商、填金額；月結或現結由系統判斷。沒有固定廠商就選「自訂」。</div>
-      <div class="exp-rows" id="variable-rows"></div>
-      <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
       <button class="submit-btn" id="submit-btn" onclick="submitDailyReport()">送出今日日報表</button>
     </div>
