@@ -71,6 +71,31 @@
     .store-locked { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--brown-main); padding: 9px 14px; }
     .content { flex: 1; overflow-y: auto; padding: 24px; }
 
+    .vendor-settings-btn {
+      border: none; background: transparent; font-size: 18px; cursor: pointer;
+      padding: 6px 8px; border-radius: 8px; opacity: 0.5; transition: opacity 0.15s, background 0.15s;
+    }
+    .vendor-settings-btn:hover { opacity: 1; background: var(--cream); }
+
+    .vendor-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(44,26,14,0.5);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .vendor-modal { background: var(--card-bg); border-radius: 16px; padding: 24px; width: 100%; max-width: 420px; max-height: 80vh; display: flex; flex-direction: column; }
+    .vendor-modal h3 { font-size: 16px; color: var(--text-dark); margin-bottom: 4px; }
+    .vendor-modal .hint { font-size: 12px; color: var(--text-light); margin-bottom: 16px; }
+    .vendor-modal-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .vendor-modal-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+    .vendor-modal-row:last-child { border-bottom: none; }
+    .vendor-modal-row .v-name { font-size: 14px; color: var(--text-dark); }
+    .vendor-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .vendor-toggle button { border: none; background: #fff; padding: 6px 12px; font-size: 12px; font-family: inherit; cursor: pointer; color: var(--text-light); }
+    .vendor-toggle button.active { background: var(--brown-main); color: #fff; }
+    .vendor-modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .vendor-modal-actions button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-family: inherit; font-size: 14px; cursor: pointer; }
+    .vendor-modal-actions .btn-cancel { background: var(--cream); color: var(--text-mid); }
+    .vendor-modal-actions .btn-save { background: var(--brown-main); color: #fff; font-weight: 700; }
+
     .month-nav { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
     .month-nav button { border: 1px solid var(--border); background: white; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
     .month-nav h2 { font-size: 16px; color: var(--text-dark); }
@@ -231,6 +256,19 @@
     </div>
     <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
     <span class="store-locked" id="store-locked" style="display:none;"></span>
+    <button class="vendor-settings-btn" onclick="openVendorSettings()" title="廠商月結設定">⚙️</button>
+  </div>
+
+  <div class="vendor-modal-overlay" id="vendor-modal-overlay">
+    <div class="vendor-modal">
+      <h3>廠商付款方式設定</h3>
+      <div class="hint">設定這家店每個廠商是月結還是當天現結，店員填日報表時會自動套用，不用每次選。</div>
+      <div class="vendor-modal-list" id="vendor-modal-list"></div>
+      <div class="vendor-modal-actions">
+        <button class="btn-cancel" onclick="closeVendorSettings()">取消</button>
+        <button class="btn-save" onclick="saveVendorSettings()">儲存</button>
+      </div>
+    </div>
   </div>
 
   <div class="content">
@@ -366,7 +404,8 @@
   let reportRows = [];
   let expenseRows = [];
   let receivables = [];
-  let vendorMaster = [];
+  let vendorMasterGlobal = [];
+  let vendorMaster = []; // 全店預設值疊上這家店的個別設定後的「有效清單」，其他地方照舊用這個變數
   let currentStoreId = null;
   let currentMonth = new Date();
   let costRowCount = 0;
@@ -399,8 +438,8 @@
   async function init() {
     document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
     updatePreview();
-    vendorMaster = await dbGet('vendor_master', 'order=vendor_name.asc');
-    if (!Array.isArray(vendorMaster)) vendorMaster = [];
+    vendorMasterGlobal = await dbGet('vendor_master', 'order=vendor_name.asc');
+    if (!Array.isArray(vendorMasterGlobal)) vendorMasterGlobal = [];
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
@@ -415,13 +454,78 @@
       label.textContent = esc(stores.find(s => s.id === currentStoreId)?.name || '');
       label.style.display = '';
     }
+    await loadEffectiveVendors();
     await loadAndRender();
   }
   init();
 
   function onStoreChange() {
     currentStoreId = document.getElementById('store-select').value;
-    loadAndRender();
+    loadEffectiveVendors().then(loadAndRender);
+  }
+
+  // ── 廠商月結設定：全店預設值（vendor_master）疊上這家店的個別覆寫
+  // （store_vendor_settings），同一個廠商不同店可以有不同的付款方式 ──
+  async function loadEffectiveVendors() {
+    if (!currentStoreId) { vendorMaster = vendorMasterGlobal; return; }
+    const overrides = await dbGet('store_vendor_settings', `store_id=eq.${currentStoreId}`);
+    const overrideMap = {};
+    (Array.isArray(overrides) ? overrides : []).forEach(o => { overrideMap[o.vendor_name] = o.monthly_settlement; });
+    vendorMaster = vendorMasterGlobal.map(v => ({
+      vendor_name: v.vendor_name,
+      monthly_settlement: overrideMap.hasOwnProperty(v.vendor_name) ? overrideMap[v.vendor_name] : v.monthly_settlement,
+    }));
+  }
+
+  function openVendorSettings() {
+    if (!currentStoreId) return;
+    const pin = prompt('請輸入設定密碼');
+    if (pin === null) return;
+    if (pin !== '9999') { alert('密碼不對'); return; }
+    const list = document.getElementById('vendor-modal-list');
+    list.innerHTML = vendorMaster.map(v => `
+      <div class="vendor-modal-row" data-vendor="${esc(v.vendor_name)}">
+        <span class="v-name">${esc(v.vendor_name)}</span>
+        <div class="vendor-toggle">
+          <button type="button" class="${!v.monthly_settlement ? 'active' : ''}" onclick="setVendorToggle(this)">現結</button>
+          <button type="button" class="${v.monthly_settlement ? 'active' : ''}" onclick="setVendorToggle(this)">月結</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('vendor-modal-overlay').style.display = 'flex';
+  }
+
+  function setVendorToggle(btn) {
+    const row = btn.closest('.vendor-modal-row');
+    row.querySelectorAll('.vendor-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function closeVendorSettings() {
+    document.getElementById('vendor-modal-overlay').style.display = 'none';
+  }
+
+  async function saveVendorSettings() {
+    const rows = [...document.querySelectorAll('#vendor-modal-list .vendor-modal-row')].map(row => ({
+      store_id: currentStoreId,
+      vendor_name: row.dataset.vendor,
+      monthly_settlement: row.querySelector('.vendor-toggle button.active')?.textContent === '月結',
+    }));
+    await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_settings?store_id=eq.${currentStoreId}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/store_vendor_settings`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(rows)
+    });
+    closeVendorSettings();
+    await loadEffectiveVendors();
+    alert('已儲存這家店的廠商付款設定');
   }
 
   function changeMonth(delta) {
