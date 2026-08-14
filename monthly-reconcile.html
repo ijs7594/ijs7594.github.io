@@ -153,6 +153,34 @@
     .summary-total-label { color: rgba(255,255,255,0.7); font-size: 13px; }
     .summary-total-val   { color: #fff; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
+    /* ── Fixed Expenses ── */
+    .fixed-exp-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .fixed-exp-row:last-child { border-bottom: none; }
+    .fixed-exp-info { flex: 1; }
+    .fixed-exp-cat { font-size: 11px; color: var(--sub); }
+    .fixed-exp-name { color: var(--text); }
+    .fixed-exp-amt { font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; margin-right: 8px; }
+    .fixed-exp-del { border: none; background: none; color: var(--sub); font-size: 16px; cursor: pointer; padding: 4px 6px; }
+    .fixed-exp-form { display: flex; gap: 6px; padding: 12px 16px; flex-wrap: wrap; }
+    .fixed-exp-form select, .fixed-exp-form input {
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+      font-size: 13px; font-family: inherit; outline: none; background: var(--bg); color: var(--text);
+    }
+    .fixed-exp-form select { flex: 1; min-width: 90px; }
+    .fixed-exp-form input[type="text"] { flex: 1; min-width: 90px; }
+    .fixed-exp-form input[type="number"] { width: 90px; text-align: right; }
+    .fixed-exp-form button {
+      background: var(--brown); color: #fff; border: none; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+    .fixed-exp-total {
+      display: flex; justify-content: space-between; padding: 11px 16px;
+      font-size: 13px; font-weight: 700; background: var(--cream);
+    }
+
     /* ── Notes ── */
     .notes-wrap { padding: 12px 16px; }
     .notes-input {
@@ -261,6 +289,31 @@
   </div>
 </div>
 
+<!-- Fixed Expenses -->
+<div class="section">
+  <div class="section-label">月度固定費用（房租／保險／自動扣款等）</div>
+  <div class="card">
+    <div id="fixed-exp-list"></div>
+    <div class="fixed-exp-total">
+      <span>本月固定費用合計</span>
+      <span id="fixed-exp-total-val">$0</span>
+    </div>
+    <div class="fixed-exp-form">
+      <select id="fixed-exp-cat">
+        <option>薪資支出</option><option>勞退</option><option>租金支出</option>
+        <option>保險費</option><option>水電瓦斯</option><option>修繕費</option>
+        <option>郵電費</option><option>文具五金</option><option>年終提列</option>
+        <option>稅捐</option><option>燃料費</option><option>折舊攤提</option>
+        <option>廣告費</option><option>其他費用</option>
+      </select>
+      <input type="text" id="fixed-exp-name" placeholder="項目名稱，例：房租" />
+      <input type="number" id="fixed-exp-amt" placeholder="金額" />
+      <button onclick="addFixedExpense()">新增</button>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--sub);padding:8px 2px 0;">這裡跟日報表的「費用」是分開算的兩筆錢，不會重複計算——固定費用是每月月結時登記一次，不是每天登記。</div>
+</div>
+
 <!-- Difference -->
 <div class="section" id="diff-section" style="display:none">
   <div class="section-label">對帳差異（實際 − 估算）</div>
@@ -299,6 +352,7 @@
   let estData = { cash: 0, linepay: 0, uber: 0, foodpanda: 0, uncollected: 0, variable: 0, fixed: 0, days: 0 };
   let existingRecordId = null;
   let isConfirmed = false;
+  let fixedExpenseList = [];
 
   const fmt = n => '$' + Math.round(n).toLocaleString('zh-TW');
 
@@ -379,11 +433,14 @@
     const { start, end } = getMonthRange(currentYearMonth);
 
     // Fetch daily reports + expenses in parallel
-    const [reports, expenses, existing] = await Promise.all([
+    const [reports, expenses, existing, fixedExpenses] = await Promise.all([
       dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`),
       dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`),
-      dbGet('monthly_reconciliation', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}`)
+      dbGet('monthly_reconciliation', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}`),
+      dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}&order=created_at.asc`)
     ]);
+    fixedExpenseList = Array.isArray(fixedExpenses) ? fixedExpenses : [];
+    renderFixedExpenses();
 
     // Compute estimated totals
     const days = new Set((reports || []).map(r => r.date)).size;
@@ -449,6 +506,65 @@
       `;
 
     document.getElementById('btn-confirm').disabled = estData.days === 0;
+  }
+
+  // ── 月度固定費用（房租/保險/自動扣款等）：跟日報表的「費用」完全分開的
+  // 另一筆錢，每月手動登記一次，不參與日報表的現金小計計算 ──
+  function renderFixedExpenses() {
+    const list = document.getElementById('fixed-exp-list');
+    list.innerHTML = fixedExpenseList.length === 0
+      ? '<div class="empty-state" style="padding:20px;"><div class="icon">🧾</div>本月尚未登記固定費用</div>'
+      : fixedExpenseList.map(e => `
+        <div class="fixed-exp-row">
+          <div class="fixed-exp-info">
+            <div class="fixed-exp-cat">${esc(e.category)}</div>
+            <div class="fixed-exp-name">${esc(e.item_name)}</div>
+          </div>
+          <span class="fixed-exp-amt">${fmt(e.amount)}</span>
+          <button class="fixed-exp-del" onclick="deleteFixedExpense('${e.id}')">✕</button>
+        </div>
+      `).join('');
+    const total = fixedExpenseList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    document.getElementById('fixed-exp-total-val').textContent = fmt(total);
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function addFixedExpense() {
+    if (!currentStoreId || !currentYearMonth) return;
+    const category = document.getElementById('fixed-exp-cat').value;
+    const item_name = document.getElementById('fixed-exp-name').value.trim();
+    const amount = Number(document.getElementById('fixed-exp-amt').value);
+    if (!item_name || !amount) { showToast('請填項目名稱跟金額'); return; }
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'return=representation'
+      },
+      body: JSON.stringify({ store_id: currentStoreId, year_month: currentYearMonth, category, item_name, amount })
+    });
+    if (res.ok) {
+      const [row] = await res.json();
+      fixedExpenseList.push(row);
+      renderFixedExpenses();
+      document.getElementById('fixed-exp-name').value = '';
+      document.getElementById('fixed-exp-amt').value = '';
+    } else {
+      showToast('❌ 新增失敗，請重試');
+    }
+  }
+
+  async function deleteFixedExpense(id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    fixedExpenseList = fixedExpenseList.filter(e => e.id !== id);
+    renderFixedExpenses();
   }
 
   function updateDiff() {
