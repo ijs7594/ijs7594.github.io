@@ -319,13 +319,13 @@
 
       <div class="live-preview" id="live-preview"></div>
 
-      <div class="exp-category-label">📌 費用（水電、房租、薪資等固定支出）</div>
-      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">水電、房租、薪資／獎金、保險費、外送平台月費等固定支出，加上臨時維修、臨時購買器具或設備（像鍋子、瓦斯爐、刀具這種會重複使用、不是每天要買的東西），都放這裡。</div>
+      <div class="exp-category-label">📌 費用</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">水電、房租、薪資、維修、設備等支出填這裡。找不到項目就選「自訂」。</div>
       <div class="exp-rows" id="cost-rows"></div>
       <button class="add-exp-row-btn" onclick="addCostRow('cost')">+ 新增費用</button>
 
-      <div class="exp-category-label" style="margin-top:18px">📦 變動成本（食材、耗材等）</div>
-      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">會被算進毛利率的食材成本，放這裡：直接選這批貨是跟哪個廠商進的，不用另外選品項。<b style="color:var(--brown-main);">就算是月結、今天不用付現金，只要貨進來了就要照實填金額</b>——這裡記的是「今天進了多少貨」，不是「今天付了多少錢」，沒填的話毛利率會算不準。沒有固定往來廠商的零星採買，選「自訂…」打買了什麼就好。</div>
+      <div class="exp-category-label" style="margin-top:18px">📦 變動成本</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">食材、耗材進貨填這裡。選廠商、填金額；月結或現結由系統判斷。沒有固定廠商就選「自訂」。</div>
       <div class="exp-rows" id="variable-rows"></div>
       <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
       <br />
@@ -625,6 +625,7 @@
     const presetNames = isVariable ? vendorMaster.map(v => v.vendor_name) : COST_PRESETS[category];
     const opts = (isVariable ? '<option value="">選擇廠商</option>' : '')
       + presetNames.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('')
+      + (isVariable ? '<option value="__transfer">🔁 店間調撥（不是外部採購）</option>' : '')
       + '<option value="__custom">自訂…</option>';
     const el = document.getElementById(`${category}-rows`);
     const row = document.createElement('div');
@@ -633,8 +634,12 @@
     row.innerHTML = `
       <select class="f-preset" onchange="onPresetChange(this,'${id}')">${opts}</select>
       <input class="f-custom" placeholder="請輸入項目" />
+      ${isVariable ? `<select class="f-transfer-store" style="display:none;">
+        <option value="">選擇對方店家</option>
+        ${stores.map(s => `<option value="${s.id}" data-name="${esc(s.name)}">${esc(s.name)}</option>`).join('')}
+      </select>` : ''}
       ${isVariable ? `<span class="exp-badge monthly" id="tag-${id}" style="display:none;">月結</span>` : ''}
-      <input class="f-amt" type="number" placeholder="金額" />
+      <input class="f-amt" type="number" placeholder="${isVariable ? '金額（沖銷成本可填負數）' : '金額'}" />
       ${isVariable ? `<input class="f-ship" type="number" placeholder="運費" />` : ''}
       <button onclick="document.getElementById('${id}').remove()">✕</button>
     `;
@@ -644,8 +649,12 @@
   function onPresetChange(select, rowId) {
     const row = document.getElementById(rowId);
     const customInput = row.querySelector('.f-custom');
+    const transferSelect = row.querySelector('.f-transfer-store');
     const isCustom = select.value === '__custom';
-    customInput.style.display = isCustom ? 'block' : 'none';
+    const isTransfer = select.value === '__transfer';
+    customInput.style.display = (isCustom || isTransfer) ? 'block' : 'none';
+    customInput.placeholder = isTransfer ? '調撥項目，例如：封口膜' : '請輸入項目';
+    if (transferSelect) transferSelect.style.display = isTransfer ? 'block' : 'none';
     if (isCustom) customInput.focus();
     const tag = document.getElementById(`tag-${rowId}`);
     if (tag) {
@@ -666,13 +675,18 @@
   function collectExpenses(category) {
     return Array.from(document.querySelectorAll(`#${category}-rows .exp-row`)).map(row => {
       const preset = row.querySelector('.f-preset').value;
+      const isTransfer = preset === '__transfer';
       const custom = row.querySelector('.f-custom').value.trim();
-      const desc = preset === '__custom' ? custom : preset;
+      const desc = (preset === '__custom' || isTransfer) ? custom : preset;
       const amount = row.querySelector('.f-amt').value;
       const shipEl = row.querySelector('.f-ship');
-      const vendor = category === 'variable' && preset !== '__custom' ? preset : '';
-      return { desc, amount, shipping: shipEl ? shipEl.value : '', vendor };
-    }).filter(e => e.amount && Number(e.amount) > 0).map(e => {
+      const transferSelect = row.querySelector('.f-transfer-store');
+      const transferStoreId = isTransfer && transferSelect ? transferSelect.value : '';
+      const transferStoreName = isTransfer && transferSelect && transferSelect.selectedOptions[0]
+        ? (transferSelect.selectedOptions[0].dataset.name || '') : '';
+      const vendor = isTransfer ? transferStoreName : (category === 'variable' && preset !== '__custom' ? preset : '');
+      return { desc, amount, shipping: shipEl ? shipEl.value : '', vendor, isTransfer, transferStoreId };
+    }).filter(e => e.amount !== '' && Number(e.amount) !== 0).map(e => {
       const vendorRecord = vendorMaster.find(v => v.vendor_name === e.vendor);
       const isMonthly = vendorRecord ? vendorRecord.monthly_settlement : false;
       return {
@@ -680,7 +694,8 @@
         amount: Number(e.amount),
         shipping_amount: e.shipping ? Number(e.shipping) : null,
         vendor_name: e.vendor || null,
-        paid: e.vendor ? !isMonthly : null
+        counterparty_store_id: e.isTransfer ? (e.transferStoreId || null) : null,
+        paid: e.isTransfer ? false : (e.vendor ? !isMonthly : null)
       };
     });
   }

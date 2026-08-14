@@ -306,6 +306,12 @@
         <div style="font-size:12px;color:var(--text-light);margin-bottom:12px;">這裡不用手動輸入。店長在日報表的「變動成本」選了廠商，系統就會自動整理到這裡；月結的廠商會列在下面等你標記已付款，現結／沒選廠商的不會出現，因為當天就結清了。</div>
         <div id="vendor-table-wrap"></div>
       </div>
+
+      <div class="card" id="transfer-card" style="display:none;">
+        <h3>🔁 店間調撥</h3>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:12px;">店長在日報表的「變動成本」選「店間調撥」才會出現在這裡，代表這筆不是外部採購，是跟別的店互相調貨。負數代表這店把成本沖銷掉（賣出去的那一方）。</div>
+        <div id="transfer-table-wrap"></div>
+      </div>
     </div>
 
     <!-- ══ 未收款清單 ══ -->
@@ -727,6 +733,46 @@
     const rows = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${range.start}&date=lte.${range.end}&vendor_name=not.is.null`);
     vendorDailyExpenses = Array.isArray(rows) ? rows : [];
     renderVendorTable();
+    await loadStoreTransfers(range);
+  }
+
+  // ── 店間調撥（本店在日報表選了「店間調撥」的變動成本紀錄）──
+  async function loadStoreTransfers(range) {
+    const rows = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${range.start}&date=lte.${range.end}&counterparty_store_id=not.is.null&order=date.desc`);
+    const transfers = Array.isArray(rows) ? rows : [];
+    const card = document.getElementById('transfer-card');
+    card.style.display = transfers.length ? 'block' : 'none';
+    if (!transfers.length) return;
+
+    const storesById = Object.fromEntries(stores.map(s => [s.id, s]));
+    const rowsHtml = transfers.map(t => {
+      const counterName = storesById[t.counterparty_store_id]?.name || '（已刪除的店）';
+      const amt = Number(t.amount || 0);
+      return `<tr class="${t.paid ? 'paid-row' : ''}">
+        <td>${esc(t.date)}</td>
+        <td>${esc(counterName)}</td>
+        <td>${esc(t.description || '')}</td>
+        <td style="color:${amt < 0 ? 'var(--red)' : 'var(--text-dark)'}">${fmt(amt)}</td>
+        <td><span class="status-badge ${t.paid ? 'badge-yes' : 'badge-no'}" onclick="markTransferPaid('${t.id}', ${!t.paid})">${t.paid ? '✅ 已確認' : '未確認'}</span></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('transfer-table-wrap').innerHTML = `<table class="data-table">
+      <thead><tr><th>日期</th><th>對方店</th><th>項目</th><th>金額</th><th>狀態</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+  }
+
+  async function markTransferPaid(id, paid) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_daily_expenses?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ paid })
+      });
+      const range = periodRange(vYear, vMonth, vHalf);
+      await loadStoreTransfers(range);
+    } catch { alert('更新失敗，請再試一次'); }
   }
 
   function renderVendorTable() {
