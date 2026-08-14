@@ -94,6 +94,17 @@
 
     .table-box { background: var(--card-bg); border-radius: 14px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
     .table-box h3 { font-size: 13px; color: var(--text-mid); margin-bottom: 14px; }
+
+    /* ── 損益表（直式，由上到下）── */
+    .pnl-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; font-size: 14px; }
+    .pnl-row.sub { padding-left: 16px; font-size: 12.5px; color: var(--text-light); }
+    .pnl-row.total { font-weight: 700; font-size: 15px; padding: 10px 0; }
+    .pnl-row .val { font-variant-numeric: tabular-nums; }
+    .pnl-row .val.neg { color: var(--red); }
+    .pnl-row .val.pos { color: var(--green); }
+    .pnl-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+    .pnl-divider.thick { border-top: 2px solid var(--text-dark); margin: 8px 0; }
+    .pnl-note { font-size: 11px; color: var(--text-light); margin-top: 8px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { text-align: left; padding: 8px 10px; background: var(--cream); color: var(--text-mid); font-weight: 600; }
     td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
@@ -228,6 +239,11 @@
       <button onclick="changeMonth(-1)">◀</button>
       <h2 id="month-label"></h2>
       <button onclick="changeMonth(1)">▶</button>
+    </div>
+
+    <div class="table-box">
+      <h3>本月損益表</h3>
+      <div id="pnl-content"></div>
     </div>
 
     <div class="cards">
@@ -369,6 +385,35 @@
     return m ? m[1] : '其他';
   }
 
+  // 傳統直式損益表：由上到下——營業收入 → 減營業成本 → 營業毛利 → 減營業費用 → 本期淨利。
+  // 跟 finance.html 全店總覽表用同一套數字，只是換成單店、由上到下的呈現方式。
+  function renderPnl(revenue, variableCost, dailyExpense, fixedList) {
+    const fixedTotal = fixedList.reduce((s, e) => s + Number(e.amount || 0), 0);
+    const grossProfit = revenue - variableCost;
+    const grossMargin = revenue > 0 ? (grossProfit / revenue * 100) : null;
+    const netProfit = grossProfit - dailyExpense - fixedTotal;
+    const netMargin = revenue > 0 ? (netProfit / revenue * 100) : null;
+    const money = n => `$${Math.round(n).toLocaleString()}`;
+    const valCls = n => n < 0 ? 'neg' : (n > 0 ? 'pos' : '');
+
+    const fixedRows = fixedList.map(e =>
+      `<div class="pnl-row sub"><span>${esc(e.category)}／${esc(e.item_name)}</span><span class="val">-${money(e.amount)}</span></div>`
+    ).join('');
+
+    document.getElementById('pnl-content').innerHTML = `
+      <div class="pnl-row"><span>營業收入</span><span class="val">${money(revenue)}</span></div>
+      <div class="pnl-row"><span>營業成本（食材／變動成本）</span><span class="val neg">-${money(variableCost)}</span></div>
+      <hr class="pnl-divider">
+      <div class="pnl-row total"><span>營業毛利</span><span class="val ${valCls(grossProfit)}">${money(grossProfit)}${grossMargin != null ? ` (${grossMargin.toFixed(1)}%)` : ''}</span></div>
+      <div class="pnl-row" style="margin-top:8px;"><span>營業費用</span><span></span></div>
+      <div class="pnl-row sub"><span>日常費用（日報表登記）</span><span class="val neg">-${money(dailyExpense)}</span></div>
+      ${fixedRows || '<div class="pnl-row sub"><span>月度固定費用（尚未登記）</span><span class="val">$0</span></div>'}
+      <hr class="pnl-divider thick">
+      <div class="pnl-row total"><span>本期淨利</span><span class="val ${valCls(netProfit)}">${money(netProfit)}${netMargin != null ? ` (淨利率 ${netMargin.toFixed(1)}%)` : ''}</span></div>
+      <div class="pnl-note">固定費用登記在「月結對帳」頁面；本表跟 finance.html 全店總覽用同一套公式，只是換成單店直式呈現。</div>
+    `;
+  }
+
   async function loadData() {
     if (!currentStoreId) return;
     const year = currentDate.getFullYear();
@@ -379,12 +424,15 @@
 
     document.getElementById('month-label').textContent = `${year} 年 ${parseInt(month)} 月`;
 
-    const [expenses, reports] = await Promise.all([
+    const yearMonth = `${year}-${month}`;
+    const [expenses, reports, fixedExpenses] = await Promise.all([
       dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.desc`),
-      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.asc`)
+      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&order=date.asc`),
+      dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${yearMonth}`)
     ]);
     const expList = Array.isArray(expenses) ? expenses : [];
     const reportList = Array.isArray(reports) ? reports : [];
+    const fixedList = Array.isArray(fixedExpenses) ? fixedExpenses : [];
 
     const totalExp = expList.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
     const totalRev = reportList.reduce((s, r) => s + calcTotal(r, variableCostForDate(expList, r.date)), 0);
@@ -398,6 +446,7 @@
       const cat = expenseCategory(e.description);
       catMap[cat] = (catMap[cat] || 0) + Number(e.amount || 0) + Number(e.shipping_amount || 0);
     });
+    renderPnl(totalRev, catMap['變動成本'] || 0, catMap['費用'] || 0, fixedList);
     const cats = Object.keys(catMap);
     if (categoryChart) categoryChart.destroy();
     categoryChart = new Chart(document.getElementById('categoryChart'), {
