@@ -204,7 +204,9 @@
               <th style="cursor:pointer" onclick="sortOverview('name')">店名</th>
               <th style="cursor:pointer" onclick="sortOverview('days')">登載天數</th>
               <th style="cursor:pointer" onclick="sortOverview('revenue')">本月營收</th>
-              <th style="cursor:pointer" onclick="sortOverview('net')">本月毛利</th>
+              <th style="cursor:pointer" onclick="sortOverview('fixedCost')">固定費用</th>
+              <th style="cursor:pointer" onclick="sortOverview('net')">本月淨利</th>
+              <th style="cursor:pointer" onclick="sortOverview('netMargin')">淨利率</th>
               <th style="cursor:pointer" onclick="sortOverview('margin')">毛利率（最新半月）</th>
               <th style="cursor:pointer" onclick="sortOverview('receivable')">未收款餘額</th>
               <th style="cursor:pointer" onclick="sortOverview('efficiency')">人效值</th>
@@ -212,11 +214,11 @@
               <th style="cursor:pointer" onclick="sortOverview('supervision')">督導合格率</th>
             </tr>
           </thead>
-          <tbody id="overview-tbody"><tr><td colspan="9" class="loading">載入中…</td></tr></tbody>
+          <tbody id="overview-tbody"><tr><td colspan="11" class="loading">載入中…</td></tr></tbody>
         </table>
       </div>
       <div style="font-size:12px;color:var(--text-light);padding:0 4px;">
-        紅字代表：登載天數少於5天（資料可能不完整）、或毛利率明顯偏離48%的常態值。只列營運中的店，籌備中／已結束不顯示。
+        紅字代表：登載天數少於5天（資料可能不完整）、淨利或淨利率為負（虧損）、或毛利率明顯偏離48%的常態值。只列營運中的店，籌備中／已結束不顯示。本月淨利＝營收－日常費用－月度固定費用（房租/保險/自動扣款等，去「月結對帳」登記）。
       </div>
     </div>
 
@@ -456,7 +458,7 @@
     const tbody = document.getElementById('overview-tbody');
     const activeStores = stores.filter(s => s.status === '營運中');
     if (activeStores.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="loading">目前沒有營運中的店</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="loading">目前沒有營運中的店</td></tr>';
       return;
     }
     const ids = activeStores.map(s => s.id).join(',');
@@ -471,13 +473,15 @@
     const prevEndKey = periodEndDate(prev.y, prev.m, prev.half);
     const periodRangeVal = periodRange(y, m, half);
 
-    const [reports, expenses, receivables, invCounts, vendorPays, supRecords] = await Promise.all([
+    const yearMonth = `${y}-${pad2(m)}`;
+    const [reports, expenses, receivables, invCounts, vendorPays, supRecords, fixedExpenses] = await Promise.all([
       dbGet('store_daily_report', `store_id=in.(${ids})&date=gte.${monthStart}&date=lte.${monthEnd}`),
       dbGet('store_daily_expenses', `store_id=in.(${ids})&date=gte.${monthStart}&date=lte.${monthEnd}`),
       dbGet('store_receivables', `store_id=in.(${ids})&collected=eq.false`),
       dbGet('store_inventory_counts', `store_id=in.(${ids})&period_end_date=in.(${endKey},${prevEndKey})`),
       dbGet('store_vendor_payments', `store_id=in.(${ids})&period_end_date=eq.${endKey}`),
-      dbGet('supervision_records', `store_id=in.(${ids})&order=created_at.desc`)
+      dbGet('supervision_records', `store_id=in.(${ids})&order=created_at.desc`),
+      dbGet('store_fixed_expenses', `store_id=in.(${ids})&year_month=eq.${yearMonth}`)
     ]);
 
     const byStore = id => ({
@@ -487,7 +491,8 @@
       begin: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_end_date === prevEndKey),
       end: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_end_date === endKey),
       vendorTotal: (Array.isArray(vendorPays) ? vendorPays : []).filter(v => v.store_id === id).reduce((s, v) => s + Number(v.amount || 0), 0),
-      latestSupervision: (Array.isArray(supRecords) ? supRecords : []).find(r => r.store_id === id)
+      latestSupervision: (Array.isArray(supRecords) ? supRecords : []).find(r => r.store_id === id),
+      fixedCost: (Array.isArray(fixedExpenses) ? fixedExpenses : []).filter(e => e.store_id === id).reduce((s, e) => s + Number(e.amount || 0), 0)
     });
 
     overviewRows = activeStores.map(s => {
@@ -513,10 +518,13 @@
         margin = periodRevenue > 0 ? (periodRevenue - usage) / periodRevenue * 100 : null;
       }
 
+      const net = revenue - cost - d.fixedCost;
       return {
         id: s.id, name: s.name,
         days: d.reports.length,
-        revenue, net: revenue - cost, margin,
+        revenue, fixedCost: d.fixedCost, net,
+        netMargin: revenue > 0 ? net / revenue * 100 : null,
+        margin,
         receivable: receivableBalance,
         efficiency: avgEff, perPot: avgPot,
         supervision: d.latestSupervision ? Number(d.latestSupervision.score) : null
@@ -545,7 +553,9 @@
       <td class="store-name" onclick="goToStore('${r.id}')">${esc(r.name)}</td>
       <td class="${r.days < 5 ? 'flag' : ''}">${r.days} 天</td>
       <td>$${Math.round(r.revenue).toLocaleString()}</td>
-      <td>$${Math.round(r.net).toLocaleString()}</td>
+      <td>$${Math.round(r.fixedCost).toLocaleString()}</td>
+      <td class="${r.net < 0 ? 'flag' : ''}">$${Math.round(r.net).toLocaleString()}</td>
+      <td class="${r.netMargin != null && r.netMargin < 0 ? 'flag' : ''}">${r.netMargin != null ? r.netMargin.toFixed(1) + '%' : '—'}</td>
       <td class="${r.margin != null && Math.abs(r.margin - 48) > 15 ? 'flag' : ''}">${r.margin != null ? r.margin.toFixed(1) + '%' : '—'}</td>
       <td>$${Math.round(r.receivable).toLocaleString()}</td>
       <td>${r.efficiency != null ? r.efficiency.toFixed(1) : '—'}</td>
