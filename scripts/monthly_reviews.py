@@ -21,6 +21,14 @@ REPORT_TO = os.environ.get("REPORT_TO_EMAIL") or "ijs7594@gmail.com"
 LINEBOT_URL = "https://guijong-linebot-production.up.railway.app"
 NOTIFY_SECRET = os.environ.get("NOTIFY_SECRET")
 
+# 固定寫死在報告裡的大前提，不靠 AI 每次記得講——評分好壞不是拿來考核用的，
+# 是幫夥伴自己看見門店狀態的鏡子，不等於營業額。
+PREMISE_STATEMENT = (
+    "評論不代表營業額，但代表門店當下的狀態。營業額好的店，評論不一定好；"
+    "但營業額好、評論也好的店，就是真正健康、能持續往上走的店——這是最好的訊號，"
+    "也是這份報告想幫大家一起看見的東西，不是拿來考核用的。"
+)
+
 
 def load_known_constraints():
     path = os.path.join(os.path.dirname(__file__), "known_constraints.txt")
@@ -155,9 +163,42 @@ def previous_month_start(today, months_back=1):
     return datetime(y, m, 1, tzinfo=timezone.utc)
 
 
-# 正常每月排程用 1（只回顧上個月）。手動觸發 workflow 時可以調大這個數字，
+# 預設抓 2 個月，不是 1 個月：Google 每家店只回傳幾則代表性評論，
+# 只看上個月常常十家有一半沒東西可講。手動觸發 workflow 時可以調更大，
 # 一次把還沒被報告過的月份（例如系統剛建置時錯過的六、七月）補進同一份報告。
-LOOKBACK_MONTHS = int(os.environ.get("REVIEW_LOOKBACK_MONTHS", "1"))
+LOOKBACK_MONTHS = int(os.environ.get("REVIEW_LOOKBACK_MONTHS", "2"))
+
+
+def get_store_revenue_total(store_id, start, end):
+    """算某店在 [start, end) 這段期間的總營業額，公式跟 store-trend.html 前端算法一致。"""
+    url = (
+        f"{SUPABASE_URL}/rest/v1/store_daily_report"
+        f"?store_id=eq.{store_id}&date=gte.{start.date().isoformat()}&date=lt.{end.date().isoformat()}"
+        f"&select=morning_revenue,evening_revenue,line_pay,uber_amount,foodpanda_amount,uncollected"
+    )
+    rows = http_json(url, headers=supa_headers())
+    if not rows:
+        return None
+    total = 0
+    for r in rows:
+        total += sum(
+            r.get(k) or 0
+            for k in ("morning_revenue", "evening_revenue", "line_pay", "uber_amount", "foodpanda_amount", "uncollected")
+        )
+    return total
+
+
+def revenue_trend_label(current, prior):
+    if current is None or prior is None or prior == 0:
+        return None, None
+    delta_pct = round((current - prior) / prior * 100, 1)
+    if delta_pct >= 5:
+        label = "成長"
+    elif delta_pct <= -5:
+        label = "下滑"
+    else:
+        label = "持平"
+    return label, delta_pct
 
 
 def collect_store_data():
@@ -209,6 +250,18 @@ def collect_store_data():
             if rv["publish_time"] and parse_iso(rv["publish_time"]) >= cutoff
         ]
         save_snapshot(s["id"], top["id"], rating, count)
+
+        # 評分不代表營業額，但評論反映的是門店的「狀態」——這裡把上個月營收
+        # 走勢一起算出來，讓報告能區分「營收好但評論沒跟上」跟「營收評論一起往上」
+        # 這兩種完全不同意義的情況，而不是只看評分高低。
+        now = datetime.now(timezone.utc)
+        last_month_start = previous_month_start(now, 1)
+        this_month_start = previous_month_start(now, 0)
+        prior_month_start = previous_month_start(now, 2)
+        revenue_last = get_store_revenue_total(s["id"], last_month_start, this_month_start)
+        revenue_prior = get_store_revenue_total(s["id"], prior_month_start, last_month_start)
+        revenue_trend, revenue_delta_pct = revenue_trend_label(revenue_last, revenue_prior)
+
         collected.append({
             "store": s,
             "matched_name": top["displayName"]["text"],
@@ -220,6 +273,8 @@ def collect_store_data():
             "trend_months": trend_months,
             "delta_rating_trend": delta_rating_trend,
             "delta_count_trend": delta_count_trend,
+            "revenue_trend": revenue_trend,
+            "revenue_delta_pct": revenue_delta_pct,
             "_has_history": last is not None,
             "reviews": new_reviews,
         })
@@ -228,13 +283,29 @@ def collect_store_data():
 
 def build_prompt(collected):
     period_desc = "上個月" if LOOKBACK_MONTHS == 1 else f"最近 {LOOKBACK_MONTHS} 個月"
-    lines = [f"以下是今年貴焿古早味麵線羹{period_desc}各分店的 Google 評論資料，請幫忙寫月報。\n"]
+    lines = [
+        f"以下是今年貴焿古早味麵線羹{period_desc}各分店的 Google 評論資料，請幫忙寫月報。\n",
+        "在開始之前，先建立一個大前提，整份報告都要用這個角度來寫：\n"
+        "評論不代表營業額，但評論代表門店當下的「狀態」——服務有沒有到位、"
+        "顧客有沒有被好好對待。營業額好的店，評論不見得好；但如果一家店營業額好、"
+        "評論也好，那就是狀態真的很健康、能持續往上的店，這是最值得肯定、最好的訊號。"
+        "所以我每家店都附上了上個月的營收走勢（成長／持平／下滑），你判斷評分意義的時候，"
+        "要把這個一起考慮進去，而不是只看評分高低：\n"
+        "- 評分好＋營收也成長：這是最好的組合，明確點名肯定，這是值得延續的健康成長。\n"
+        "- 評分不到4分＋營收卻成長或持平：這是最值得留意的落差——代表客人還是有來，"
+        "但滿意度沒跟上，長期會侵蝕回購率，要溫和但明確地點出這個落差，不是罵店，"
+        "是幫店長看見一個他營業額報表上看不到的風險。\n"
+        "- 評分好＋營收下滑：評論好代表服務體質沒問題，營收下滑通常是外部因素"
+        "（來客量、競爭、季節），不要因為營收下滑就連帶質疑服務品質。\n"
+        "整份報告最重要的原則：這是要幫夥伴自己「看見」，不是拿來苛責或考核。"
+        "語氣可以直接、具體，但底層是教練式的關心，不是上對下的檢討。\n",
+    ]
     constraints = load_known_constraints()
     if constraints:
         lines.append(
             "以下是總部已經明確決定、不會因為顧客評論而調整的既定政策。"
-            "評論內容如果只是在抱怨這些，不要放進「可用SOP解決的系統性問題」或"
-            "「需要店長／夥伴自我檢查的問題」這兩段去要求改善，當作已有共識的既定政策看待就好。"
+            "評論內容如果只是在抱怨這些，不要放進「可以優化的制度或流程」或"
+            "「值得提醒夥伴留意的服務細節」這兩段去要求改善，當作已有共識的既定政策看待就好。"
             "如果建議店長怎麼回覆顧客這類評論，語氣要溫暖、明確感謝顧客花時間反映意見，"
             "讓顧客覺得被重視、有被聽見；但不要道歉、不要承諾會改、也不要解釋這是公司政策或成本考量，"
             "單純傳達「謝謝您的建議，我們收到了」這種被聽見但不承諾改變的態度：\n"
@@ -249,6 +320,8 @@ def build_prompt(collected):
         delta_r = f"{c['delta_rating']:+}" if c["delta_rating"] is not None else "無上月資料"
         delta_c = f"{c['delta_count']:+}" if c["delta_count"] is not None else ""
         lines.append(f"【{name}】目前 {c['rating']} 分（{delta_r}），共 {c['count']} 則（{delta_c}），評分等級：{c['tier']}")
+        revenue_note = f"上個月營收：{c['revenue_trend']}（{c['revenue_delta_pct']:+}%）" if c["revenue_trend"] else "上個月營收：資料不足無法判斷"
+        lines.append(f"  {revenue_note}")
         if c["trend_months"]:
             trend_r = f"{c['delta_rating_trend']:+}" if c["delta_rating_trend"] is not None else "無資料"
             trend_c = f"{c['delta_count_trend']:+}" if c["delta_count_trend"] is not None else "無資料"
@@ -271,23 +344,27 @@ def build_prompt(collected):
     lines.append(
         "請用繁體中文輸出兩個部分，用 <manager> 跟 <exec> 這兩個 XML 標籤包起來：\n"
         "1. <manager> 標籤內：每家店各一句話，給該店店長看的具體上月回饋，"
-        "根據評論內容指出上個月最該讚美或最該改善的一件事，語氣直接不要客套。"
+        "根據評論內容指出上個月最該讚美或最該留意的一件事。語氣是教練在跟自己人講話："
+        "直接、具體、不客套，但底層是關心，不是指責，目的是幫他自己看見，不是讓他覺得被抓包。"
+        "如果評分好、營收也成長，這句話要明確肯定這是雙好的健康狀態。"
         "如果我有特別註明該店沒有任何一則代表性評論落在上個月，這句話就只講「上個月沒有可回顧的新評論」；"
-        "不要翻舊帳去引用更早之前的評論內容或問題，除非我有另外要求做舊帳回顧。\n"
+        "不要翻舊帳去引用更早之前的評論內容或問題，除非我另外要求做舊帳回顧。\n"
         "2. <exec> 標籤內：給執行長跟督導看的整體趨勢摘要。"
-        "「系統性問題」和「自我檢查」這兩段只能根據上個月真的有拿到的評論內容來判斷，"
-        "沒有拿到評論內容的店不用列入這兩段；"
-        "但「整體趨勢」段不受此限——每家店我都有附上近幾個月的評分/則數變化（這是真實數字，"
-        "不是評論內容），可以直接拿來討論長期趨勢和退步/進步，即使該店上個月沒有拿到評論內容也要看這個數字。"
+        "「可以優化的制度或流程」和「值得提醒夥伴留意的服務細節」這兩段只能根據上個月真的有拿到的"
+        "評論內容來判斷，沒有拿到評論內容的店不用列入這兩段；"
+        "但「整體趨勢」段不受此限——每家店我都有附上營收走勢跟近幾個月的評分/則數變化（這些是真實數字，"
+        "不是評論內容），可以直接拿來討論長期趨勢和退步/進步，即使該店上個月沒有拿到評論內容也要看這些數字。"
         "內容要分成三段，各自用小標題開頭（純文字小標題，不用再包標籤）：\n"
-        "「整體趨勢」：2-3 句，根據近幾個月的評分/則數變化，哪幾家在退步、哪幾家在進步、"
-        "哪幾家評分明顯低於其他店（低於4.0分）需要留意。\n"
-        "「可用 SOP 解決的系統性問題」：列出跨店重複出現、屬於制度或流程層級的問題"
+        "「整體趨勢」：3-4 句。第一句先點名這個月「評分好且營收也成長」的店，明確肯定是健康成長；"
+        "接著點出「評分低於4.0但營收成長或持平」的店，用「值得留意的落差」這種語氣講，"
+        "不要用「問題店」「退步」這種定性字眼；最後簡單提一下其他店的評分/則數變化。\n"
+        "「可以優化的制度或流程」：列出跨店重複出現、屬於制度或流程層級的狀況"
         "（例如好幾家都有一樣的抱怨、加購定價不透明、包裝標準不一致這種可以寫成書面規範來源頭解決的），"
-        "每項註明是哪些店，如果本月沒有這類問題就寫「本月無」。\n"
-        "「需要店長／夥伴自我檢查的問題」：列出屬於個別人員態度、當下應對方式、"
-        "個人責任心的問題（例如某店店員不耐煩、甩餐、算錯錢這種不是制度缺失、"
-        "而是當下那個人沒做好的），每項註明是哪家店，如果本月沒有就寫「本月無」。\n"
+        "每項註明是哪些店，如果本月沒有這類狀況就寫「本月無」。\n"
+        "「值得提醒夥伴留意的服務細節」：列出屬於個別人員態度、當下應對方式的具體事件"
+        "（例如某店店員不耐煩、甩餐、算錯錢這種不是制度缺失、而是當下那個人沒做好的），"
+        "每項註明是哪家店，語氣是「這件事值得跟他聊聊」而不是「這個人有問題」，"
+        "如果本月沒有就寫「本月無」。\n"
         "不要輸出任何其他文字。"
     )
     return "\n".join(lines)
@@ -374,6 +451,7 @@ def build_email_html(collected, ai_text):
         {standing_rows}
       </table>
       <p style="font-size:13px;color:#8a6d5a;">紅字＝評分低於 4.0，建議優先關注。長期趨勢是跟最早有紀錄的一次比較，會隨著月報累積愈來愈準。</p>
+      <p style="background:#f4e9dc;border-radius:8px;padding:12px 14px;font-size:13px;color:#5c3d28;line-height:1.6;">💡 {PREMISE_STATEMENT}</p>
       <h3 style="color:#7a3b1e;">給執行長／督導的整體摘要</h3>
       <p>{exec_part}</p>
       <h3 style="color:#7a3b1e;">給各店店長的本月回饋</h3>
@@ -393,7 +471,7 @@ def build_line_message(collected, ai_text):
     )
     below = [c for c in ranked if c["rating"] < 4.0]
 
-    lines = [f"⭐ 今年貴焿 {period_label} 評論月報", ""]
+    lines = [f"⭐ 今年貴焿 {period_label} 評論月報", "", f"💡 {PREMISE_STATEMENT}", ""]
     if below:
         lines.append("⚠️ 評分低於4.0分，需要留意：")
         for c in below:
