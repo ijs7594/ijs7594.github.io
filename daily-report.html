@@ -280,7 +280,7 @@
         <div class="field-group-label">客數 & 日營收</div>
         <div class="field-row">
           <div class="field"><label>客數</label><input type="number" id="f-morning-customers" oninput="updatePreview()" /></div>
-          <div class="field"><label>日營收（現場現金）</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
+          <div class="field"><label>現金小計</label><input type="number" id="f-morning-revenue" oninput="updatePreview()" /></div>
         </div>
       </div>
 
@@ -430,7 +430,7 @@
   }
 
   // ── 公式：現場營收合計 / 整日營收總額 / 人效值 ──
-  // 店長回報的「日營收（現場現金）」是付完當天現金支出後剩下的錢，不是真正營收，
+  // 店長回報的「現金小計」是付完當天現金支出後剩下的錢，不是真正營收，
   // 要把當天所有從現金付掉的支出（費用＋變動成本）加回來才是真正的營業總額。
   // 月結未付的變動成本不能加回去——那筆錢根本沒從收銀機拿出去過。
   function variableCostForDate(expRows, date) {
