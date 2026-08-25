@@ -420,6 +420,10 @@
     document.getElementById('vperiod-year').onchange = () => { vYear = Number(document.getElementById('vperiod-year').value); loadVendor(); };
     document.getElementById('vperiod-month').onchange = () => { vMonth = Number(document.getElementById('vperiod-month').value); loadVendor(); };
 
+    // 按鈕預設寫死「上旬」，這裡讓畫面高亮的按鈕對齊 mHalf/vHalf 實際算出來的期間（依今天日期判斷）
+    document.querySelectorAll('[data-half]').forEach(el => el.classList.toggle('active', el.dataset.half === mHalf));
+    document.querySelectorAll('[data-vhalf]').forEach(el => el.classList.toggle('active', el.dataset.vhalf === vHalf));
+
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');

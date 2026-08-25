@@ -288,10 +288,6 @@
         <div class="stat-value red" id="stat-expense">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">本月毛利</div>
-        <div class="stat-value brown" id="stat-net">—</div>
-      </div>
-      <div class="stat-card">
         <div class="stat-label">平均人效值</div>
         <div class="stat-value blue" id="stat-efficiency">—</div>
       </div>
@@ -629,8 +625,34 @@
     Object.entries(fieldToId).forEach(([f, id]) => {
       document.getElementById(id).value = existing ? (existing[f] ?? '') : '';
     });
+    document.getElementById('cost-rows').innerHTML = '';
+    document.getElementById('variable-rows').innerHTML = '';
+    expenseRows.filter(e => e.date === date).forEach(e => {
+      const category = (e.description || '').startsWith('【變動成本】') ? 'variable'
+        : (e.description || '').startsWith('【費用】') ? 'cost' : null;
+      if (category) prefillExpenseRow(category, e);
+    });
     renderTodayReceivables();
     updatePreview();
+  }
+
+  // ── 修改某一天時，把已經記過的費用／變動成本帶回畫面，避免補登記時看不到舊資料而重複輸入 ──
+  function prefillExpenseRow(category, exp) {
+    addCostRow(category);
+    const row = document.getElementById(`${category}-rows`).lastElementChild;
+    const select = row.querySelector('.f-preset');
+    const custom = row.querySelector('.f-custom');
+    const amt = row.querySelector('.f-amt');
+    const ship = row.querySelector('.f-ship');
+    const desc = (exp.description || '').replace(/^【(?:費用|變動成本)】/, '');
+    const presetValue = category === 'variable' && exp.vendor_name
+      ? exp.vendor_name
+      : (category === 'cost' && COST_PRESETS.cost.includes(desc) ? desc : null);
+    select.value = (presetValue && Array.from(select.options).some(o => o.value === presetValue)) ? presetValue : '__custom';
+    onPresetChange(select, row.id);
+    if (select.value === '__custom') custom.value = desc;
+    amt.value = exp.amount ?? '';
+    if (ship) ship.value = exp.shipping_amount ?? '';
   }
 
   // ── 未收款登記（今日新增用，掛在日報表當天日期下）──
@@ -717,7 +739,6 @@
     const avgPerPot = monthAvgPerPot();
     document.getElementById('stat-revenue').textContent = fmt(totalRev);
     document.getElementById('stat-expense').textContent = fmt(totalExp);
-    document.getElementById('stat-net').textContent = fmt(totalRev - totalExp);
     document.getElementById('stat-efficiency').textContent = avgEff != null ? avgEff.toFixed(1) : '—';
     document.getElementById('stat-per-pot').textContent = avgPerPot != null ? Math.round(avgPerPot).toLocaleString() : '—';
     document.getElementById('stat-days').textContent = `${reportRows.length} 天`;
@@ -847,6 +868,11 @@
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(report)
       });
+      // 這天的費用／變動成本每次送出都要整批取代，不然重複補登記或修改就會疊加成兩筆
+      await fetch(`${SUPABASE_URL}/rest/v1/store_daily_expenses?store_id=eq.${currentStoreId}&date=eq.${date}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
       if (expInputs.length > 0) {
         await fetch(`${SUPABASE_URL}/rest/v1/store_daily_expenses`, {
           method: 'POST',
@@ -880,7 +906,6 @@
       const vc = variableCostForDate(expenseRows, date);
       const total = r ? calcTotal(r, vc) : 0;
       const expTotal = exps.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
-      const net = total - expTotal;
       const perPot = r ? calcPerPot(r, vc) : null;
       const isOpen = openDayKey === date;
       return `<div class="day-row">
@@ -889,7 +914,6 @@
           <span class="day-figure">整日營收總額 <b style="color:var(--green)">${fmt(total)}</b></span>
           <span class="day-figure">支出 <b style="color:var(--red)">${fmt(expTotal)}</b></span>
           ${perPot != null ? `<span class="day-figure">每鍋 <b style="color:${perPotAnomalyColor(perPot)}">${Math.round(perPot).toLocaleString()}</b>${perPotHint(perPot)}</span>` : ''}
-          <span class="day-net" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">毛利 ${fmt(net)}</span>
         </div>
         <div class="day-detail ${isOpen ? 'open' : ''}">
           ${r ? `<div class="detail-grid">
