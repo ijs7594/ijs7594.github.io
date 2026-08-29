@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINE Auth PoC</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Noto Sans TC', sans-serif; background: #f7f4f0; color: #1a1a1a; padding: 16px; font-size: 14px; line-height: 1.65; }
+h1 { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+.sub { color: #888; font-size: 11px; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid #e5e0db; }
+h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #7B3328; margin-bottom: 10px; }
+label { display: block; font-size: 11px; color: #555; margin: 8px 0 3px; font-weight: 600; }
+input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; font-family: monospace; background: #fafafa; }
+input:focus { outline: 2px solid #7B3328; border-color: transparent; }
+.warn { background: #fff8e6; border: 1px solid #f0c040; border-radius: 5px; padding: 10px 12px; font-size: 12px; color: #7a5a10; margin-top: 8px; }
+.note { background: #f0ece8; border-radius: 5px; padding: 10px 12px; font-size: 12px; color: #555; margin-top: 8px; }
+.empirical { background: #fdf0e8; border: 1px solid #e8a060; border-radius: 5px; padding: 10px 12px; font-size: 12px; color: #7a4010; margin-bottom: 10px; }
+.btn { display: block; width: 100%; padding: 11px; border: none; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn-a { background: #06C755; color: #fff; }
+.btn-b { background: #7B3328; color: #fff; }
+.btn-clear { background: #eee; color: #555; font-size: 12px; padding: 8px; }
+/* Steps */
+.step { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #f0ece8; }
+.step:last-child { border-bottom: none; }
+.si { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.si-wait { background: #e8e4e0; color: #888; }
+.si-ok   { background: #d4edda; color: #1a7a3a; }
+.si-fail { background: #fde8e8; color: #b03020; }
+.si-skip { background: #fff3cd; color: #856404; }
+.st { flex: 1; min-width: 0; }
+.st-t { font-weight: 600; font-size: 13px; }
+.st-d { font-size: 12px; color: #666; margin-top: 3px; line-height: 1.55; }
+.st-d code { background: #f3ede8; padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 11px; word-break: break-all; }
+.verdict { padding: 11px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-top: 10px; }
+.v-pass { background: #d4edda; color: #155724; }
+.v-fail { background: #fde8e8; color: #721c24; }
+.v-skip { background: #fff3cd; color: #856404; }
+.v-wait { background: #f0ece8; color: #777; }
+/* Comparison */
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.cmp-col { border: 1px solid #e0d8d0; border-radius: 6px; padding: 12px; }
+.cmp-col h3 { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+.cmp-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid #f3ede8; }
+.cmp-row:last-child { border-bottom: none; }
+.cmp-k { color: #888; }
+.cmp-v { font-weight: 500; }
+.tag-ok   { background: #d4edda; color: #155724; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+.tag-warn { background: #fff3cd; color: #856404; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+.tag-fail { background: #fde8e8; color: #721c24; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+.tag-na   { background: #f0ece8; color: #888; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+pre.raw { background: #f0ebe5; padding: 10px; border-radius: 5px; font-size: 10.5px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin-top: 8px; color: #333; border: 1px solid #e0d8d0; }
+.recommend { margin-top: 12px; padding: 12px; background: #f9f5f0; border-radius: 6px; font-size: 13px; color: #3a2010; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>LINE Auth PoC</h1>
+<p class="sub">隔離測試 · 不碰 production · 驗完請刪除此頁面</p>
+
+<!-- ── 設定 ── -->
+<div class="card">
+  <h2>設定</h2>
+
+  <label>PoC LIFF ID（新建的獨立 LIFF App，不要填既有的）</label>
+  <input id="liffId" value="" placeholder="2010930752-XXXXXXXXX">
+  <div class="warn" style="margin-top:6px">在 LINE Login Channel 底下另建新 LIFF App，Endpoint = 此頁面 URL。<br>既有 LIFF App（DdwrPCTY）完全不動。</div>
+
+  <label>Supabase Project URL</label>
+  <input id="sbUrl" value="https://zsowgiobylacwabjjvub.supabase.co">
+
+  <label>Supabase Anon Key</label>
+  <input id="sbKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw">
+
+  <label>Custom OIDC Provider Identifier（Supabase Dashboard 設定時填的名稱）</label>
+  <input id="providerName" value="line-poc" placeholder="line-poc">
+  <div class="note">API 呼叫時加 <code>custom:</code> 前綴 → <code>custom:line-poc</code><br>
+  Supabase 的 Custom OAuth/OIDC Provider（Authentication → Sign In Methods）。<br>
+  ⚠ 這不是 Third Party Auth（那是 Clerk/Auth0/Firebase 用的）。</div>
+</div>
+
+<!-- ── Method A ── -->
+<div class="card">
+  <h2>Method A：signInWithIdToken（待實證）</h2>
+  <div class="empirical">
+    ⚠ 待實證：Supabase Custom OIDC Provider 是否支援直接傳入 id_token 而不走 redirect？<br>
+    若成功 → Method A 是摩擦最低的方案（LIFF 內無跳轉）。<br>
+    若失敗 → 改用 Method B（標準 OAuth redirect）。
+  </div>
+  <div class="step"><div class="si si-wait" id="a1i">1</div><div class="st"><div class="st-t">LIFF 初始化</div><div class="st-d" id="a1d">等待</div></div></div>
+  <div class="step"><div class="si si-wait" id="a2i">2</div><div class="st"><div class="st-t">LINE 登入確認</div><div class="st-d" id="a2d">等待步驟 1</div></div></div>
+  <div class="step"><div class="si si-wait" id="a3i">3</div><div class="st"><div class="st-t">liff.getIDToken()</div><div class="st-d" id="a3d">等待步驟 2</div></div></div>
+  <div class="step"><div class="si si-wait" id="a4i">4</div><div class="st"><div class="st-t">解析 Token header：alg / kid / aud</div><div class="st-d" id="a4d">等待步驟 3</div></div></div>
+  <div class="step"><div class="si si-wait" id="a5i">5</div><div class="st"><div class="st-t">signInWithIdToken({ provider: 'custom:line-poc' })</div><div class="st-d" id="a5d">等待步驟 4</div></div></div>
+  <div class="step"><div class="si si-wait" id="a6i">6</div><div class="st"><div class="st-t">auth.uid() 確認</div><div class="st-d" id="a6d">等待步驟 5</div></div></div>
+  <div class="verdict v-wait" id="aVerdict">尚未執行</div>
+  <button class="btn btn-a" id="btnA" onclick="runA()">執行 Method A</button>
+</div>
+
+<!-- ── Method B ── -->
+<div class="card">
+  <h2>Method B：signInWithOAuth（同一個 custom:line-poc provider，redirect 流程）</h2>
+  <div class="note" style="margin-bottom:10px">
+    使用同一個 Custom OIDC Provider（不需要第二個）。<br>
+    流程：signInWithOAuth → LINE 登入頁 → Supabase callback → session。<br>
+    ⚠ 在 LIFF 內測試 redirect 可能中斷 LIFF session，建議也在一般瀏覽器測。
+  </div>
+  <div class="step"><div class="si si-wait" id="b1i">1</div><div class="st"><div class="st-t">signInWithOAuth({ provider: 'custom:line-poc' })</div><div class="st-d" id="b1d">等待</div></div></div>
+  <div class="step"><div class="si si-wait" id="b2i">2</div><div class="st"><div class="st-t">LINE OAuth 授權 → Supabase callback</div><div class="st-d" id="b2d">redirect 後回到此頁會自動繼續</div></div></div>
+  <div class="step"><div class="si si-wait" id="b3i">3</div><div class="st"><div class="st-t">auth.uid() 確認</div><div class="st-d" id="b3d">等待步驟 2</div></div></div>
+  <div class="verdict v-wait" id="bVerdict">尚未執行</div>
+  <button class="btn btn-b" id="btnB" onclick="runB()">執行 Method B</button>
+</div>
+
+<!-- ── 比較 ── -->
+<div class="card" id="cmpCard" style="display:none">
+  <h2>PoC 比較結果</h2>
+  <div class="cmp-grid">
+    <div class="cmp-col">
+      <h3 style="color:#06C755">Method A：signInWithIdToken</h3>
+      <div class="cmp-row"><span class="cmp-k">結果</span><span class="cmp-v" id="cA-r">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">Token alg</span><span class="cmp-v" id="cA-alg">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">kid 有無</span><span class="cmp-v" id="cA-kid">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">auth.uid()</span><span class="cmp-v" id="cA-uid">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">LIFF 體驗</span><span class="cmp-v" id="cA-ux">—</span></div>
+    </div>
+    <div class="cmp-col">
+      <h3 style="color:#7B3328">Method B：signInWithOAuth</h3>
+      <div class="cmp-row"><span class="cmp-k">結果</span><span class="cmp-v" id="cB-r">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">Token alg</span><span class="cmp-v" id="cB-alg">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">kid 有無</span><span class="cmp-v" id="cB-kid">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">auth.uid()</span><span class="cmp-v" id="cB-uid">—</span></div>
+      <div class="cmp-row"><span class="cmp-k">LIFF 體驗</span><span class="cmp-v">redirect（跳轉）</span></div>
+    </div>
+  </div>
+  <div class="recommend" id="recommend"></div>
+</div>
+
+<!-- ── Debug ── -->
+<div class="card" id="debugCard" style="display:none">
+  <h2>完整報告（回傳給漢柏確認）</h2>
+  <pre class="raw" id="reportBox"></pre>
+  <button class="btn btn-clear" onclick="clearSession()">清除 session 重測</button>
+</div>
+
+<script>
+/* ── helpers ── */
+const $   = id => document.getElementById(id);
+const sb  = () => window.supabase.createClient($('sbUrl').value.trim(), $('sbKey').value.trim());
+const provider = () => 'custom:' + $('providerName').value.trim().replace(/^custom:/, '');
+
+let _sb = null, liffInited = false;
+const client = () => (_sb = _sb || sb());
+
+function icon(id, state) {
+  const el = $(id + 'i');
+  el.className = 'si si-' + state;
+  el.textContent = { ok: '✓', fail: '✕', skip: '–', wait: '?' }[state] || '?';
+}
+function det(id, html) { $(id + 'd').innerHTML = html; }
+function verd(id, state, msg) {
+  const el = $(id + 'Verdict');
+  el.className = 'verdict v-' + state;
+  el.textContent = ({ ok: '✅ ', fail: '❌ ', skip: '⚠ ', wait: '' }[state] || '') + msg;
+}
+
+function decHdr(t) {
+  try { const b = t.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(atob(b + '===='.slice(b.length%4))); }
+  catch { return null; }
+}
+function decPld(t) {
+  try { const b = t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(atob(b + '===='.slice(b.length%4))); }
+  catch { return null; }
+}
+
+let report = { ts: new Date().toISOString(), method_a: {}, method_b: {} };
+
+function showDebug() {
+  $('debugCard').style.display = 'block';
+  $('reportBox').textContent = JSON.stringify(report, null, 2);
+}
+function showCmp() { $('cmpCard').style.display = 'block'; }
+
+/* ── Method A ── */
+async function runA() {
+  $('btnA').disabled = true;
+  if (!$('liffId').value.trim()) {
+    verd('a', 'fail', 'LIFF ID 未填');
+    $('btnA').disabled = false;
+    return;
+  }
+
+  // 1. LIFF init
+  try {
+    if (!liffInited) { await liff.init({ liffId: $('liffId').value.trim() }); liffInited = true; }
+    icon('a1', 'ok');
+    det('a1', `LIFF init 成功。isInClient: <code>${liff.isInClient()}</code>  version: <code>${liff.getVersion()}</code>`);
+    report.method_a.liff_init = 'ok';
+    report.method_a.is_in_client = liff.isInClient();
+  } catch (e) {
+    icon('a1', 'fail');
+    det('a1', `LIFF init 失敗：<code>${e.message}</code>（確認 LIFF ID 正確，且此 URL 已加入 LIFF Endpoint）`);
+    verd('a', 'fail', `LIFF init 失敗：${e.message}`);
+    report.method_a.liff_init = 'fail'; report.method_a.error = e.message;
+    showDebug(); return;
+  }
+
+  // 2. LINE login
+  if (!liff.isLoggedIn()) {
+    icon('a2', 'skip');
+    det('a2', '尚未登入，重導向至 LINE 登入...');
+    sessionStorage.setItem('poc_resume', 'A');
+    liff.login({ redirectUri: window.location.href });
+    return;
+  }
+  icon('a2', 'ok'); det('a2', 'LINE 已登入 ✓');
+  report.method_a.line_login = 'ok';
+
+  // 3. ID Token
+  let tok;
+  try {
+    tok = liff.getIDToken();
+    if (!tok) throw new Error('getIDToken() returned null');
+    icon('a3', 'ok');
+    det('a3', `取得成功（${tok.length} chars）　<code>${tok.slice(0,40)}…</code>`);
+    report.method_a.id_token = 'ok';
+  } catch (e) {
+    icon('a3', 'fail'); det('a3', `失敗：<code>${e.message}</code>`);
+    verd('a', 'fail', `getIDToken 失敗：${e.message}`);
+    report.method_a.error = e.message; showDebug(); return;
+  }
+
+  // 4. Decode
+  const hdr = decHdr(tok), pld = decPld(tok);
+  if (hdr) {
+    report.method_a.alg = hdr.alg; report.method_a.kid = hdr.kid || null;
+    report.method_a.aud = pld?.aud; report.method_a.sub = pld?.sub; report.method_a.iss = pld?.iss;
+    icon('a4', 'ok');
+    det('a4', `alg: <code>${hdr.alg}</code>　kid: ${hdr.kid ? `<code>${hdr.kid.slice(0,20)}…</code>` : '<strong style="color:#b03">無</strong>（HS256，Supabase OIDC 驗不了）'}<br>aud: <code>${pld?.aud||'—'}</code>　sub（LINE UID）: <code>${pld?.sub||'—'}</code>`);
+    $('cA-alg').textContent = hdr.alg;
+    $('cA-kid').innerHTML = hdr.kid ? '<span class="tag-ok">有</span>' : '<span class="tag-fail">無</span>';
+  } else {
+    icon('a4', 'fail'); det('a4', 'Token 解析失敗');
+  }
+
+  if (!hdr?.kid) {
+    icon('a5', 'skip'); icon('a6', 'skip');
+    det('a5', `alg=${hdr?.alg}，無 kid → signInWithIdToken 需要 asymmetric token（ES256）。Method A 不適用。`);
+    det('a6', '跳過');
+    verd('a', 'skip', `Token 為 ${hdr?.alg}（無 kid）→ Method A 不適用，請用 Method B`);
+    report.method_a.result = 'NOT_APPLICABLE';
+    $('cA-r').innerHTML = '<span class="tag-warn">不適用</span>';
+    $('cA-ux').textContent = '—';
+    showDebug(); showCmp(); updateRecommend(); return;
+  }
+
+  // 5. signInWithIdToken
+  const prov = provider();
+  try {
+    const { data, error } = await client().auth.signInWithIdToken({ provider: prov, token: tok });
+    if (error) throw error;
+    icon('a5', 'ok'); det('a5', `signInWithIdToken({ provider: '${prov}' }) 成功`);
+    report.method_a.signin = 'ok'; report.method_a.provider_used = prov;
+  } catch (e) {
+    icon('a5', 'fail');
+    det('a5', `失敗（provider: '${prov}'）：<code>${e.message}</code><br>
+      可能原因：<br>
+      · Custom OIDC Provider 尚未在 Supabase Dashboard 建立<br>
+      · provider 名稱不符（確認 Dashboard 的 identifier）<br>
+      · Supabase Custom OIDC Provider 不支援直接 id_token flow（需改用 Method B）`);
+    verd('a', 'fail', `signInWithIdToken 失敗：${e.message}`);
+    report.method_a.signin = 'fail'; report.method_a.signin_error = e.message;
+    report.method_a.result = 'FAIL';
+    $('cA-r').innerHTML = '<span class="tag-fail">失敗</span>';
+    showDebug(); showCmp(); updateRecommend(); return;
+  }
+
+  // 6. auth.uid()
+  try {
+    const { data: { user }, error } = await client().auth.getUser();
+    if (error || !user) throw error || new Error('user null');
+    icon('a6', 'ok');
+    det('a6', `auth.uid() = <code>${user.id}</code><br>email: <code>${user.email||'(none)'}</code>　provider: <code>${user.app_metadata?.provider||'?'}</code>`);
+    verd('a', 'ok', `Method A 成功！auth.uid() = ${user.id.slice(0,8)}…`);
+    report.method_a.auth_uid = user.id; report.method_a.email = user.email;
+    report.method_a.result = 'PASS';
+    $('cA-r').innerHTML = '<span class="tag-ok">成功</span>';
+    $('cA-uid').innerHTML = `<code>${user.id.slice(0,8)}…</code>`;
+    $('cA-ux').innerHTML = '<span class="tag-ok">無跳轉</span>';
+  } catch (e) {
+    icon('a6', 'fail'); det('a6', `getUser 失敗：<code>${e.message}</code>`);
+    verd('a', 'fail', `auth.uid() 失敗：${e.message}`);
+    report.method_a.result = 'FAIL'; report.method_a.error = e.message;
+    $('cA-r').innerHTML = '<span class="tag-fail">失敗</span>';
+  }
+  showDebug(); showCmp(); updateRecommend();
+}
+
+/* ── Method B ── */
+async function runB() {
+  $('btnB').disabled = true;
+  const prov = provider();
+
+  icon('b1', 'ok');
+  det('b1', `呼叫 signInWithOAuth({ provider: '${prov}' })… 即將 redirect`);
+  report.method_b.provider = prov;
+  sessionStorage.setItem('poc_resume', 'B');
+
+  try {
+    const { error } = await client().auth.signInWithOAuth({
+      provider: prov,
+      options: { redirectTo: window.location.href, scopes: 'openid profile' }
+    });
+    if (error) throw error;
+    // redirect happens automatically
+  } catch (e) {
+    icon('b1', 'fail');
+    det('b1', `signInWithOAuth 失敗：<code>${e.message}</code><br>
+      可能原因：Custom OIDC Provider 未建立、provider 名稱不符、Callback URL 未加入 LINE Channel`);
+    verd('b', 'fail', `signInWithOAuth 失敗：${e.message}`);
+    report.method_b.result = 'FAIL'; report.method_b.error = e.message;
+    $('cB-r').innerHTML = '<span class="tag-fail">失敗</span>';
+    showDebug(); showCmp(); updateRecommend();
+    $('btnB').disabled = false;
+  }
+}
+
+async function resumeB() {
+  const { data: { session } } = await client().auth.getSession();
+  if (!session) {
+    icon('b2', 'fail'); det('b2', 'callback 後無 session，redirect 可能失敗');
+    verd('b', 'fail', 'callback 後無 session');
+    report.method_b.result = 'FAIL';
+    $('cB-r').innerHTML = '<span class="tag-fail">失敗</span>';
+    showDebug(); showCmp(); updateRecommend();
+    return;
+  }
+  icon('b1', 'ok'); icon('b2', 'ok');
+  det('b1', `signInWithOAuth 發起成功（provider: '${provider()}'）`);
+  det('b2', 'LINE 授權 → Supabase callback 完成，session 取得');
+  report.method_b.callback = 'ok';
+
+  try {
+    const { data: { user }, error } = await client().auth.getUser();
+    if (error || !user) throw error || new Error('user null');
+    icon('b3', 'ok');
+    det('b3', `auth.uid() = <code>${user.id}</code><br>email: <code>${user.email||'(none)'}</code>`);
+    verd('b', 'ok', `Method B 成功！auth.uid() = ${user.id.slice(0,8)}…`);
+    report.method_b.auth_uid = user.id; report.method_b.email = user.email;
+    report.method_b.result = 'PASS';
+    $('cB-r').innerHTML = '<span class="tag-ok">成功</span>';
+    $('cB-uid').innerHTML = `<code>${user.id.slice(0,8)}…</code>`;
+
+    // Try to decode Method B token too
+    const accessTok = session.access_token;
+    const hdr = decHdr(accessTok);
+    if (hdr) { $('cB-alg').textContent = hdr.alg; $('cB-kid').innerHTML = hdr.kid ? '<span class="tag-ok">有</span>' : '<span class="tag-na">無</span>'; }
+  } catch (e) {
+    icon('b3', 'fail'); det('b3', `getUser 失敗：<code>${e.message}</code>`);
+    verd('b', 'fail', `auth.uid() 失敗：${e.message}`);
+    report.method_b.result = 'FAIL';
+    $('cB-r').innerHTML = '<span class="tag-fail">失敗</span>';
+  }
+  sessionStorage.removeItem('poc_resume');
+  showDebug(); showCmp(); updateRecommend();
+}
+
+function updateRecommend() {
+  const aR = report.method_a.result, bR = report.method_b.result;
+  let txt = '';
+  if (aR === 'PASS' && bR === 'PASS')
+    txt = '✅ 兩個方案均成功。建議 LIFF 用 Method A（無跳轉，最低摩擦），Web 用 Method B 作備援。';
+  else if (aR === 'PASS')
+    txt = '✅ Method A 成功（最佳）。可以用 signInWithIdToken → 無跳轉，Phase 1 優先採用。';
+  else if (bR === 'PASS')
+    txt = '✅ Method B 成功。Method A 不適用或失敗 → Phase 1 改用 signInWithOAuth 或 Edge Function。';
+  else if (aR === 'NOT_APPLICABLE')
+    txt = '⚠ Token 為 HS256（無 kid）→ Method A 無法用 Supabase OIDC 驗證。請確認 Method B，或改用 Edge Function。';
+  else
+    txt = '尚未完整測試，請完成兩個方法後再看結論。';
+  $('recommend').textContent = txt;
+}
+
+async function clearSession() {
+  try { await client().auth.signOut(); } catch {}
+  localStorage.clear(); sessionStorage.clear(); location.reload();
+}
+
+/* ── Auto resume ── */
+window.addEventListener('DOMContentLoaded', async () => {
+  const resume = sessionStorage.getItem('poc_resume');
+  if (resume === 'A') { setTimeout(() => runA(), 400); }
+  else if (resume === 'B') { resumeB(); }
+});
+</script>
+</body>
+</html>
