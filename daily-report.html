@@ -137,6 +137,10 @@
     .submit-btn { background: var(--brown-main); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 14px; }
     .submit-btn:hover { background: var(--brown-mid); }
     .submit-btn:disabled { opacity: 0.6; cursor: default; }
+    .rest-day-btn { border: 2px solid var(--sand); background: var(--warm-white); color: var(--text-mid); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-family: inherit; cursor: pointer; margin: 4px 0 12px; transition: all 0.15s; }
+    .rest-day-btn.active { background: #FFF3CD; border-color: #E6AC00; color: #7B4F00; font-weight: 700; }
+    .form-locked { opacity: 0.35; pointer-events: none; user-select: none; }
+    .rest-day-badge { display: inline-block; background: #FFF3CD; color: #7B4F00; border: 1px solid #E6AC00; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
 
     /* ── History table ── */
     .history-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
@@ -309,7 +313,9 @@
           <div class="field"><label>日期</label><input type="date" id="f-date" onchange="loadExistingDay()" /></div>
         </div>
       </div>
+      <button class="rest-day-btn" id="rest-day-btn" type="button" onclick="toggleRestDay()">🏖️ 本日店休</button>
 
+      <div id="form-fields">
       <div class="field-group">
         <div class="field-group-label">客數 & 日營收</div>
         <div class="field-row">
@@ -336,6 +342,7 @@
           <div class="field"><label>時數</label><input type="number" step="0.01" id="f-labor-hours" oninput="updatePreview()" /></div>
         </div>
       </div>
+      </div><!-- /#form-fields -->
 
       <div class="live-preview" id="live-preview"></div>
 
@@ -406,6 +413,30 @@
   let currentMonth = new Date();
   let costRowCount = 0;
   let openDayKey = null;
+  let isRestDay = false;
+
+  function toggleRestDay() {
+    isRestDay = !isRestDay;
+    applyRestDayUi();
+  }
+
+  function applyRestDayUi() {
+    const btn = document.getElementById('rest-day-btn');
+    const fields = document.getElementById('form-fields');
+    btn.classList.toggle('active', isRestDay);
+    btn.textContent = isRestDay ? '✅ 店休中（點此取消）' : '🏖️ 本日店休';
+    fields.classList.toggle('form-locked', isRestDay);
+    if (isRestDay) {
+      ['f-morning-customers','f-morning-revenue','f-line-pay','f-uber','f-foodpanda',
+       'f-cash-counted','f-cash-undeposited','f-pot-count','f-labor-hours'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('live-preview').innerHTML =
+        '<div style="color:var(--text-mid);font-size:13px;padding:4px 0">🏖️ 本日店休，無需填寫數據</div>';
+    } else {
+      updatePreview();
+    }
+  }
 
   const COST_PRESETS = {
     cost:     ['水電費', '房租', '薪資/獎金', '設備維修', '保險費', '外送平台月費', '臨時外送運費', 'Panda Go外送服務費', '其他費用'],
@@ -611,6 +642,8 @@
   function loadExistingDay() {
     const date = document.getElementById('f-date').value;
     const existing = reportRows.find(r => r.date === date);
+    isRestDay = !!(existing && existing.is_rest_day);
+    applyRestDayUi();
     const fieldToId = {
       morning_customers: 'f-morning-customers',
       morning_revenue: 'f-morning-revenue',
@@ -841,18 +874,19 @@
     const report = {
       store_id: currentStoreId,
       date,
-      morning_customers: num('f-morning-customers'),
-      morning_revenue: num('f-morning-revenue'),
+      is_rest_day: isRestDay,
+      morning_customers: isRestDay ? null : num('f-morning-customers'),
+      morning_revenue: isRestDay ? null : num('f-morning-revenue'),
       evening_customers: null,
       evening_revenue: null,
-      line_pay: num('f-line-pay'),
-      uncollected: todayReceivablesTotal(),
-      pot_count: num('f-pot-count'),
-      cash_counted: num('f-cash-counted'),
-      cash_undeposited: num('f-cash-undeposited'),
-      uber_amount: num('f-uber'),
-      foodpanda_amount: num('f-foodpanda'),
-      labor_hours: num('f-labor-hours')
+      line_pay: isRestDay ? null : num('f-line-pay'),
+      uncollected: isRestDay ? 0 : todayReceivablesTotal(),
+      pot_count: isRestDay ? null : num('f-pot-count'),
+      cash_counted: isRestDay ? null : num('f-cash-counted'),
+      cash_undeposited: isRestDay ? null : num('f-cash-undeposited'),
+      uber_amount: isRestDay ? null : num('f-uber'),
+      foodpanda_amount: isRestDay ? null : num('f-foodpanda'),
+      labor_hours: isRestDay ? null : num('f-labor-hours')
     };
 
     const expInputs = [...collectExpenses('cost'), ...collectExpenses('variable')]
@@ -908,6 +942,15 @@
       const expTotal = exps.reduce((s, e) => s + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
       const perPot = r ? calcPerPot(r, vc) : null;
       const isOpen = openDayKey === date;
+      if (r && r.is_rest_day) {
+        return `<div class="day-row">
+          <div class="day-row-top" onclick="editDay('${date}')" style="cursor:pointer">
+            <span class="day-date">${date}</span>
+            <span class="rest-day-badge">🏖️ 店休</span>
+            <span style="margin-left:auto;font-size:11px;color:var(--text-light)">點擊可取消店休</span>
+          </div>
+        </div>`;
+      }
       return `<div class="day-row">
         <div class="day-row-top" onclick="toggleDay('${date}')">
           <span class="day-date">${date}</span>
