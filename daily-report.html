@@ -639,9 +639,30 @@
   }
 
   // ── 若當天已經填過，載入既有資料以便修改 ──
+  // 找出「本月已知最早一筆紀錄」到目標日期之間，有沒有完全沒填也沒標店休的缺口日
+  // （只在要開一個「還沒填過」的新日期時才需要擋，回頭改已存在的資料不受影響）
+  function findEarliestGap(date) {
+    if (!reportRows.length) return null;
+    const existingDates = new Set(reportRows.map(r => r.date));
+    const earliest = reportRows.reduce((min, r) => r.date < min ? r.date : min, reportRows[0].date);
+    for (let d = new Date(earliest); d.toISOString().split('T')[0] < date; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().split('T')[0];
+      if (!existingDates.has(key)) return key;
+    }
+    return null;
+  }
+
   function loadExistingDay() {
     const date = document.getElementById('f-date').value;
     const existing = reportRows.find(r => r.date === date);
+    if (!existing) {
+      const gap = findEarliestGap(date);
+      if (gap) {
+        alert(`⚠️ ${gap} 這天還沒有紀錄，也沒有標記店休。\n\n請先補登記這天的日報（或標記店休），才能繼續填寫 ${date}。`);
+        document.getElementById('f-date').value = gap;
+        return loadExistingDay();
+      }
+    }
     isRestDay = !!(existing && existing.is_rest_day);
     applyRestDayUi();
     const fieldToId = {
