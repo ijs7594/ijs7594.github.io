@@ -64,6 +64,39 @@
     }
     .selector-bar select:focus { border-color: var(--caramel); }
 
+    /* ── Period Pills ── */
+    .period-pills-wrap {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      overflow-x: auto;
+      display: flex; gap: 6px;
+      scrollbar-width: none;
+    }
+    .period-pills-wrap::-webkit-scrollbar { display: none; }
+    .period-pill {
+      flex-shrink: 0;
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: var(--bg); color: var(--sub);
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .period-pill.active {
+      background: var(--brown); color: #fff;
+      border-color: var(--brown);
+    }
+    .period-pill.confirmed {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-bg);
+    }
+    .period-pill.confirmed.active {
+      background: var(--green); color: #fff;
+      border-color: var(--green);
+    }
+
     /* ── Status Bar ── */
     .status-bar {
       display: flex; align-items: center; justify-content: space-between;
@@ -76,6 +109,17 @@
     }
     .status-badge.draft     { background: var(--amber-bg); color: var(--amber); }
     .status-badge.confirmed { background: var(--green-bg); color: var(--green); }
+
+    /* ── Warning Bar ── */
+    .warning-bar {
+      margin: 0 14px 10px;
+      padding: 8px 12px;
+      background: var(--amber-bg);
+      border-left: 3px solid var(--amber);
+      border-radius: 8px;
+      font-size: 12px; color: var(--amber);
+      display: none;
+    }
 
     /* ── Sections ── */
     .section { margin: 0 14px 14px; }
@@ -124,6 +168,17 @@
 
     .pl-divider { height: 1px; background: var(--cream); margin: 2px 16px; }
 
+    /* ── Gross margin target indicator ── */
+    .margin-target {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
+      font-size: 11px; color: var(--sub);
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .margin-bar-wrap { flex: 1; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; }
+    .margin-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
     /* ── Inventory Input ── */
     .inv-input-row {
       display: flex; align-items: center; gap: 10px;
@@ -140,6 +195,11 @@
     }
     .inv-input:focus { border-color: var(--caramel); background: #fff; }
     .inv-input:disabled { background: var(--cream); color: var(--sub); }
+    .inv-input.highlight {
+      border-color: var(--caramel);
+      background: #fffaf5;
+      font-size: 16px; font-weight: 700;
+    }
 
     /* ── Revenue Breakdown ── */
     .rev-row {
@@ -151,9 +211,6 @@
     .rev-label { color: var(--sub); }
     .rev-val { font-weight: 600; font-variant-numeric: tabular-nums; }
     .rev-pct { color: var(--sub); font-size: 11px; margin-left: 4px; }
-
-    /* ── Fill Count ── */
-    .fill-info { padding: 8px 16px; font-size: 11px; color: var(--sub); }
 
     /* ── Notes ── */
     .notes-wrap { padding: 12px 16px; }
@@ -214,14 +271,20 @@
 </div>
 
 <div class="selector-bar">
-  <select id="store-select" onchange="onSelChange()"></select>
-  <select id="period-select" onchange="onSelChange()"></select>
+  <select id="store-select" onchange="onStoreChange()"></select>
+  <select id="period-select" onchange="onPeriodChange()"></select>
 </div>
 
+<!-- 期別快速切換 pills -->
+<div class="period-pills-wrap" id="period-pills"></div>
+
 <div class="status-bar">
-  <span id="fill-count" class="fill-count">載入中…</span>
+  <span id="fill-count" style="color:var(--sub);font-size:12px">載入中…</span>
   <span class="status-badge draft" id="status-badge">🟡 未鎖定</span>
 </div>
+
+<!-- 進貨覆蓋率警示 -->
+<div class="warning-bar" id="warning-bar"></div>
 
 <!-- 收入摘要 -->
 <div class="section">
@@ -233,7 +296,7 @@
 
 <!-- 庫存輸入 + 成本核算 -->
 <div class="section">
-  <div class="section-label">庫存盤點 & 成本核算</div>
+  <div class="section-label">庫存盤點</div>
   <div class="card">
     <div class="inv-input-row">
       <div class="inv-label">
@@ -251,17 +314,18 @@
     </div>
     <div class="inv-input-row">
       <div class="inv-label">
-        期末庫存
-        <small>盤點後填入實際庫存金額</small>
+        期末庫存 <span style="color:var(--caramel);font-weight:700">← 填這格</span>
+        <small>盤點後填入實際庫存金額（元）</small>
       </div>
-      <input class="inv-input" type="number" id="closing-inv" placeholder="請填入" oninput="updatePL()" />
+      <input class="inv-input highlight" type="number" id="closing-inv"
+             placeholder="請填入" oninput="updatePL()" inputmode="numeric" />
     </div>
   </div>
 </div>
 
 <!-- P&L -->
 <div class="section" id="pl-section" style="display:none">
-  <div class="section-label">本期損益</div>
+  <div class="section-label">本期損益試算</div>
   <div class="card" id="pl-card"></div>
 </div>
 
@@ -270,7 +334,8 @@
   <div class="section-label">備註</div>
   <div class="card">
     <div class="notes-wrap">
-      <textarea class="notes-input" id="notes" placeholder="盤點時的特殊狀況、食材耗損說明…"></textarea>
+      <textarea class="notes-input" id="notes"
+                placeholder="盤點時的特殊狀況、食材耗損說明…"></textarea>
     </div>
   </div>
 </div>
@@ -284,14 +349,16 @@
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
 
-  let stores = [];
+  let stores       = [];
   let currentStoreId = null;
-  let revData = { cash: 0, linepay: 0, uber: 0, foodpanda: 0, uncollected: 0, days: 0, fixed: 0 };
-  let existingId = null;
-  let isConfirmed = false;
+  let allChecks    = [];   // all inventory_check rows for current store
+  let revData      = { cash: 0, linepay: 0, uber: 0, foodpanda: 0, uncollected: 0, purchases: 0, fixed: 0, days: 0 };
+  let existingId   = null;
+  let isConfirmed  = false;
+  let periods      = [];
 
-  const fmt  = n => '$' + Math.round(n || 0).toLocaleString('zh-TW');
-  const pct  = (n, total) => total > 0 ? (n / total * 100).toFixed(1) + '%' : '—';
+  const fmt = n => '$' + Math.round(n || 0).toLocaleString('zh-TW');
+  const pct = (n, total) => total > 0 ? (n / total * 100).toFixed(1) + '%' : '—';
 
   async function dbGet(table, q = '') {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${q ? '?' + q : ''}`, {
@@ -325,7 +392,7 @@
     return res.ok ? res.json() : null;
   }
 
-  /* 產生最近 6 個期別選項（上旬/下旬） */
+  /* 產生最近 8 個期別（上旬/下旬）*/
   function buildPeriodOptions() {
     const opts = [];
     const now = new Date();
@@ -335,19 +402,29 @@
       const ym = `${y}-${String(m).padStart(2,'0')}`;
       const lastDay = new Date(y, m, 0).getDate();
       opts.push({
-        key:   `${ym}-lower`,
-        label: `${y}年${m}月下旬（16日～${lastDay}日）`,
-        start: `${ym}-16`,
-        end:   `${ym}-${String(lastDay).padStart(2,'0')}`
+        key:        `${ym}-lower`,
+        label:      `${y}年${m}月下旬（16日～${lastDay}日）`,
+        shortLabel: `${m}月下旬`,
+        start:      `${ym}-16`,
+        end:        `${ym}-${String(lastDay).padStart(2,'0')}`
       });
       opts.push({
-        key:   `${ym}-upper`,
-        label: `${y}年${m}月上旬（1日～15日）`,
-        start: `${ym}-01`,
-        end:   `${ym}-15`
+        key:        `${ym}-upper`,
+        label:      `${y}年${m}月上旬（1日～15日）`,
+        shortLabel: `${m}月上旬`,
+        start:      `${ym}-01`,
+        end:        `${ym}-15`
       });
     }
     return opts;
+  }
+
+  function defaultPeriodKey() {
+    const now = new Date();
+    const y   = now.getFullYear();
+    const m   = String(now.getMonth() + 1).padStart(2, '0');
+    const half = now.getDate() <= 15 ? 'upper' : 'lower';
+    return `${y}-${m}-${half}`;
   }
 
   function getPrevPeriodKey(key) {
@@ -358,6 +435,38 @@
     return `${py}-${String(pm).padStart(2,'0')}-lower`;
   }
 
+  function getCurrentPeriod() {
+    const key = document.getElementById('period-select').value;
+    return periods.find(p => p.key === key) || periods[0];
+  }
+
+  /* ── Render period pills ── */
+  function renderPeriodPills() {
+    const currentKey = document.getElementById('period-select').value;
+    const pillsEl = document.getElementById('period-pills');
+    pillsEl.innerHTML = periods.slice(0, 6).map(p => {
+      const chk = allChecks.find(c => c.period_key === p.key);
+      const isConfirmedPeriod = chk?.status === 'confirmed';
+      const hasDraft = chk && !isConfirmedPeriod;
+      const isActive = p.key === currentKey;
+
+      let icon = '⬜';
+      if (isConfirmedPeriod) icon = '✅';
+      else if (hasDraft) icon = '🟡';
+
+      let cls = 'period-pill';
+      if (isConfirmedPeriod) cls += ' confirmed';
+      if (isActive) cls += ' active';
+
+      return `<button class="${cls}" onclick="jumpPeriod('${p.key}')">${icon} ${p.shortLabel}</button>`;
+    }).join('');
+  }
+
+  function jumpPeriod(key) {
+    document.getElementById('period-select').value = key;
+    loadData();
+  }
+
   async function init() {
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
@@ -366,67 +475,97 @@
     storeSel.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     currentStoreId = stores[0]?.id || null;
 
-    const periods = buildPeriodOptions();
+    periods = buildPeriodOptions();
     const periodSel = document.getElementById('period-select');
     periodSel.innerHTML = periods.map(p => `<option value="${p.key}">${p.label}</option>`).join('');
 
-    if (currentStoreId) await loadData();
+    // Auto-select current period based on today's date
+    const defKey = defaultPeriodKey();
+    const matchIdx = periods.findIndex(p => p.key === defKey);
+    if (matchIdx >= 0) periodSel.selectedIndex = matchIdx;
+
+    if (currentStoreId) await loadStoreChecks();
   }
 
-  function getCurrentPeriod() {
-    const periods = buildPeriodOptions();
-    const key = document.getElementById('period-select').value;
-    return periods.find(p => p.key === key) || periods[0];
-  }
-
-  async function onSelChange() {
+  async function onStoreChange() {
     currentStoreId = document.getElementById('store-select').value;
+    await loadStoreChecks();
+  }
+
+  async function onPeriodChange() {
+    renderPeriodPills();
+    await loadData();
+  }
+
+  /* Load all checks for this store (for pills), then load period data */
+  async function loadStoreChecks() {
+    allChecks = [];
+    if (!currentStoreId) return;
+    const result = await dbGet('inventory_check', `store_id=eq.${currentStoreId}`);
+    allChecks = Array.isArray(result) ? result : [];
+    renderPeriodPills();
     await loadData();
   }
 
   async function loadData() {
     if (!currentStoreId) return;
-    const period = getCurrentPeriod();
+    const period  = getCurrentPeriod();
     const prevKey = getPrevPeriodKey(period.key);
 
-    const [reports, expenses, existing, prevCheck] = await Promise.all([
-      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${period.start}&date=lte.${period.end}`),
+    const [reports, expenses, prevCheck] = await Promise.all([
+      dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${period.start}&date=lte.${period.end}&is_rest_day=eq.false`),
       dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${period.start}&date=lte.${period.end}`),
-      dbGet('inventory_check', `store_id=eq.${currentStoreId}&period_key=eq.${period.key}`),
       dbGet('inventory_check', `store_id=eq.${currentStoreId}&period_key=eq.${prevKey}`)
     ]);
 
-    const days = new Set((reports||[]).map(r=>r.date)).size;
+    const repArr = Array.isArray(reports) ? reports : [];
+    const expArr = Array.isArray(expenses) ? expenses : [];
+
+    const purchasesData = expArr.filter(e => (e.description || '').startsWith('【變動成本】'));
+    const purchaseDays  = new Set(purchasesData.map(e => e.date)).size;
+    const reportDays    = new Set(repArr.map(r => r.date)).size;
+
     revData = {
-      cash:        (reports||[]).reduce((s,r)=>s+(Number(r.morning_revenue)||0),0),
-      linepay:     (reports||[]).reduce((s,r)=>s+(Number(r.line_pay)||0),0),
-      uber:        (reports||[]).reduce((s,r)=>s+(Number(r.uber_amount)||0),0),
-      foodpanda:   (reports||[]).reduce((s,r)=>s+(Number(r.foodpanda_amount)||0),0),
-      uncollected: (reports||[]).reduce((s,r)=>s+(Number(r.uncollected)||0),0),
-      purchases:   (expenses||[]).filter(e=>(e.description||'').startsWith('【變動成本】'))
-                                  .reduce((s,e)=>s+(Number(e.amount)||0),0),
-      fixed:       (expenses||[]).filter(e=>(e.description||'').startsWith('【費用】'))
-                                  .reduce((s,e)=>s+(Number(e.amount)||0),0),
-      days
+      cash:        repArr.reduce((s, r) => s + (Number(r.morning_revenue) || 0), 0),
+      linepay:     repArr.reduce((s, r) => s + (Number(r.line_pay) || 0), 0),
+      uber:        repArr.reduce((s, r) => s + (Number(r.uber_amount) || 0), 0),
+      foodpanda:   repArr.reduce((s, r) => s + (Number(r.foodpanda_amount) || 0), 0),
+      uncollected: repArr.reduce((s, r) => s + (Number(r.uncollected) || 0), 0),
+      purchases:   purchasesData.reduce((s, e) => s + (Number(e.amount) || 0), 0),
+      fixed:       expArr.filter(e => (e.description || '').startsWith('【費用】'))
+                         .reduce((s, e) => s + (Number(e.amount) || 0), 0),
+      days:        reportDays
     };
 
-    document.getElementById('fill-count').textContent = `已填 ${days} 天日報`;
+    document.getElementById('fill-count').textContent = `已填 ${reportDays} 天日報`;
+
+    // 進貨覆蓋率警示
+    const warnEl = document.getElementById('warning-bar');
+    if (reportDays > 0 && purchaseDays < reportDays) {
+      warnEl.style.display = 'block';
+      warnEl.textContent = `⚠️ 進貨資料僅涵蓋 ${purchaseDays}/${reportDays} 天，毛利率可能偏低——請補填日報的「變動成本」。`;
+    } else {
+      warnEl.style.display = 'none';
+    }
+
     document.getElementById('purchases').value = revData.purchases || '';
 
-    // 期初庫存 = 前一期的期末庫存
-    const openingInv = (prevCheck && prevCheck.length > 0) ? (prevCheck[0].closing_inventory || 0) : 0;
+    // 期初庫存 = 前一期已鎖定盤點的期末庫存
+    const prevChecks = Array.isArray(prevCheck) ? prevCheck : [];
+    const prevConfirmed = prevChecks.find(c => c.status === 'confirmed') || prevChecks[0];
+    const openingInv = prevConfirmed ? (Number(prevConfirmed.closing_inventory) || 0) : 0;
     document.getElementById('opening-inv').value = openingInv || '';
 
     renderRevCard();
 
     // 載入既有紀錄
     existingId = null; isConfirmed = false;
-    if (existing && existing.length > 0) {
-      const rec = existing[0];
-      existingId = rec.id;
-      isConfirmed = rec.status === 'confirmed';
-      document.getElementById('closing-inv').value = rec.closing_inventory ?? '';
-      document.getElementById('notes').value       = rec.notes ?? '';
+    const existing = allChecks.find(c => c.period_key === period.key);
+    if (existing) {
+      existingId  = existing.id;
+      isConfirmed = existing.status === 'confirmed';
+      document.getElementById('closing-inv').value = existing.closing_inventory ?? '';
+      document.getElementById('notes').value       = existing.notes ?? '';
     } else {
       document.getElementById('closing-inv').value = '';
       document.getElementById('notes').value       = '';
@@ -446,7 +585,7 @@
     const row = (label, val) => `
       <div class="rev-row">
         <span class="rev-label">${label}</span>
-        <span class="rev-val">${fmt(val)}<span class="rev-pct">${pct(val,total)}</span></span>
+        <span class="rev-val">${fmt(val)}<span class="rev-pct">${pct(val, total)}</span></span>
       </div>`;
     document.getElementById('rev-card').innerHTML =
       row('現場現金', revData.cash) +
@@ -461,9 +600,9 @@
   }
 
   function updatePL() {
-    const opening  = Number(document.getElementById('opening-inv').value) || 0;
+    const opening   = Number(document.getElementById('opening-inv').value) || 0;
     const purchases = revData.purchases;
-    const closing  = Number(document.getElementById('closing-inv').value);
+    const closing   = Number(document.getElementById('closing-inv').value);
     const hasClosing = document.getElementById('closing-inv').value.trim() !== '';
 
     document.getElementById('pl-section').style.display = hasClosing ? '' : 'none';
@@ -471,14 +610,21 @@
 
     if (!hasClosing) return;
 
-    const cogs  = opening + purchases - closing;
-    const total = revData.cash + revData.linepay + revData.uber + revData.foodpanda + revData.uncollected;
-    const gross = total - cogs;
-    const fixed = revData.fixed;
+    const cogs     = opening + purchases - closing;
+    const total    = revData.cash + revData.linepay + revData.uber + revData.foodpanda + revData.uncollected;
+    const gross    = total - cogs;
+    const fixed    = revData.fixed;
     const netProfit = gross - fixed;
+    const grossPct = total > 0 ? gross / total * 100 : 0;
 
-    const cogsColor  = cogs / total > 0.52 ? 'var(--red)' : 'var(--text)';
-    const grossColor = gross >= 0 ? 'var(--green)' : 'var(--red)';
+    // Color logic: target < 48% food cost ratio = > 52% gross margin
+    const cogsRatio = total > 0 ? cogs / total : 0;
+    const cogsColor  = cogsRatio > 0.52 ? 'var(--red)' : 'var(--text)';
+    const grossColor = grossPct >= 52 ? 'var(--green)' : grossPct >= 48 ? 'var(--amber)' : 'var(--red)';
+
+    // Gross margin progress bar (target: 52%+)
+    const barWidth = Math.min(Math.max(grossPct, 0), 100).toFixed(1);
+    const barColor = grossPct >= 52 ? 'var(--green)' : grossPct >= 48 ? 'var(--amber)' : 'var(--red)';
 
     document.getElementById('pl-card').innerHTML = `
       <div class="pl-row total">
@@ -505,25 +651,32 @@
       <div class="pl-row cost" style="color:${cogsColor}">
         <span class="pl-label" style="color:${cogsColor}">本期食材成本</span>
         <span class="pl-value" style="color:${cogsColor}">${fmt(cogs)}</span>
-        <span class="pl-pct" style="color:${cogsColor}">${pct(cogs,total)}</span>
+        <span class="pl-pct" style="color:${cogsColor}">${pct(cogs, total)}</span>
       </div>
       <div class="pl-divider"></div>
-      <div class="pl-row profit" style="color:${grossColor}">
+      <div class="pl-row profit" style="border-bottom:none">
         <span class="pl-label" style="font-weight:700;color:${grossColor}">食材毛利</span>
-        <span class="pl-value" style="color:${grossColor}">${fmt(gross)}</span>
-        <span class="pl-pct" style="color:${grossColor}">${pct(gross,total)}</span>
+        <span class="pl-value" style="color:${grossColor};font-size:16px">${fmt(gross)}</span>
+        <span class="pl-pct" style="color:${grossColor};font-weight:700">${pct(gross, total)}</span>
+      </div>
+      <div class="margin-target">
+        <span style="white-space:nowrap">毛利率目標 52%+</span>
+        <div class="margin-bar-wrap">
+          <div class="margin-bar-fill" style="width:${barWidth}%;background:${barColor}"></div>
+        </div>
+        <span style="white-space:nowrap;font-weight:700;color:${grossColor}">${grossPct.toFixed(1)}%</span>
       </div>
       ${fixed > 0 ? `
-      <div class="pl-row indent">
+      <div class="pl-row indent" style="border-top:1px solid var(--border)">
         <span class="pl-label">− 固定費用</span>
         <span class="pl-value">${fmt(fixed)}</span>
-        <span class="pl-pct">${pct(fixed,total)}</span>
+        <span class="pl-pct">${pct(fixed, total)}</span>
       </div>
       <div class="pl-divider"></div>
       <div class="pl-row" style="border-bottom:none">
         <span class="pl-label" style="font-weight:700">本期淨利（估）</span>
         <span class="pl-value" style="color:${netProfit>=0?'var(--green)':'var(--red)'};font-size:16px">${fmt(netProfit)}</span>
-        <span class="pl-pct" style="color:${netProfit>=0?'var(--green)':'var(--red)'};font-weight:700">${pct(netProfit,total)}</span>
+        <span class="pl-pct" style="color:${netProfit>=0?'var(--green)':'var(--red)'};font-weight:700">${pct(netProfit, total)}</span>
       </div>` : ''}
     `;
   }
@@ -532,13 +685,21 @@
     const badge   = document.getElementById('status-badge');
     const confirm = document.getElementById('btn-confirm');
     const reopen  = document.getElementById('btn-reopen');
+    const closingEl = document.getElementById('closing-inv');
+    const notesEl   = document.getElementById('notes');
 
     badge.className   = 'status-badge ' + (locked ? 'confirmed' : 'draft');
     badge.textContent = locked ? '✅ 已鎖定' : '🟡 未鎖定';
     confirm.style.display = locked ? 'none' : 'block';
     reopen.style.display  = locked ? 'block' : 'none';
-    document.getElementById('closing-inv').disabled = locked;
-    document.getElementById('notes').disabled       = locked;
+    closingEl.disabled = locked;
+    notesEl.disabled   = locked;
+
+    if (locked) {
+      closingEl.classList.remove('highlight');
+    } else {
+      closingEl.classList.add('highlight');
+    }
   }
 
   async function saveCheck() {
@@ -548,8 +709,8 @@
     const period   = getCurrentPeriod();
     const opening  = Number(document.getElementById('opening-inv').value) || 0;
     const closing  = Number(document.getElementById('closing-inv').value) || 0;
-    const purchases = revData.purchases;
-    const cogs     = opening + purchases - closing;
+    const purch    = revData.purchases;
+    const cogs     = opening + purch - closing;
     const total    = revData.cash + revData.linepay + revData.uber + revData.foodpanda + revData.uncollected;
     const gross    = total - cogs;
 
@@ -560,7 +721,7 @@
       period_start:      period.start,
       period_end:        period.end,
       opening_inventory: opening,
-      purchases:         purchases,
+      purchases:         purch,
       closing_inventory: closing,
       total_revenue:     total,
       cogs,
@@ -573,9 +734,15 @@
 
     const result = await dbUpsert('inventory_check', payload);
     if (result) {
-      existingId = result[0]?.id || existingId;
+      const saved = result[0];
+      existingId  = saved?.id || existingId;
       isConfirmed = true;
+      // Update local allChecks cache
+      const idx = allChecks.findIndex(c => c.period_key === period.key);
+      if (idx >= 0) allChecks[idx] = { ...allChecks[idx], ...payload, id: existingId };
+      else allChecks.push({ ...payload, id: existingId });
       setLocked(true);
+      renderPeriodPills();
       showToast('✅ 本期盤點已鎖定');
     } else {
       showToast('❌ 儲存失敗，請重試');
@@ -589,8 +756,12 @@
     if (!confirm('確定重新開啟本期盤點？')) return;
     await dbPatch('inventory_check', existingId, { status: 'draft', confirmed_at: null });
     isConfirmed = false;
+    const period = getCurrentPeriod();
+    const idx = allChecks.findIndex(c => c.period_key === period.key);
+    if (idx >= 0) allChecks[idx].status = 'draft';
     setLocked(false);
     document.getElementById('btn-confirm').textContent = '確認並鎖定本期盤點';
+    renderPeriodPills();
     showToast('已重新開啟，可修改');
   }
 

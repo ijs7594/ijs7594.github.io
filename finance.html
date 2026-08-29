@@ -521,13 +521,15 @@
     const prev = previousPeriod(y, m, half);
     const prevEndKey = periodEndDate(prev.y, prev.m, prev.half);
     const periodRangeVal = periodRange(y, m, half);
+    const periodKey = `${y}-${pad2(m)}-${half === '上旬' ? 'upper' : 'lower'}`;
+    const prevPeriodKey = `${prev.y}-${pad2(prev.m)}-${prev.half === '上旬' ? 'upper' : 'lower'}`;
 
     const yearMonth = `${y}-${pad2(m)}`;
     const [reports, expenses, receivables, invCounts, vendorPays, supRecords, fixedExpenses] = await Promise.all([
       dbGet('store_daily_report', `store_id=in.(${ids})&date=gte.${monthStart}&date=lte.${monthEnd}`),
       dbGet('store_daily_expenses', `store_id=in.(${ids})&date=gte.${monthStart}&date=lte.${monthEnd}`),
       dbGet('store_receivables', `store_id=in.(${ids})&collected=eq.false`),
-      dbGet('store_inventory_counts', `store_id=in.(${ids})&period_end_date=in.(${endKey},${prevEndKey})`),
+      dbGet('inventory_check', `store_id=in.(${ids})&period_key=in.(${periodKey},${prevPeriodKey})&status=eq.confirmed`),
       dbGet('store_vendor_payments', `store_id=in.(${ids})&period_end_date=eq.${endKey}`),
       dbGet('supervision_records', `store_id=in.(${ids})&order=created_at.desc`),
       dbGet('store_fixed_expenses', `store_id=in.(${ids})&year_month=eq.${yearMonth}`)
@@ -537,8 +539,8 @@
       reports: (Array.isArray(reports) ? reports : []).filter(r => r.store_id === id),
       expenses: (Array.isArray(expenses) ? expenses : []).filter(e => e.store_id === id),
       receivables: (Array.isArray(receivables) ? receivables : []).filter(r => r.store_id === id),
-      begin: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_end_date === prevEndKey),
-      end: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_end_date === endKey),
+      begin: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_key === prevPeriodKey),
+      end: (Array.isArray(invCounts) ? invCounts : []).find(c => c.store_id === id && c.period_key === periodKey),
       vendorTotal: (Array.isArray(vendorPays) ? vendorPays : []).filter(v => v.store_id === id).reduce((s, v) => s + Number(v.amount || 0), 0),
       latestSupervision: (Array.isArray(supRecords) ? supRecords : []).find(r => r.store_id === id),
       fixedCost: (Array.isArray(fixedExpenses) ? fixedExpenses : []).filter(e => e.store_id === id).reduce((s, e) => s + Number(e.amount || 0), 0)
@@ -563,7 +565,7 @@
           .filter(e => e.date >= periodRangeVal.start && e.date <= periodRangeVal.end)
           .filter(e => (e.description || '').startsWith('【變動成本】'))
           .reduce((sum, e) => sum + Number(e.amount || 0) + Number(e.shipping_amount || 0), 0);
-        const usage = Number(d.begin.inventory_value) + d.vendorTotal + periodVariableCost - Number(d.end.inventory_value);
+        const usage = Number(d.begin.closing_inventory) + d.vendorTotal + periodVariableCost - Number(d.end.closing_inventory);
         margin = periodRevenue > 0 ? (periodRevenue - usage) / periodRevenue * 100 : null;
       }
 
