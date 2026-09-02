@@ -15,14 +15,7 @@
     }
     body { font-family: -apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; background: var(--warm-white); color: var(--text-dark); min-height: 100vh; }
 
-    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 340px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .gate-box h2 { font-size: 17px; margin-bottom: 6px; }
-    .gate-box p { font-size: 12px; color: var(--text-light); margin-bottom: 22px; }
-    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
-    .gate-box input:focus { border-color: var(--caramel); }
-    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
+    /* gate removed */
 
     .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; }
     .topbar-icon { font-size: 22px; }
@@ -72,15 +65,6 @@
 </head>
 <body>
 
-<div class="gate" id="gate">
-  <div class="gate-box">
-    <h2>💬 留言儀表板</h2>
-    <p>僅限工程師／負責人使用</p>
-    <input type="password" id="gate-input" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')checkGate()" />
-    <button onclick="checkGate()">進入</button>
-    <div class="gate-error" id="gate-error"></div>
-  </div>
-</div>
 
 <div class="topbar">
   <span class="topbar-icon">💬</span>
@@ -121,20 +105,7 @@
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
 
-  const GATE_PASS = '9999';
   let allItems = [];
-  let unlocked = false;
-
-  function checkGate() {
-    const v = document.getElementById('gate-input').value;
-    if (v === GATE_PASS) {
-      document.getElementById('gate').style.display = 'none';
-      unlocked = true;
-      loadAll();
-    } else {
-      document.getElementById('gate-error').textContent = '密碼不正確';
-    }
-  }
 
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -156,7 +127,6 @@
   }
 
   async function loadAll() {
-    if (!unlocked) return;
     document.getElementById('items-list').innerHTML = '<div class="loading">載入中…</div>';
     try {
       allItems = await apiGet('report_feedback', 'order=created_at.desc&limit=200');
@@ -245,7 +215,7 @@
     document.body.appendChild(ov);
   }
 
-  document.getElementById('gate-input').focus();
+  loadAll();
 </script>
 </body>
 </html>
