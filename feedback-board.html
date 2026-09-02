@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>留言儀表板 · 日報表工程師視角</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --brown-dark: #2C1A0E; --brown-mid: #5C3317; --brown-main: #8B5E3C;
+      --caramel: #C17B4E; --sand: #D4A574; --cream: #F5EDE0;
+      --warm-white: #FAF7F2; --card-bg: #FFFFFF;
+      --text-dark: #2C1A0E; --text-mid: #6B4C35; --text-light: #9E7B60;
+      --border: #EDE0D0; --green: #4CAF7D; --red: #C0392B; --blue: #5B8FD4;
+    }
+    body { font-family: -apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; background: var(--warm-white); color: var(--text-dark); min-height: 100vh; }
+
+    .gate { position: fixed; inset: 0; background: rgba(44,26,14,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .gate-box { background: var(--card-bg); border-radius: 16px; padding: 40px 36px; width: 340px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .gate-box h2 { font-size: 17px; margin-bottom: 6px; }
+    .gate-box p { font-size: 12px; color: var(--text-light); margin-bottom: 22px; }
+    .gate-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+    .gate-box input:focus { border-color: var(--caramel); }
+    .gate-box button { width: 100%; padding: 11px; background: var(--brown-main); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gate-error { font-size: 12px; color: #e53e3e; margin-top: 8px; }
+
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .back-link { margin-left: auto; font-size: 13px; color: var(--brown-main); text-decoration: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; }
+    .back-link:hover { background: var(--cream); }
+
+    .content { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    .controls select, .controls input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+    .controls select:focus, .controls input:focus { border-color: var(--caramel); }
+    .refresh-btn { border: 1px solid var(--border); background: white; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-family: inherit; cursor: pointer; }
+    .refresh-btn:hover { background: var(--cream); }
+
+    .summary-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .summary-chip { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 110px; }
+    .summary-chip .chip-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+    .summary-chip .chip-val { font-size: 20px; font-weight: 800; }
+    .chip-val.blue { color: var(--blue); }
+    .chip-val.red { color: var(--red); }
+    .chip-val.green { color: var(--green); }
+
+    .items-list { display: flex; flex-direction: column; gap: 12px; }
+    .fb-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+    .fb-item.new { border-left: 4px solid var(--blue); }
+    .fb-item.resolved { opacity: 0.65; }
+    .fb-item-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .fb-store { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+    .fb-date { font-size: 12px; color: var(--text-mid); }
+    .fb-ts { font-size: 11px; color: var(--text-light); margin-left: auto; }
+    .fb-badge { font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 600; }
+    .fb-badge.new { background: #EFF6FF; color: #1D4ED8; }
+    .fb-badge.read { background: #F0FDF4; color: #15803D; }
+    .fb-badge.resolved { background: #F9FAFB; color: #6B7280; }
+    .fb-message { font-size: 13px; color: var(--text-dark); line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin-bottom: 10px; }
+    .fb-screenshot img { max-width: 280px; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
+    .fb-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .fb-actions button { border: 1px solid var(--border); background: var(--warm-white); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-family: inherit; cursor: pointer; }
+    .fb-actions button:hover { background: var(--cream); }
+    .fb-actions button.primary { background: var(--brown-main); color: white; border-color: var(--brown-main); }
+    .fb-actions button.primary:hover { background: var(--brown-mid); }
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 14px; }
+    .loading { text-align: center; padding: 40px; color: var(--text-light); }
+  </style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2>💬 留言儀表板</h2>
+    <p>僅限工程師／負責人使用</p>
+    <input type="password" id="gate-input" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')checkGate()" />
+    <button onclick="checkGate()">進入</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
+<div class="topbar">
+  <span class="topbar-icon">💬</span>
+  <div>
+    <div class="topbar-title">留言儀表板</div>
+    <div class="topbar-sub">店長對日報表的疑問與反饋</div>
+  </div>
+  <a class="back-link" href="daily-report.html">← 回日報表</a>
+</div>
+
+<div class="content">
+  <div class="summary-row">
+    <div class="summary-chip"><div class="chip-label">待處理</div><div class="chip-val blue" id="cnt-new">—</div></div>
+    <div class="summary-chip"><div class="chip-label">已閱讀</div><div class="chip-val" id="cnt-read">—</div></div>
+    <div class="summary-chip"><div class="chip-label">已解決</div><div class="chip-val green" id="cnt-resolved">—</div></div>
+    <div class="summary-chip"><div class="chip-label">有截圖</div><div class="chip-val" id="cnt-screenshot">—</div></div>
+  </div>
+
+  <div class="controls">
+    <select id="filter-store" onchange="applyFilters()">
+      <option value="">全部店家</option>
+    </select>
+    <select id="filter-status" onchange="applyFilters()">
+      <option value="">全部狀態</option>
+      <option value="new">待處理</option>
+      <option value="read">已閱讀</option>
+      <option value="resolved">已解決</option>
+    </select>
+    <button class="refresh-btn" onclick="loadAll()">🔄 重新整理</button>
+  </div>
+
+  <div class="items-list" id="items-list">
+    <div class="loading">載入中…</div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  const GATE_PASS = '9999';
+  let allItems = [];
+  let unlocked = false;
+
+  function checkGate() {
+    const v = document.getElementById('gate-input').value;
+    if (v === GATE_PASS) {
+      document.getElementById('gate').style.display = 'none';
+      unlocked = true;
+      loadAll();
+    } else {
+      document.getElementById('gate-error').textContent = '密碼不正確';
+    }
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function apiGet(table, qs) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${qs}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  async function apiPatch(table, filter, body) {
+    return fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+      method: 'PATCH',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+  }
+
+  async function loadAll() {
+    if (!unlocked) return;
+    document.getElementById('items-list').innerHTML = '<div class="loading">載入中…</div>';
+    try {
+      allItems = await apiGet('report_feedback', 'order=created_at.desc&limit=200');
+      if (!Array.isArray(allItems)) {
+        document.getElementById('items-list').innerHTML = '<div class="empty">❌ 資料表尚未建立，請先執行建表 SQL。</div>';
+        return;
+      }
+      updateStoreFilter();
+      updateSummary();
+      applyFilters();
+    } catch {
+      document.getElementById('items-list').innerHTML = '<div class="empty">載入失敗，請重新整理</div>';
+    }
+  }
+
+  function updateStoreFilter() {
+    const storeNames = [...new Set(allItems.map(i => i.store_name).filter(Boolean))].sort();
+    const sel = document.getElementById('filter-store');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">全部店家</option>' + storeNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    sel.value = cur;
+  }
+
+  function updateSummary() {
+    document.getElementById('cnt-new').textContent = allItems.filter(i => (i.status || 'new') === 'new').length;
+    document.getElementById('cnt-read').textContent = allItems.filter(i => i.status === 'read').length;
+    document.getElementById('cnt-resolved').textContent = allItems.filter(i => i.status === 'resolved').length;
+    document.getElementById('cnt-screenshot').textContent = allItems.filter(i => i.screenshot_data).length;
+  }
+
+  function applyFilters() {
+    const storeF = document.getElementById('filter-store').value;
+    const statusF = document.getElementById('filter-status').value;
+    let items = allItems;
+    if (storeF) items = items.filter(i => i.store_name === storeF);
+    if (statusF) items = items.filter(i => (i.status || 'new') === statusF);
+    renderItems(items);
+  }
+
+  function renderItems(items) {
+    const el = document.getElementById('items-list');
+    if (!items.length) { el.innerHTML = '<div class="empty">這個篩選條件沒有留言</div>'; return; }
+    const statusLabel = { new: '待處理', read: '已閱讀', resolved: '已解決' };
+    el.innerHTML = items.map(item => {
+      const st = item.status || 'new';
+      const ts = new Date(item.created_at).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const sc = item.screenshot_data
+        ? `<div class="fb-screenshot" style="margin-top:10px;"><img src="data:${item.screenshot_type || 'image/jpeg'};base64,${item.screenshot_data}" onclick="enlargeImg(this)" title="點擊放大" /></div>`
+        : '';
+      const actions = st !== 'resolved'
+        ? `<div class="fb-actions">
+            ${st === 'new' ? `<button onclick="setStatus('${item.id}','read')">✓ 標記已閱讀</button>` : ''}
+            <button class="primary" onclick="setStatus('${item.id}','resolved')">✔ 標記已解決</button>
+          </div>`
+        : `<div class="fb-actions"><button onclick="setStatus('${item.id}','new')">↩ 重新開啟</button></div>`;
+      return `<div class="fb-item ${st}" data-id="${item.id}">
+        <div class="fb-item-header">
+          <span class="fb-store">🏪 ${esc(item.store_name || '未知店家')}</span>
+          ${item.report_date ? `<span class="fb-date">📅 ${item.report_date}</span>` : ''}
+          <span class="fb-badge ${st}">${statusLabel[st] || st}</span>
+          <span class="fb-ts">${ts}</span>
+        </div>
+        <div class="fb-message">${esc(item.message)}</div>
+        ${sc}
+        ${actions}
+      </div>`;
+    }).join('');
+  }
+
+  async function setStatus(id, status) {
+    await apiPatch('report_feedback', `id=eq.${id}`, { status });
+    const item = allItems.find(i => i.id === id);
+    if (item) item.status = status;
+    updateSummary();
+    applyFilters();
+  }
+
+  function enlargeImg(el) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+    ov.onclick = () => ov.remove();
+    const img = document.createElement('img');
+    img.src = el.src;
+    img.style.cssText = 'max-width:94vw;max-height:94vh;border-radius:12px;box-shadow:0 8px 60px rgba(0,0,0,0.6);';
+    ov.appendChild(img);
+    document.body.appendChild(ov);
+  }
+
+  document.getElementById('gate-input').focus();
+</script>
+</body>
+</html>
