@@ -154,6 +154,44 @@
     }
     .task-empty .big { font-size: 32px; margin-bottom: 10px; }
 
+    /* ── 四象限分類 ── */
+    .quad-summary {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;
+      margin-bottom: 22px;
+    }
+    .quad-card {
+      border-radius: 12px; padding: 12px 14px; border: 1.5px solid transparent;
+    }
+    .quad-card .qc-count { font-size: 20px; font-weight: 800; }
+    .quad-card .qc-label { font-size: 11px; font-weight: 700; margin-top: 2px; }
+    .quad-card .qc-action { font-size: 10px; opacity: 0.75; margin-top: 4px; }
+    .quad-card.q-do        { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+    .quad-card.q-schedule  { background: #EFF6FF; border-color: #BFDBFE; color: #1E40AF; }
+    .quad-card.q-delegate  { background: #FFF7ED; border-color: #FED7AA; color: #9A3412; }
+    .quad-card.q-drop      { background: #F3F4F6; border-color: #E5E7EB; color: #4B5563; }
+
+    .quad-group { margin-bottom: 22px; }
+    .quad-group-title {
+      font-size: 12px; font-weight: 700; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .quad-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .quad-dot.q-do       { background: #DC2626; }
+    .quad-dot.q-schedule { background: #2563EB; }
+    .quad-dot.q-delegate { background: #C2410C; }
+    .quad-dot.q-drop     { background: #9CA3AF; }
+    .quad-dot.q-unknown  { background: #D4A574; }
+
+    .task-quadrant {
+      font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border-radius: 10px; border: 1px solid;
+    }
+    .task-quadrant.q-do       { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
+    .task-quadrant.q-schedule { background: #EFF6FF; color: #1E40AF; border-color: #BFDBFE; }
+    .task-quadrant.q-delegate { background: #FFF7ED; color: #9A3412; border-color: #FED7AA; }
+    .task-quadrant.q-drop     { background: #F3F4F6; color: #4B5563; border-color: #E5E7EB; }
+    .task-ai-note { font-size: 11px; color: var(--text-mid); margin-top: 6px; }
+
     .mobile-nav {
       display: none;
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -236,6 +274,8 @@
       <button class="tab-pill" id="tab-done" onclick="switchTab('done')">已完成</button>
     </div>
 
+    <div class="quad-summary" id="quad-summary"></div>
+
     <div class="task-list" id="task-list">
       <div class="task-empty"><div class="big">⏳</div>載入中…</div>
     </div>
@@ -288,6 +328,17 @@
     return { cls: 'web', txt: '🌐 網頁' };
   }
 
+  // 重要／緊急四象限：幫忙決定「抓在自己手上」還是「授權出去」
+  const QUADRANTS = [
+    { key: '重要緊急',   cls: 'q-do',       action: '親自處理', emoji: '🔴' },
+    { key: '重要不緊急', cls: 'q-schedule', action: '排時間做', emoji: '🔵' },
+    { key: '緊急不重要', cls: 'q-delegate', action: '授權出去', emoji: '🟠' },
+    { key: '不重要不緊急', cls: 'q-drop',   action: '刪除或忽略', emoji: '⚪' },
+  ];
+  function quadInfo(name) {
+    return QUADRANTS.find(q => q.key === name) || null;
+  }
+
   async function loadTasks() {
     const status = currentTab === 'pending' ? 'pending' : 'done';
     const res = await sb(`tasks?status=eq.${status}&order=created_at.desc`);
@@ -298,9 +349,12 @@
     const data = await res.json();
     currentTasks = data;
 
-    // update badge
+    // update badge + 四象限總覽（只在待辦頁顯示，已完成的不用再分心力）
     if (currentTab === 'pending') {
       document.getElementById('pending-count').textContent = data.length + ' 件待辦';
+      renderQuadSummary(data);
+    } else {
+      document.getElementById('quad-summary').innerHTML = '';
     }
 
     const el = document.getElementById('task-list');
@@ -310,24 +364,82 @@
         : '<div class="task-empty"><div class="big">📭</div>還沒有完成的任務</div>';
       return;
     }
-    el.innerHTML = data.map(t => {
-      const src = sourceLabel(t.source);
-      const isDone = t.status === 'done';
+    el.innerHTML = currentTab === 'pending'
+      ? renderGrouped(data)
+      : data.map(renderTaskItem).join('');
+  }
+
+  function renderQuadSummary(data) {
+    const el = document.getElementById('quad-summary');
+    let html = QUADRANTS.map(q => {
+      const count = data.filter(t => t.quadrant === q.key).length;
       return `
-        <div class="task-item${isDone ? ' done' : ''}" id="task-${t.id}">
-          <div class="task-check" onclick="toggleDone(${t.id}, '${t.status}')">
-            ${isDone ? '✓' : ''}
-          </div>
-          <div class="task-body">
-            <div class="task-content">${escHtml(t.content)}</div>
-            <div class="task-meta">
-              <span class="task-source ${src.cls}">${src.txt}</span>
-              <span class="task-time">${fmtTime(t.created_at)}</span>
-            </div>
-          </div>
+        <div class="quad-card ${q.cls}">
+          <div class="qc-count">${count}</div>
+          <div class="qc-label">${q.emoji} ${q.key}</div>
+          <div class="qc-action">${q.action}</div>
         </div>
       `;
     }).join('');
+    const unclassified = data.filter(t => !quadInfo(t.quadrant)).length;
+    if (unclassified) {
+      html += `
+        <div class="quad-card" style="background:var(--warm-white);border-color:var(--border);color:var(--text-light);">
+          <div class="qc-count">${unclassified}</div>
+          <div class="qc-label">⏳ 待分類</div>
+          <div class="qc-action">AI 判斷中</div>
+        </div>
+      `;
+    }
+    el.innerHTML = html;
+  }
+
+  function renderGrouped(data) {
+    let html = '';
+    QUADRANTS.forEach(q => {
+      const items = data.filter(t => t.quadrant === q.key);
+      if (!items.length) return;
+      html += `
+        <div class="quad-group">
+          <div class="quad-group-title"><span class="quad-dot ${q.cls}"></span>${q.emoji} ${q.key}｜建議${q.action}（${items.length}）</div>
+          <div class="task-list">${items.map(renderTaskItem).join('')}</div>
+        </div>
+      `;
+    });
+    const unclassified = data.filter(t => !quadInfo(t.quadrant));
+    if (unclassified.length) {
+      html += `
+        <div class="quad-group">
+          <div class="quad-group-title"><span class="quad-dot q-unknown"></span>⏳ 待分類（${unclassified.length}）</div>
+          <div class="task-list">${unclassified.map(renderTaskItem).join('')}</div>
+        </div>
+      `;
+    }
+    return html;
+  }
+
+  function renderTaskItem(t) {
+    const src = sourceLabel(t.source);
+    const isDone = t.status === 'done';
+    const quad = quadInfo(t.quadrant);
+    const quadBadge = quad ? `<span class="task-quadrant ${quad.cls}">${quad.emoji} ${quad.key}</span>` : '';
+    const note = (!isDone && t.ai_note) ? `<div class="task-ai-note">💡 ${escHtml(t.ai_note)}</div>` : '';
+    return `
+      <div class="task-item${isDone ? ' done' : ''}" id="task-${t.id}">
+        <div class="task-check" onclick="toggleDone(${t.id}, '${t.status}')">
+          ${isDone ? '✓' : ''}
+        </div>
+        <div class="task-body">
+          <div class="task-content">${escHtml(t.content)}</div>
+          <div class="task-meta">
+            <span class="task-source ${src.cls}">${src.txt}</span>
+            ${quadBadge}
+            <span class="task-time">${fmtTime(t.created_at)}</span>
+          </div>
+          ${note}
+        </div>
+      </div>
+    `;
   }
 
   async function toggleDone(id, currentStatus) {
@@ -357,11 +469,25 @@
     const content = input.value.trim();
     if (!content) return;
     input.value = '';
-    await sb('tasks', {
+    const res = await sb('tasks', {
       method: 'POST',
       body: JSON.stringify({ content, source: 'web', status: 'pending' })
     });
+    try {
+      const data = await res.json();
+      if (data && data[0]) classifyTask(data[0].id, content);
+    } catch {}
     await loadTasks();
+  }
+
+  // 網頁快速新增沒有經過 LINE Bot，補打一支 API 讓分身用同一套四象限判斷分類，
+  // 分類結果非同步寫回 Supabase，等下一次自動刷新（30秒）就會出現
+  function classifyTask(id, content) {
+    fetch(`${BOT_URL}/api/classify-task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: BOT_SECRET, id, content })
+    }).catch(() => {});
   }
 
   function switchTab(tab) {
