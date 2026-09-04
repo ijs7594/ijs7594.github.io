@@ -301,13 +301,15 @@
   let currentTasks = [];
 
   async function sb(path, opts = {}) {
+    const { headers: extraHeaders, prefer, ...rest } = opts;
     const res = await fetch(SB_URL + '/rest/v1/' + path, {
+      ...rest,
       headers: {
         apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
         'Content-Type': 'application/json',
-        'Prefer': opts.prefer || 'return=representation',
-        ...(opts.headers || {})
-      }, ...opts
+        'Prefer': prefer || 'return=representation',
+        ...(extraHeaders || {})
+      }
     });
     return res;
   }
@@ -358,12 +360,37 @@
 
     const el = document.getElementById('task-list');
     if (!data.length) {
-      el.innerHTML = currentTab === 'pending'
-        ? '<div class="task-empty"><div class="big">🎉</div>沒有待辦任務<br>對 LINE Bot 說語音，任務自動出現</div>'
-        : '<div class="task-empty"><div class="big">📭</div>還沒有完成的任務</div>';
+      if (currentTab === 'pending') {
+        el.innerHTML = '<div class="task-empty"><div class="big">⏳</div>載入中…</div>';
+        await renderPendingEmptyState(el);
+      } else {
+        el.innerHTML = '<div class="task-empty"><div class="big">📭</div>還沒有完成的任務</div>';
+      }
       return;
     }
     el.innerHTML = renderGrouped(data);
+  }
+
+  // 待辦是空的時候，不要只丟一句「沒有待辦任務」讓人自己猜——
+  // 主動告訴他已完成的事有沒有做過四象限分析，指路過去，不用自己想到要切頁籤
+  async function renderPendingEmptyState(el) {
+    const countRes = await sb('tasks?status=eq.done&select=id', { headers: { Prefer: 'count=exact', 'Range': '0-0' } });
+    const range = countRes.headers.get('content-range'); // 格式："0-0/23"
+    const doneCount = range ? parseInt(range.split('/')[1], 10) || 0 : 0;
+
+    if (!doneCount) {
+      el.innerHTML = '<div class="task-empty"><div class="big">🎉</div>沒有待辦任務<br>對 LINE Bot 說語音，任務自動出現</div>';
+      return;
+    }
+    el.innerHTML = `
+      <div class="task-empty">
+        <div class="big">🎉</div>
+        沒有待辦任務，都處理完了<br>對 LINE Bot 說語音，任務自動出現
+        <div style="margin-top:18px;">
+          <button class="quick-btn" onclick="switchTab('done')">看已完成的 ${doneCount} 件事花在哪裡 →</button>
+        </div>
+      </div>
+    `;
   }
 
   function renderQuadSummary(data) {
