@@ -349,13 +349,12 @@
     const data = await res.json();
     currentTasks = data;
 
-    // update badge + 四象限總覽（只在待辦頁顯示，已完成的不用再分心力）
+    // update badge；四象限總覽兩個頁籤都顯示——待辦頁看「該做什麼」，
+    // 已完成頁看「時間實際花在哪」，兩者對照才看得出有沒有把時間花在刀口上
     if (currentTab === 'pending') {
       document.getElementById('pending-count').textContent = data.length + ' 件待辦';
-      renderQuadSummary(data);
-    } else {
-      document.getElementById('quad-summary').innerHTML = '';
     }
+    renderQuadSummary(data);
 
     const el = document.getElementById('task-list');
     if (!data.length) {
@@ -364,20 +363,19 @@
         : '<div class="task-empty"><div class="big">📭</div>還沒有完成的任務</div>';
       return;
     }
-    el.innerHTML = currentTab === 'pending'
-      ? renderGrouped(data)
-      : data.map(renderTaskItem).join('');
+    el.innerHTML = renderGrouped(data);
   }
 
   function renderQuadSummary(data) {
     const el = document.getElementById('quad-summary');
+    const actionWord = currentTab === 'pending' ? '建議' : '當時';
     let html = QUADRANTS.map(q => {
       const count = data.filter(t => t.quadrant === q.key).length;
       return `
         <div class="quad-card ${q.cls}">
           <div class="qc-count">${count}</div>
           <div class="qc-label">${q.emoji} ${q.key}</div>
-          <div class="qc-action">${q.action}</div>
+          <div class="qc-action">${actionWord}${q.action}</div>
         </div>
       `;
     }).join('');
@@ -395,13 +393,14 @@
   }
 
   function renderGrouped(data) {
+    const actionWord = currentTab === 'pending' ? '建議' : '當時';
     let html = '';
     QUADRANTS.forEach(q => {
       const items = data.filter(t => t.quadrant === q.key);
       if (!items.length) return;
       html += `
         <div class="quad-group">
-          <div class="quad-group-title"><span class="quad-dot ${q.cls}"></span>${q.emoji} ${q.key}｜建議${q.action}（${items.length}）</div>
+          <div class="quad-group-title"><span class="quad-dot ${q.cls}"></span>${q.emoji} ${q.key}｜${actionWord}${q.action}（${items.length}）</div>
           <div class="task-list">${items.map(renderTaskItem).join('')}</div>
         </div>
       `;
@@ -423,7 +422,7 @@
     const isDone = t.status === 'done';
     const quad = quadInfo(t.quadrant);
     const quadBadge = quad ? `<span class="task-quadrant ${quad.cls}">${quad.emoji} ${quad.key}</span>` : '';
-    const note = (!isDone && t.ai_note) ? `<div class="task-ai-note">💡 ${escHtml(t.ai_note)}</div>` : '';
+    const note = t.ai_note ? `<div class="task-ai-note">💡 ${escHtml(t.ai_note)}</div>` : '';
     return `
       <div class="task-item${isDone ? ' done' : ''}" id="task-${t.id}">
         <div class="task-check" onclick="toggleDone(${t.id}, '${t.status}')">
