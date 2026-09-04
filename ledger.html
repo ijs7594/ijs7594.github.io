@@ -253,8 +253,11 @@
       <div class="card">
         <div class="margin-grid">
           <div class="margin-cell">
-            <div class="margin-label">期初庫存（自動帶入）</div>
-            <div class="margin-value" id="m-begin">—</div>
+            <div class="margin-label" id="m-begin-label">期初庫存（自動帶入）</div>
+            <div class="margin-value" id="m-begin" style="display:none">—</div>
+            <input type="number" id="m-begin-input" placeholder="請填入期初估算金額"
+              style="display:none;width:100%;margin-top:6px;padding:6px 8px;border:1.5px solid var(--caramel);border-radius:8px;font-size:15px;font-weight:700;color:var(--caramel);background:var(--bg);text-align:right;"
+              oninput="recalcMargin()" />
           </div>
           <div class="margin-cell">
             <div class="margin-label">期末庫存（本期盤點加總，見下方逐項盤點）</div>
@@ -533,22 +536,54 @@
       return s + total;
     }, 0);
 
-    document.getElementById('m-begin').textContent = beginCount ? fmt(beginCount.inventory_value) : '（尚無上一期盤點）';
+    // 期初庫存：有上期盤點則自動帶入顯示，否則開放手動填入
+    const beginEl      = document.getElementById('m-begin');
+    const beginInput   = document.getElementById('m-begin-input');
+    const beginLabel   = document.getElementById('m-begin-label');
+    if (beginCount) {
+      beginEl.textContent = fmt(beginCount.inventory_value);
+      beginEl.style.display = '';
+      beginInput.style.display = 'none';
+      beginLabel.textContent = '期初庫存（自動帶入）';
+      window._beginValue = Number(beginCount.inventory_value);
+    } else {
+      beginEl.style.display = 'none';
+      beginInput.style.display = '';
+      beginLabel.textContent = '期初庫存（尚無上期，請填估算值）';
+      window._beginValue = Number(beginInput.value) || 0;
+    }
+
     document.getElementById('m-end').textContent = endCount ? fmt(endCount.inventory_value) : '—';
     document.getElementById('m-purchase').textContent = fmt(purchaseTotal);
     document.getElementById('m-revenue').textContent = fmt(revenueTotal);
 
-    if (beginCount && endCount) {
-      const usage = Number(beginCount.inventory_value) + purchaseTotal - Number(endCount.inventory_value);
+    window._purchaseTotal = purchaseTotal;
+    window._revenueTotal  = revenueTotal;
+    window._endValue      = endCount ? Number(endCount.inventory_value) : null;
+
+    recalcMargin();
+
+    await loadInventoryItemsForPeriod();
+  }
+
+  function recalcMargin() {
+    const beginInput = document.getElementById('m-begin-input');
+    const begin = beginInput.style.display !== 'none'
+      ? (Number(beginInput.value) || 0)
+      : (window._beginValue || 0);
+    const end   = window._endValue;
+    const purch = window._purchaseTotal || 0;
+    const rev   = window._revenueTotal  || 0;
+
+    if (end != null) {
+      const usage = begin + purch - end;
       document.getElementById('m-usage').textContent = fmt(usage);
-      const rate = revenueTotal > 0 ? (revenueTotal - usage) / revenueTotal * 100 : null;
+      const rate = rev > 0 ? (rev - usage) / rev * 100 : null;
       document.getElementById('margin-rate').textContent = rate != null ? `${rate.toFixed(1)}%` : '—';
     } else {
       document.getElementById('m-usage').textContent = '—（需要期初與期末庫存都填了才能算）';
       document.getElementById('margin-rate').textContent = '—';
     }
-
-    await loadInventoryItemsForPeriod();
   }
 
   // ── 逐項盤點 ──
