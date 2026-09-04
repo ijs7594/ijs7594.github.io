@@ -301,7 +301,7 @@
     <div class="inv-input-row">
       <div class="inv-label">
         期初庫存
-        <small>上期盤點結轉（自動帶入）</small>
+        <small id="opening-inv-hint">上期盤點結轉（自動帶入）</small>
       </div>
       <input class="inv-input" type="number" id="opening-inv" placeholder="0" disabled />
     </div>
@@ -550,11 +550,11 @@
 
     document.getElementById('purchases').value = revData.purchases || '';
 
-    // 期初庫存 = 前一期已鎖定盤點的期末庫存
+    // 期初庫存 = 前一期已鎖定盤點的期末庫存；沒有上期資料時開放手動填入
     const prevChecks = Array.isArray(prevCheck) ? prevCheck : [];
     const prevConfirmed = prevChecks.find(c => c.status === 'confirmed') || prevChecks[0];
-    const openingInv = prevConfirmed ? (Number(prevConfirmed.closing_inventory) || 0) : 0;
-    document.getElementById('opening-inv').value = openingInv || '';
+    const openingEl = document.getElementById('opening-inv');
+    const openingHint = document.getElementById('opening-inv-hint');
 
     renderRevCard();
 
@@ -569,6 +569,22 @@
     } else {
       document.getElementById('closing-inv').value = '';
       document.getElementById('notes').value       = '';
+    }
+
+    if (prevConfirmed) {
+      // 有上期盤點 → 自動帶入，鎖定
+      openingEl.value = Number(prevConfirmed.closing_inventory) || '';
+      openingEl.disabled = true;
+      openingEl.dataset.autoFilled = '1';
+      openingHint.textContent = '上期盤點結轉（自動帶入）';
+    } else {
+      delete openingEl.dataset.autoFilled;
+      // 沒有上期盤點 → 開放手動填（如導入期、新店開張）
+      // 若已有儲存過的期初庫存則優先帶入
+      openingEl.value = existing?.opening_inventory != null ? existing.opening_inventory : '';
+      openingEl.disabled = isConfirmed; // 確認後才鎖
+      openingHint.textContent = '尚無上期盤點，可手動填入估算值';
+      openingEl.addEventListener('input', renderRevCard, { once: false });
     }
 
     setLocked(isConfirmed);
@@ -694,6 +710,9 @@
     reopen.style.display  = locked ? 'block' : 'none';
     closingEl.disabled = locked;
     notesEl.disabled   = locked;
+    // 手動期初庫存（無上期盤點時才可編輯）確認後一併鎖定
+    const openingEl2 = document.getElementById('opening-inv');
+    if (!openingEl2.dataset.autoFilled) openingEl2.disabled = locked;
 
     if (locked) {
       closingEl.classList.remove('highlight');
