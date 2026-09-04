@@ -192,6 +192,29 @@
     .task-quadrant.q-drop     { background: #F3F4F6; color: #4B5563; border-color: #E5E7EB; }
     .task-ai-note { font-size: 11px; color: var(--text-mid); margin-top: 6px; }
 
+    /* ── 分析建議（累積趨勢）── */
+    .analysis-list { display: flex; flex-direction: column; gap: 14px; }
+    .snapshot-card {
+      background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+    }
+    .snapshot-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
+    }
+    .snapshot-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+    .snapshot-rate { font-size: 22px; font-weight: 800; color: var(--brown-main); }
+    .snapshot-trend { font-size: 12px; font-weight: 600; margin-left: 8px; color: var(--text-light); }
+    .snapshot-bar {
+      display: flex; height: 10px; border-radius: 6px; overflow: hidden;
+      margin-bottom: 12px; background: var(--warm-white);
+    }
+    .snapshot-bar span { display: block; height: 100%; }
+    .snapshot-text {
+      font-size: 12.5px; color: var(--text-mid); white-space: pre-wrap;
+      line-height: 1.7; border-top: 1px solid var(--border); padding-top: 12px;
+    }
+
     .mobile-nav {
       display: none;
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -272,6 +295,7 @@
     <div class="tab-row">
       <button class="tab-pill active" id="tab-pending" onclick="switchTab('pending')">待辦</button>
       <button class="tab-pill" id="tab-done" onclick="switchTab('done')">已完成</button>
+      <button class="tab-pill" id="tab-analysis" onclick="switchTab('analysis')">📈 分析建議</button>
     </div>
 
     <div class="quad-summary" id="quad-summary"></div>
@@ -279,6 +303,8 @@
     <div class="task-list" id="task-list">
       <div class="task-empty"><div class="big">⏳</div>載入中…</div>
     </div>
+
+    <div class="analysis-list" id="analysis-list" style="display:none;"></div>
 
   </div>
 </div>
@@ -516,19 +542,78 @@
     }).catch(() => {});
   }
 
+  // 累積式分析：每月/每季由 linebot 的 cron 存一筆快照到 task_quadrant_snapshots，
+  // 這裡只負責讀出來排序顯示，跟上一期對照的邏輯已經算好存在 delegate_rate 欄位裡
+  async function loadAnalysis() {
+    const el = document.getElementById('analysis-list');
+    el.innerHTML = '<div class="task-empty"><div class="big">⏳</div>載入中…</div>';
+    const res = await sb('task_quadrant_snapshots?order=period_start.desc');
+    if (!res.ok) {
+      el.innerHTML = '<div class="task-empty"><div class="big">⚠️</div>請先在 Supabase 建立 task_quadrant_snapshots 資料表</div>';
+      return;
+    }
+    const data = await res.json();
+    if (!data.length) {
+      el.innerHTML = '<div class="task-empty"><div class="big">📊</div>還沒有分析紀錄<br>每月1號會自動產生，季底月份（1/4/7/10月）多一份季度分析</div>';
+      return;
+    }
+    el.innerHTML = data.map((s, i) => {
+      const prev = data[i + 1]; // 陣列是新到舊排序，下一筆就是上一期
+      let trendHtml = '';
+      if (prev && prev.delegate_rate != null && s.delegate_rate != null) {
+        const diff = s.delegate_rate - prev.delegate_rate;
+        const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+        trendHtml = `<span class="snapshot-trend">${arrow} 上期 ${prev.delegate_rate}%</span>`;
+      }
+      const total = s.count_do + s.count_schedule + s.count_delegate + s.count_drop;
+      const seg = n => total ? (n / total * 100) : 0;
+      const bar = total ? `
+        <div class="snapshot-bar">
+          ${s.count_do ? `<span style="width:${seg(s.count_do)}%;background:#DC2626;" title="重要緊急 ${s.count_do}"></span>` : ''}
+          ${s.count_schedule ? `<span style="width:${seg(s.count_schedule)}%;background:#2563EB;" title="重要不緊急 ${s.count_schedule}"></span>` : ''}
+          ${s.count_delegate ? `<span style="width:${seg(s.count_delegate)}%;background:#C2410C;" title="緊急不重要 ${s.count_delegate}"></span>` : ''}
+          ${s.count_drop ? `<span style="width:${seg(s.count_drop)}%;background:#9CA3AF;" title="不重要不緊急 ${s.count_drop}"></span>` : ''}
+        </div>
+      ` : '';
+      return `
+        <div class="snapshot-card">
+          <div class="snapshot-header">
+            <div class="snapshot-title">${s.is_quarter ? '📈' : '📊'} ${escHtml(s.period_label)}</div>
+            <div>
+              <span class="snapshot-rate">${s.delegate_rate != null ? s.delegate_rate + '%' : '—'}</span>
+              ${trendHtml}
+            </div>
+          </div>
+          ${bar}
+          <div class="snapshot-text">${escHtml(s.summary_text || '')}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
   function switchTab(tab) {
     currentTab = tab;
-    document.getElementById('tab-pending').className = 'tab-pill' + (tab === 'pending' ? ' active' : '');
-    document.getElementById('tab-done').className   = 'tab-pill' + (tab === 'done'    ? ' active' : '');
-    loadTasks();
+    document.getElementById('tab-pending').className  = 'tab-pill' + (tab === 'pending'  ? ' active' : '');
+    document.getElementById('tab-done').className     = 'tab-pill' + (tab === 'done'     ? ' active' : '');
+    document.getElementById('tab-analysis').className = 'tab-pill' + (tab === 'analysis' ? ' active' : '');
+
+    const showTasks = tab !== 'analysis';
+    document.getElementById('quad-summary').style.display = showTasks ? '' : 'none';
+    document.getElementById('task-list').style.display = showTasks ? '' : 'none';
+    document.getElementById('analysis-list').style.display = showTasks ? 'none' : '';
+    refresh();
   }
 
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  loadTasks();
-  setInterval(loadTasks, 30000); // 每30秒自動更新
+  function refresh() {
+    if (currentTab === 'analysis') loadAnalysis(); else loadTasks();
+  }
+
+  refresh();
+  setInterval(refresh, 30000); // 每30秒自動更新
 </script>
 </body>
 </html>
