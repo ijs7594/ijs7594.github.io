@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurant PoC - LINE Auth</title>
+  <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: -apple-system, "PingFang TC", sans-serif; padding: 24px; background: #FAF7F2; color: #2C1A0E; max-width: 480px; margin: 0 auto; }
+    h2 { font-size: 18px; margin-bottom: 16px; }
+    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #EDE0D0; word-break: break-all; }
+    .label { font-size: 11px; color: #9E7B60; margin-bottom: 4px; }
+    .val { font-size: 13px; }
+    .status { font-weight: 700; }
+    .ok { color: #4CAF7D; }
+    .err { color: #C0392B; }
+    .warn { color: #E6AC00; }
+    button { background: #8B5E3C; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+    button:hover { background: #5C3317; }
+    pre { font-size: 11px; white-space: pre-wrap; word-break: break-all; background: #F5EDE0; padding: 10px; border-radius: 8px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h2>🧪 Restaurant PoC — LINE Auth</h2>
+  <div class="card">
+    <div class="label">Project</div>
+    <div class="val">restaurant-ops-dev (新 Supabase project)</div>
+  </div>
+
+  <div class="card" id="liff-card">
+    <div class="label">LIFF 狀態</div>
+    <div class="val status warn" id="liff-status">初始化中…</div>
+  </div>
+
+  <div class="card" id="line-card" style="display:none">
+    <div class="label">LINE 帳號</div>
+    <div class="val" id="line-name">—</div>
+    <div class="label" style="margin-top:8px">LINE UID（Provider 底下）</div>
+    <div class="val" id="line-uid">—</div>
+  </div>
+
+  <div class="card" id="supabase-card" style="display:none">
+    <div class="label">Supabase 登入狀態</div>
+    <div class="val status" id="sb-status">—</div>
+    <div class="label" style="margin-top:8px">auth.users.id</div>
+    <div class="val" id="sb-uid">—</div>
+    <div class="label" style="margin-top:8px">provider</div>
+    <div class="val" id="sb-provider">—</div>
+    <pre id="sb-detail" style="display:none"></pre>
+  </div>
+
+  <button id="login-btn" style="display:none" onclick="doLogin()">LINE 登入 → Supabase</button>
+  <button id="detail-btn" style="display:none" onclick="toggleDetail()">顯示完整 session</button>
+
+  <script>
+    const SUPABASE_URL = 'https://nrmgatbpzhtexnhlcjqa.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_SdShm_tU9_Ls5KPmMCzWXg_amnhAWso';
+    const LIFF_ID = '2010930752-6XG2AGCF';
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let detailVisible = false;
+
+    async function init() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        document.getElementById('liff-status').textContent = 'LIFF 初始化成功 ✓';
+        document.getElementById('liff-status').className = 'val status ok';
+
+        if (!liff.isLoggedIn()) {
+          document.getElementById('liff-status').textContent = 'LIFF 初始化成功，尚未登入 LINE';
+          document.getElementById('liff-status').className = 'val status warn';
+          document.getElementById('login-btn').style.display = 'block';
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        document.getElementById('line-card').style.display = 'block';
+        document.getElementById('line-name').textContent = profile.displayName;
+        document.getElementById('line-uid').textContent = profile.userId;
+
+        document.getElementById('login-btn').style.display = 'block';
+
+        // 已有 Supabase session 就直接顯示
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) showSupabaseResult(session);
+
+      } catch (e) {
+        document.getElementById('liff-status').textContent = '❌ LIFF 初始化失敗：' + e.message;
+        document.getElementById('liff-status').className = 'val status err';
+      }
+    }
+
+    async function doLogin() {
+      const btn = document.getElementById('login-btn');
+      btn.textContent = '登入中…';
+      btn.disabled = true;
+      try {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        const idToken = liff.getIDToken();
+        if (!idToken) throw new Error('getIDToken() 回傳空值');
+
+        const { data, error } = await sb.auth.signInWithIdToken({
+          provider: 'custom:line',
+          token: idToken,
+        });
+        if (error) throw error;
+        showSupabaseResult(data.session);
+      } catch (e) {
+        document.getElementById('supabase-card').style.display = 'block';
+        document.getElementById('sb-status').textContent = '❌ 失敗：' + e.message;
+        document.getElementById('sb-status').className = 'val status err';
+      } finally {
+        btn.textContent = 'LINE 登入 → Supabase';
+        btn.disabled = false;
+      }
+    }
+
+    function showSupabaseResult(session) {
+      document.getElementById('supabase-card').style.display = 'block';
+      document.getElementById('sb-status').textContent = '✓ 登入成功';
+      document.getElementById('sb-status').className = 'val status ok';
+      document.getElementById('sb-uid').textContent = session.user?.id || '—';
+      const identity = session.user?.identities?.find(i => i.provider.includes('line'));
+      document.getElementById('sb-provider').textContent = identity?.provider || session.user?.app_metadata?.provider || '—';
+      document.getElementById('sb-detail').textContent = JSON.stringify(session.user, null, 2);
+      document.getElementById('detail-btn').style.display = 'block';
+    }
+
+    function toggleDetail() {
+      detailVisible = !detailVisible;
+      document.getElementById('sb-detail').style.display = detailVisible ? 'block' : 'none';
+      document.getElementById('detail-btn').textContent = detailVisible ? '隱藏完整 session' : '顯示完整 session';
+    }
+
+    init();
+  </script>
+</body>
+</html>
