@@ -207,8 +207,13 @@
 
     <!-- ══ 全店總覽 ══ -->
     <div id="section-overview">
+      <div class="month-nav">
+        <button onclick="changeOverviewMonth(-1)">◀</button>
+        <h2 id="overview-month-label"></h2>
+        <button onclick="changeOverviewMonth(1)">▶</button>
+      </div>
       <div class="table-box">
-        <h3>各店本月關鍵數據（點欄位標題排序，點店名看細節）</h3>
+        <h3>各店關鍵數據（點欄位標題排序，點店名看細節）</h3>
         <table>
           <thead>
             <tr>
@@ -298,6 +303,7 @@
 
   let stores = [];
   let currentStoreId = null;
+  let overviewDate = new Date();
 
   function checkPw() {
     const val = document.getElementById('pw-input').value;
@@ -364,6 +370,11 @@
   function changeMonth(delta) {
     currentDate.setMonth(currentDate.getMonth() + delta);
     loadData();
+  }
+
+  function changeOverviewMonth(delta) {
+    overviewDate.setMonth(overviewDate.getMonth() + delta);
+    loadOverview();
   }
 
   // 跟日報表同一套公式：整日營收總額 = 現場營收 + line pay + UBER + 熊貓 + 當日未收款
@@ -512,11 +523,16 @@
     }
     const ids = activeStores.map(s => s.id).join(',');
 
+    document.getElementById('overview-month-label').textContent = `${overviewDate.getFullYear()} 年 ${overviewDate.getMonth() + 1} 月`;
+
     const now = new Date();
-    const y = now.getFullYear(), m = now.getMonth() + 1;
+    const y = overviewDate.getFullYear(), m = overviewDate.getMonth() + 1;
+    const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
     const monthStart = `${y}-${pad2(m)}-01`;
     const monthEnd = `${y}-${pad2(m)}-${pad2(lastDayOfMonth(y, m))}`;
-    const half = now.getDate() <= 15 ? '上旬' : '下旬';
+    // 看歷史月份時整個月資料都已經定案，直接用下旬（月底）當「最新半月」；
+    // 只有看當月才要照今天日期判斷現在走到上旬還是下旬。
+    const half = isCurrentMonth ? (now.getDate() <= 15 ? '上旬' : '下旬') : '下旬';
     const endKey = periodEndDate(y, m, half);
     const prev = previousPeriod(y, m, half);
     const prevEndKey = periodEndDate(prev.y, prev.m, prev.half);
