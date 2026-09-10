@@ -325,11 +325,13 @@ const JOIN_BASE_URL = 'https://ijs7594.github.io/join.html?token=';
 let accessToken = null; // Supabase JWT, set after sign-in
 
 // ── Supabase REST helpers (no SDK — LINE WebView blocks cdnjs) ──
-async function supaSignIn(idToken) {
+async function supaSignIn(idToken, nonce) {
+  const body = { provider: 'custom:line', id_token: idToken };
+  if (nonce) body.nonce = nonce;
   const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=id_token`, {
     method: 'POST',
     headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider: 'custom:line', id_token: idToken }),
+    body: JSON.stringify(body),
   });
   const d = await res.json();
   if (!res.ok) throw new Error(d.error_description || d.msg || `auth ${res.status}`);
@@ -424,15 +426,18 @@ let qrInstance = null;
     let tokenPayload = null;
     try {
       tokenPayload = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-      dbg('7b. iss=' + tokenPayload.iss + ' aud=' + tokenPayload.aud + ' exp=' + new Date(tokenPayload.exp*1000).toLocaleTimeString());
+      dbg('7b. iss=' + tokenPayload.iss + ' aud=' + tokenPayload.aud
+        + ' nonce=' + (tokenPayload.nonce || '（無）')
+        + ' exp=' + new Date(tokenPayload.exp*1000).toLocaleTimeString());
     } catch(e) { dbg('7b. decode err: ' + e.message); }
 
-    dbg('8. Supabase signIn…');
+    const nonce = tokenPayload?.nonce || undefined;
+    dbg('8. Supabase signIn… nonce=' + (nonce ? '有' : '無'));
     try {
-      accessToken = await supaSignIn(idToken);
+      accessToken = await supaSignIn(idToken, nonce);
     } catch (authErr) {
       const hint = tokenPayload
-        ? `\naud=${tokenPayload.aud}\niss=${tokenPayload.iss}`
+        ? `\naud=${tokenPayload.aud} nonce=${tokenPayload.nonce || '無'}`
         : '';
       showError('Supabase 登入失敗：' + authErr.message + hint);
       return;
