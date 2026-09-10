@@ -153,8 +153,9 @@
     .pnl-subtotal td { background:var(--cream); font-weight:700; border-top:1px solid var(--border); }
     .pnl-highlight td { background:#e8f0d0; font-weight:800; font-size:14px; border-top:2px solid #b8cc88; border-bottom:2px solid #b8cc88; }
     .pnl-highlight td:nth-child(1) { padding-left:16px; }
-    .pnl-final td { background:var(--brown-dark); color:#fff; font-weight:900; font-size:15px; border:none; }
-    .pnl-final td .pnl-pct { color:rgba(255,255,255,0.55); }
+    .pnl-final td { background:#FFC000; color:#2C1A0E; font-weight:900; font-size:15px; border:none; }
+    .pnl-final .pnl-amt { color:#2C1A0E; }
+    .pnl-final .pnl-pct { color:rgba(44,26,14,0.6); }
 
     /* ── Empty State ── */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 13px; line-height: 1.8; }
@@ -691,10 +692,16 @@
             <td class="pnl-pct">${pct(grossProfit)}</td>
           </tr>
           ${expRows}
-          <tr>
-            <td colspan="2" style="padding:10px 16px;font-weight:700">營業利益</td>
-            <td class="pnl-amt" style="color:${rc(opProfit)}">${f(opProfit)}</td>
+          <tr style="background:var(--cream)">
+            <td colspan="2" style="padding:10px 16px;font-weight:800;font-size:14px">營業利益</td>
+            <td class="pnl-amt" style="color:${rc(opProfit)};font-size:14px">${f(opProfit)}</td>
             <td class="pnl-pct" style="color:${rc(opProfit)}">${pct(opProfit)}</td>
+          </tr>
+          <tr>
+            <td class="pnl-cat">績效分紅</td>
+            <td class="pnl-item" style="color:var(--text-light)">—</td>
+            <td class="pnl-amt" style="color:var(--text-light)">0</td>
+            <td class="pnl-pct">0.00%</td>
           </tr>
           <tr>
             <td class="pnl-cat">＝ 所得稅</td>
@@ -704,8 +711,8 @@
           </tr>
           <tr class="pnl-final">
             <td colspan="2" style="padding:13px 16px">本期損益</td>
-            <td class="pnl-amt" style="color:${opProfit >= 0 ? '#7EE8A2' : '#FF9B9B'}">${f(opProfit)}</td>
-            <td class="pnl-pct" style="color:rgba(255,255,255,0.5)">${pct(opProfit)}</td>
+            <td class="pnl-amt">${f(opProfit)}</td>
+            <td class="pnl-pct">${pct(opProfit)}</td>
           </tr>
         </tbody>
       </table>`;
