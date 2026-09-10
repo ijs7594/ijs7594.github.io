@@ -462,6 +462,25 @@
     return res.json();
   }
 
+  const FIXED_PRESETS = [
+    { category: '薪資',     item: '薪資' },
+    { category: '薪資',     item: '獎金' },
+    { category: '薪資',     item: '激勵金' },
+    { category: '勞工保險', item: '勞退' },
+    { category: '勞工保險', item: '勞保' },
+    { category: '勞工保險', item: '健保' },
+    { category: '勞工保險', item: '圍保（128/人）' },
+    { category: '租金',     item: '房租' },
+    { category: '租金',     item: '管理費' },
+    { category: '保險費',   item: '火險' },
+    { category: '水電',     item: '電費' },
+    { category: '水電',     item: '水費' },
+    { category: '修繕費',   item: '設備維修' },
+    { category: '通訊費',   item: '電話+網路' },
+    { category: '其他費用', item: '管理基金' },
+    { category: '其他費用', item: '工程款' },
+  ];
+
   async function init() {
     const y = new Date().getFullYear();
     const yearOptions = [];
@@ -851,24 +870,6 @@
   // ── 月固定費用 ──
   let monthlyFixedExpenses = [];
 
-  const FIXED_PRESETS = [
-    { category: '薪資',     item: '薪資' },
-    { category: '薪資',     item: '獎金' },
-    { category: '薪資',     item: '激勵金' },
-    { category: '勞工保險', item: '勞退' },
-    { category: '勞工保險', item: '勞保' },
-    { category: '勞工保險', item: '健保' },
-    { category: '勞工保險', item: '圍保（128/人）' },
-    { category: '租金',     item: '房租' },
-    { category: '租金',     item: '管理費' },
-    { category: '保險費',   item: '火險' },
-    { category: '水電',     item: '電費' },
-    { category: '水電',     item: '水費' },
-    { category: '修繕費',   item: '設備維修' },
-    { category: '通訊費',   item: '電話+網路' },
-    { category: '其他費用', item: '管理基金' },
-    { category: '其他費用', item: '工程款' },
-  ];
 
   function initFixedPresets() {
     const el = document.getElementById('fixed-presets');
