@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>月固定費用 · 今年貴焿</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-mid:   #5C3317;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --cream:       #F5EDE0;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --green:       #4CAF7D;
+    }
+
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-text { color: #fff; }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.55); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub  { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text-dark); }
+    .topbar-sub { font-size: 12px; color: var(--text-light); }
+    .store-select { margin-left: auto; border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .store-locked { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--brown-main); padding: 9px 14px; }
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .card h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+
+    .period-picker { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .period-picker select { border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+
+    /* 月固定費用 Grid */
+    .fixed-group { margin-bottom: 12px; }
+    .fixed-cat-hdr { font-size: 10px; font-weight: 700; color: var(--brown-mid); letter-spacing: .06em; padding: 2px 0; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+    .fixed-items-wrap { line-height: 2; }
+    .fixed-item { display: inline-flex; align-items: center; gap: 4px; margin-right: 16px; vertical-align: middle; }
+    .fixed-item-label { font-size: 12px; color: var(--text-dark); white-space: nowrap; }
+    .fixed-item input[type=number] { width: 82px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; background: #fff; color: var(--text-dark); text-align: right; }
+    .fixed-item input[type=number]:focus { border-color: var(--brown-main); outline: none; }
+    .fixed-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+    .fixed-row input { border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12px; font-family: inherit; outline: none; }
+    .fixed-row input[type=number] { width: 82px; text-align: right; }
+    .del-btn { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 13px; padding: 2px 4px; }
+    .del-btn:hover { color: #C0392B; }
+
+    /* Mobile */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--brown-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      justify-content: space-around; align-items: center;
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px;
+      flex: 1; padding: 6px 4px;
+    }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px !important; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div class="brand-text">
+      <div class="brand-name">今年貴焿助理</div>
+      <div class="brand-sub">貴焿共好系統</div>
+    </div>
+  </div>
+  <div class="nav-list" id="nav-list">
+    <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span><div><div class="nav-text">總覽</div></div></a>
+    <a class="nav-item" href="finance-hub.html"><span class="nav-icon">💰</span><div><div class="nav-text">營收帳務</div></div></a>
+    <a class="nav-item" href="daily-report.html"><span class="nav-icon">📆</span><div><div class="nav-text">日報表</div></div></a>
+    <a class="nav-item" href="ledger.html"><span class="nav-icon">📒</span><div><div class="nav-text">應收應付</div></div></a>
+    <a class="nav-item active" href="fixed-expenses.html"><span class="nav-icon">💰</span><div><div class="nav-text">月固定費用</div></div></a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">💰</span>
+    <div>
+      <div class="topbar-title">月固定費用</div>
+      <div class="topbar-sub">薪資、租金、保險等固定費用月底登記一次</div>
+    </div>
+    <select class="store-select" id="store-select" onchange="onStoreChange()"></select>
+    <span class="store-locked" id="store-locked" style="display:none;"></span>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <h3>選擇月份</h3>
+      <div class="period-picker">
+        <select id="fperiod-year"></select>
+        <select id="fperiod-month"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💰 月固定費用登記</h3>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:16px;">直接填金額，不需要的項目留空，填好後按「儲存本月費用」。</div>
+      <div id="fixed-grid"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:14px">
+        <button onclick="addCustomFixedRow()" style="padding:7px 14px;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--text-light);font-size:13px;cursor:pointer">＋ 新增自訂項目</button>
+        <button onclick="saveAllFixed()" style="padding:8px 20px;background:var(--brown-main);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">💾 儲存本月費用</button>
+        <span id="fixed-save-msg" style="font-size:12px;color:var(--green)"></span>
+      </div>
+      <div id="fixed-total-bar" style="margin-top:12px;font-weight:700;font-size:14px;text-align:right;color:var(--text-dark)"></div>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-nav" id="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="daily-report.html"><span class="mn-icon">📆</span><span>日報表</span></a>
+  <a class="mobile-nav-item active" href="fixed-expenses.html"><span class="mn-icon">💰</span><span>固定費用</span></a>
+  <a class="mobile-nav-item" href="monthly-reconcile.html"><span class="mn-icon">📊</span><span>損益表</span></a>
+  <a class="mobile-nav-item" href="ledger.html"><span class="mn-icon">📒</span><span>應收應付</span></a>
+</nav>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const isStaff = params.get('from') === 'staff';
+
+  if (isStaff) {
+    document.getElementById('nav-list').innerHTML = `
+      <a class="nav-item" href="staff.html">
+        <span class="nav-icon">←</span>
+        <div><div class="nav-text">返回夥伴互動入口</div></div>
+      </a>`;
+    document.getElementById('mobile-nav').innerHTML = `
+      <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>`;
+  }
+
+  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+
+  let stores = [];
+  let currentStoreId = null;
+  let monthlyFixedExpenses = [];
+  let fYear = new Date().getFullYear();
+  let fMonth = new Date().getMonth() + 1;
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  async function dbGet(table, filters) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filters}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  }
+
+  const FIXED_PRESETS = [
+    { category: '薪資',     item: '薪資' },
+    { category: '薪資',     item: '獎金' },
+    { category: '薪資',     item: '激勵金' },
+    { category: '勞工保險', item: '勞退' },
+    { category: '勞工保險', item: '勞保' },
+    { category: '勞工保險', item: '健保' },
+    { category: '勞工保險', item: '圍保（128/人）' },
+    { category: '租金',     item: '房租' },
+    { category: '租金',     item: '管理費' },
+    { category: '保險費',   item: '火險' },
+    { category: '水電',     item: '電費' },
+    { category: '水電',     item: '水費' },
+    { category: '修繕費',   item: '設備維修' },
+    { category: '通訊費',   item: '電話+網路' },
+    { category: '其他費用', item: '管理基金' },
+    { category: '其他費用', item: '工程款' },
+  ];
+
+  async function init() {
+    // 年份/月份 picker
+    const y = new Date().getFullYear();
+    const yearOpts = Array.from({length: 3}, (_, i) => y - 1 + i).map(yr => `<option value="${yr}">${yr}</option>`).join('');
+    const monthOpts = Array.from({length: 12}, (_, i) => i + 1).map(m => `<option value="${m}">${m} 月</option>`).join('');
+    document.getElementById('fperiod-year').innerHTML = yearOpts;
+    document.getElementById('fperiod-month').innerHTML = monthOpts;
+    document.getElementById('fperiod-year').value = fYear;
+    document.getElementById('fperiod-month').value = fMonth;
+    document.getElementById('fperiod-year').onchange = () => { fYear = Number(document.getElementById('fperiod-year').value); loadMonthlyFixed(); };
+    document.getElementById('fperiod-month').onchange = () => { fMonth = Number(document.getElementById('fperiod-month').value); loadMonthlyFixed(); };
+
+    // 店家
+    stores = await dbGet('stores', 'order=created_at.asc');
+    if (!Array.isArray(stores)) stores = [];
+    const sel = document.getElementById('store-select');
+    sel.innerHTML = stores.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    const paramStore = params.get('store');
+    const locked = paramStore && stores.some(s => s.id === paramStore);
+    currentStoreId = locked ? paramStore : (stores[0]?.id || null);
+    sel.value = currentStoreId;
+    if (locked) {
+      sel.style.display = 'none';
+      const label = document.getElementById('store-locked');
+      label.textContent = esc(stores.find(s => s.id === currentStoreId)?.name || '');
+      label.style.display = '';
+    }
+
+    await loadMonthlyFixed();
+  }
+
+  function onStoreChange() {
+    currentStoreId = document.getElementById('store-select').value;
+    loadMonthlyFixed();
+  }
+
+  async function loadMonthlyFixed() {
+    if (!currentStoreId) return;
+    const ym = `${fYear}-${pad2(fMonth)}`;
+    const rows = await dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${ym}&order=category.asc,item_name.asc`);
+    monthlyFixedExpenses = Array.isArray(rows) ? rows : [];
+    renderFixedGrid();
+  }
+
+  function renderFixedGrid() {
+    const grid = document.getElementById('fixed-grid');
+    if (!grid) return;
+
+    const existingMap = {};
+    monthlyFixedExpenses.forEach(e => { existingMap[`${e.category}::${e.item_name}`] = e.amount; });
+
+    const presetKeys = new Set(FIXED_PRESETS.map(p => `${p.category}::${p.item}`));
+    const customRows = monthlyFixedExpenses.filter(e => !presetKeys.has(`${e.category}::${e.item_name}`));
+
+    const groups = {};
+    FIXED_PRESETS.forEach(p => {
+      if (!groups[p.category]) groups[p.category] = [];
+      groups[p.category].push(p.item);
+    });
+
+    let html = '';
+    let groupIdx = 0;
+    Object.entries(groups).forEach(([cat, items]) => {
+      const gid = `fg_${groupIdx++}`;
+      html += `<div class="fixed-group">
+        <div class="fixed-cat-hdr">${esc(cat)}
+          <button onclick="addItemToGroup('${gid}','${esc(cat)}')"
+            style="margin-left:8px;border:none;background:transparent;color:var(--brown-mid);font-size:12px;cursor:pointer;vertical-align:middle;padding:0">＋ 新增</button>
+        </div>
+        <div class="fixed-items-wrap" id="${gid}">`;
+      items.forEach(item => {
+        const val = existingMap[`${cat}::${item}`] || '';
+        html += `<div class="fixed-item">
+          <span class="fixed-item-label">${esc(item)}</span>
+          <input type="number" placeholder="0" value="${val}"
+            data-cat="${esc(cat)}" data-item="${esc(item)}"
+            oninput="updateFixedTotal()">
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+
+    if (customRows.length) {
+      html += `<div class="fixed-group" data-custom-sec>
+        <div class="fixed-cat-hdr">自訂項目</div>`;
+      customRows.forEach(e => {
+        html += `<div class="fixed-row">
+          <input type="text" value="${esc(e.category)}" placeholder="類別" style="width:72px" data-custom-cat>
+          <input type="text" value="${esc(e.item_name)}" placeholder="項目名稱" style="width:100px" data-custom-item>
+          <input type="number" value="${e.amount || ''}" placeholder="0" data-custom-amount oninput="updateFixedTotal()">
+          <button class="del-btn" onclick="this.closest('.fixed-row').remove();updateFixedTotal()">✕</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    grid.innerHTML = html;
+    updateFixedTotal();
+  }
+
+  function updateFixedTotal() {
+    const totalBar = document.getElementById('fixed-total-bar');
+    if (!totalBar) return;
+    let total = 0;
+    document.querySelectorAll('#fixed-grid input[data-cat]').forEach(el => { total += Number(el.value) || 0; });
+    document.querySelectorAll('#fixed-grid input[data-custom-amount]').forEach(el => { total += Number(el.value) || 0; });
+    totalBar.textContent = total > 0 ? `本月合計：$${total.toLocaleString()}` : '';
+  }
+
+  function addItemToGroup(gid, cat) {
+    const wrap = document.getElementById(gid);
+    if (!wrap) return;
+    const item = document.createElement('div');
+    item.className = 'fixed-item';
+    item.innerHTML = `
+      <input type="text" placeholder="項目名稱" data-cat="${esc(cat)}" data-custom-item
+        style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:#fff;color:var(--text-dark)">
+      <input type="number" placeholder="0" data-custom-amount oninput="updateFixedTotal()"
+        style="width:82px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:#fff;color:var(--text-dark);text-align:right">
+      <button class="del-btn" onclick="this.closest('.fixed-item').remove();updateFixedTotal()">✕</button>`;
+    wrap.appendChild(item);
+    item.querySelector('input[data-custom-item]').focus();
+  }
+
+  function addCustomFixedRow() {
+    const grid = document.getElementById('fixed-grid');
+    let customSec = grid.querySelector('[data-custom-sec]');
+    if (!customSec) {
+      customSec = document.createElement('div');
+      customSec.className = 'fixed-group';
+      customSec.setAttribute('data-custom-sec', '');
+      const hdr = document.createElement('div');
+      hdr.className = 'fixed-cat-hdr';
+      hdr.textContent = '自訂項目';
+      customSec.appendChild(hdr);
+      grid.appendChild(customSec);
+    }
+    const row = document.createElement('div');
+    row.className = 'fixed-row';
+    row.innerHTML = `
+      <input type="text" placeholder="類別" data-custom-cat style="width:72px">
+      <input type="text" placeholder="項目名稱" data-custom-item style="width:100px">
+      <input type="number" placeholder="0" data-custom-amount oninput="updateFixedTotal()">
+      <button class="del-btn" onclick="this.closest('.fixed-row').remove();updateFixedTotal()">✕</button>`;
+    customSec.appendChild(row);
+    row.querySelector('input[data-custom-cat]').focus();
+  }
+
+  async function saveAllFixed() {
+    const ym = `${fYear}-${pad2(fMonth)}`;
+    const records = [];
+
+    document.querySelectorAll('#fixed-grid input[data-cat][data-item]').forEach(el => {
+      const amount = Number(el.value);
+      if (amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: el.dataset.cat, item_name: el.dataset.item, amount });
+    });
+
+    document.querySelectorAll('#fixed-grid input[data-custom-item]').forEach(nameEl => {
+      const cat = nameEl.dataset.cat || '其他費用';
+      const item = nameEl.value.trim();
+      const amountEl = nameEl.closest('.fixed-item')?.querySelector('input[data-custom-amount]')
+                    || nameEl.closest('.fixed-row')?.querySelector('input[data-custom-amount]');
+      const amount = Number(amountEl?.value);
+      if (cat && item && amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount });
+    });
+
+    document.querySelectorAll('#fixed-grid .fixed-row').forEach(row => {
+      const catEl = row.querySelector('[data-custom-cat]');
+      if (!catEl) return;
+      const cat = catEl.value.trim();
+      const item = row.querySelector('[data-custom-item]')?.value.trim();
+      const amount = Number(row.querySelector('[data-custom-amount]')?.value);
+      if (cat && item && amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount });
+    });
+
+    const msg = document.getElementById('fixed-save-msg');
+    msg.textContent = '儲存中…';
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses?store_id=eq.${currentStoreId}&year_month=eq.${ym}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' }
+      });
+      if (records.length > 0) {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify(records)
+        });
+        if (!res.ok) throw new Error(await res.text());
+      }
+      msg.textContent = `✓ 已儲存 ${records.length} 筆`;
+      setTimeout(() => { msg.textContent = ''; }, 3000);
+      await loadMonthlyFixed();
+    } catch (err) { msg.textContent = ''; alert('儲存失敗：' + err.message); }
+  }
+
+  init();
+</script>
+</body>
+</html>
