@@ -955,6 +955,7 @@
       const isMonthly = vendorRecord ? vendorRecord.monthly_settlement : false;
       return {
         description: `【${CATEGORY_LABEL[category]}】${e.desc || '未命名'}`,
+        category: CATEGORY_LABEL[category],
         amount: Number(e.amount),
         shipping_amount: e.shipping ? Number(e.shipping) : null,
         vendor_name: e.vendor || null,
