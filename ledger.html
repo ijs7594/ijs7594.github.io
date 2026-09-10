@@ -299,8 +299,7 @@
         <div class="period-picker">
           <select id="vperiod-year"></select>
           <select id="vperiod-month"></select>
-          <div class="period-half-btn active" data-vhalf="上旬" onclick="setVHalf('上旬')">上旬（1-15）</div>
-          <div class="period-half-btn" data-vhalf="下旬" onclick="setVHalf('下旬')">下旬（16-月底）</div>
+          <span style="font-size:13px;color:var(--text-light);margin-left:4px;">整月（德品自動用26~25週期）</span>
         </div>
       </div>
 
@@ -381,7 +380,7 @@
   let mMonth = new Date().getMonth() + 1;
   let mHalf = new Date().getDate() <= 15 ? '上旬' : '下旬';
   // vendor period state (independent picker, same default)
-  let vYear = mYear, vMonth = mMonth, vHalf = mHalf;
+  let vYear = mYear, vMonth = mMonth;
 
   let inventoryCounts = [];
   let vendorPayments = [];
@@ -425,7 +424,6 @@
 
     // 按鈕預設寫死「上旬」，這裡讓畫面高亮的按鈕對齊 mHalf/vHalf 實際算出來的期間（依今天日期判斷）
     document.querySelectorAll('[data-half]').forEach(el => el.classList.toggle('active', el.dataset.half === mHalf));
-    document.querySelectorAll('[data-vhalf]').forEach(el => el.classList.toggle('active', el.dataset.vhalf === vHalf));
 
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
@@ -465,12 +463,6 @@
     document.querySelectorAll('[data-half]').forEach(el => el.classList.toggle('active', el.dataset.half === half));
     loadMargin();
   }
-  function setVHalf(half) {
-    vHalf = half;
-    document.querySelectorAll('[data-vhalf]').forEach(el => el.classList.toggle('active', el.dataset.vhalf === half));
-    loadVendor();
-  }
-
   // ── 期間換算 ──
   function lastDayOfMonth(y, m) { return new Date(y, m, 0).getDate(); }
   function periodRange(y, m, half) {
@@ -784,11 +776,17 @@
   let vendorDailyExpenses = [];
 
   async function loadVendor() {
-    const range = periodRange(vYear, vMonth, vHalf);
-    const rows = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${range.start}&date=lte.${range.end}&vendor_name=not.is.null`);
+    // 抓比整月更寬的範圍：覆蓋德品週期（上月26日）到本月月底
+    let prevYear = vYear, prevMonth = vMonth - 1;
+    if (prevMonth < 1) { prevMonth = 12; prevYear--; }
+    const fetchStart = `${prevYear}-${pad2(prevMonth)}-26`;
+    const fetchEnd = `${vYear}-${pad2(vMonth)}-${pad2(lastDayOfMonth(vYear, vMonth))}`;
+    const rows = await dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${fetchStart}&date=lte.${fetchEnd}&vendor_name=not.is.null`);
     vendorDailyExpenses = Array.isArray(rows) ? rows : [];
     renderVendorTable();
-    await loadStoreTransfers(range);
+    // 店間調撥用整月範圍
+    const stdRange = { start: `${vYear}-${pad2(vMonth)}-01`, end: fetchEnd };
+    await loadStoreTransfers(stdRange);
   }
 
   // ── 店間調撥（本店在日報表選了「店間調撥」的變動成本紀錄）──
@@ -825,44 +823,103 @@
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({ paid })
       });
-      const range = periodRange(vYear, vMonth, vHalf);
-      await loadStoreTransfers(range);
+      const stdRange = { start: `${vYear}-${pad2(vMonth)}-01`, end: `${vYear}-${pad2(vMonth)}-${pad2(lastDayOfMonth(vYear, vMonth))}` };
+      await loadStoreTransfers(stdRange);
     } catch { alert('更新失敗，請再試一次'); }
   }
 
   function renderVendorTable() {
     const el = document.getElementById('vendor-table-wrap');
-
     if (vendorDailyExpenses.length === 0) {
       el.innerHTML = '<div class="empty">這個期間還沒有廠商應付帳款</div>';
       return;
     }
 
+    let prevYear = vYear, prevMonth = vMonth - 1;
+    if (prevMonth < 1) { prevMonth = 12; prevYear--; }
+    const depinStart = `${prevYear}-${pad2(prevMonth)}-26`;
+    const depinEnd   = `${vYear}-${pad2(vMonth)}-25`;
+    const stdStart   = `${vYear}-${pad2(vMonth)}-01`;
+    const stdEnd     = `${vYear}-${pad2(vMonth)}-${pad2(lastDayOfMonth(vYear, vMonth))}`;
+    const DEPIN_VENDOR = '德品';
+
+    // 先按廠商分群
     const groups = {};
     vendorDailyExpenses.forEach(e => {
-      const key = e.vendor_name;
-      if (!groups[key]) groups[key] = { amount: 0, ids: [], paid: true };
-      groups[key].amount += Number(e.amount || 0) + Number(e.shipping_amount || 0);
-      groups[key].ids.push(e.id);
-      if (!e.paid) groups[key].paid = false;
+      if (!groups[e.vendor_name]) groups[e.vendor_name] = [];
+      groups[e.vendor_name].push(e);
     });
 
-    const rows = Object.entries(groups).map(([vendor, g]) => `
-      <tr class="${g.paid ? 'paid-row' : ''}">
-        <td>${esc(vendor)}</td>
-        <td>${fmt(g.amount)}</td>
-        <td><span class="status-badge ${g.paid ? 'badge-yes' : 'badge-no'}" onclick="markVendorGroupPaid('${g.ids.join(',')}', ${!g.paid})">${g.paid ? '✅ 已付' : '未付'}</span></td>
-      </tr>`).join('');
+    let totalAll = 0;
+    const tableRows = Object.entries(groups).map(([vendor, allRows]) => {
+      const isDepin = vendor === DEPIN_VENDOR;
+      const start = isDepin ? depinStart : stdStart;
+      const end   = isDepin ? depinEnd   : stdEnd;
+      const filtered = allRows.filter(r => r.date >= start && r.date <= end);
+      if (filtered.length === 0) return '';
 
-    const total = Object.values(groups).reduce((s, g) => s + g.amount, 0);
+      const amount  = filtered.reduce((s, r) => s + Number(r.amount || 0) + Number(r.shipping_amount || 0), 0);
+      const allPaid = filtered.every(r => r.paid);
+      const ids     = filtered.map(r => r.id).join(',');
+      totalAll += amount;
+
+      const periodLabel = isDepin
+        ? `<small style="color:var(--text-light);font-size:11px;margin-left:6px">${prevYear}/${prevMonth}/26～${vYear}/${vMonth}/25</small>`
+        : `<small style="color:var(--text-light);font-size:11px;margin-left:6px">${vYear}/${vMonth}/01～${vYear}/${vMonth}/${lastDayOfMonth(vYear, vMonth)}</small>`;
+
+      const detailId = `vd_${vendor.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      const detailRows = filtered
+        .slice().sort((a, b) => a.date > b.date ? 1 : -1)
+        .map(r => {
+          const amt = Number(r.amount || 0) + Number(r.shipping_amount || 0);
+          return `<tr style="background:var(--card-bg)">
+            <td style="padding-left:32px;color:var(--text-light);font-size:12px">${r.date}</td>
+            <td style="font-size:12px;color:var(--text-light)">${esc(r.description || '—')}</td>
+            <td style="font-size:12px">${fmt(amt)}</td>
+            <td></td>
+          </tr>`;
+        }).join('');
+
+      return `<tr class="${allPaid ? 'paid-row' : ''}" onclick="toggleVendorDetail('${detailId}')" style="cursor:pointer">
+        <td>
+          <span id="arrow-${detailId}" style="display:inline-block;width:14px;font-size:10px;transition:transform .15s">▶</span>
+          ${esc(vendor)}${periodLabel}
+        </td>
+        <td>${fmt(amount)}</td>
+        <td><span class="status-badge ${allPaid ? 'badge-yes' : 'badge-no'}" onclick="event.stopPropagation();markVendorGroupPaid('${ids}',${!allPaid})">${allPaid ? '✅ 已付' : '未付'}</span></td>
+      </tr>
+      <tr id="${detailId}" style="display:none">
+        <td colspan="3" style="padding:0;border-top:none">
+          <table style="width:100%;border-collapse:collapse">
+            <colgroup><col style="width:110px"><col><col style="width:100px"><col style="width:80px"></colgroup>
+            ${detailRows}
+          </table>
+        </td>
+      </tr>`;
+    }).filter(Boolean).join('');
+
+    if (!tableRows) {
+      el.innerHTML = '<div class="empty">這個月份還沒有廠商應付帳款</div>';
+      return;
+    }
 
     el.innerHTML = `<table class="data-table">
-      <thead><tr><th>廠商</th><th>本期金額</th><th>已付款</th></tr></thead>
+      <thead><tr><th>廠商（點開看明細）</th><th>本期應付</th><th>已付款</th></tr></thead>
       <tbody>
-        ${rows}
-        <tr class="total-row"><td>整期加總</td><td>${fmt(total)}</td><td></td></tr>
+        ${tableRows}
+        <tr class="total-row"><td>合計</td><td>${fmt(totalAll)}</td><td></td></tr>
       </tbody>
     </table>`;
+  }
+
+  function toggleVendorDetail(detailId) {
+    const row = document.getElementById(detailId);
+    const arrow = document.getElementById('arrow-' + detailId);
+    if (!row) return;
+    const visible = row.style.display !== 'none';
+    row.style.display = visible ? 'none' : 'table-row';
+    if (arrow) arrow.textContent = visible ? '▶' : '▼';
   }
 
   async function markVendorGroupPaid(idsCsv, paid) {
