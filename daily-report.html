@@ -347,6 +347,31 @@
       <div id="photo-status" style="margin-top:8px;font-size:13px;color:var(--text-light)"></div>
     </div>
 
+    <!-- 文字貼上批次填入 -->
+    <div class="entry-card" id="text-paste-card">
+      <h3>📋 貼上文字資料（批次填入）</h3>
+      <p style="font-size:13px;color:var(--text-light);margin:4px 0 8px">從試算表或其他地方複製整段資料貼上，系統自動辨識欄位</p>
+      <div style="font-size:12px;color:var(--text-light);background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:10px;line-height:1.8">
+        支援欄位：日期／客數／現金／鍋數／熊貓／UBER／LINE Pay／實存現金<br>
+        漏掉的欄位跳過，不影響其他欄位寫入
+      </div>
+      <textarea id="paste-input" placeholder="直接把表格資料貼在這裡..." style="width:100%;height:140px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <select id="paste-year" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></select>
+        <select id="paste-month" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></select>
+        <button onclick="parsePasteText()" style="flex:1;padding:9px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">解析並預覽</button>
+      </div>
+      <div id="paste-result" style="margin-top:12px;display:none">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">解析結果（可修改後送出）：</div>
+        <div id="paste-table-wrap" style="overflow-x:auto"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="document.getElementById('paste-result').style.display='none'" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer">取消</button>
+          <button id="paste-submit-btn" onclick="submitPasteRows()" style="padding:7px 16px;background:#2D9E6B;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">確認批次寫入</button>
+        </div>
+      </div>
+      <div id="paste-status" style="margin-top:8px;font-size:13px;color:var(--text-light)"></div>
+    </div>
+
     <div class="entry-card">
       <h3>✍️ 新增／更新今日日報表</h3>
 
@@ -1371,6 +1396,145 @@
     btn.disabled = false; btn.textContent = '確認批次寫入';
     document.getElementById('photo-status').textContent = `✅ 成功寫入 ${ok} 天${fail ? `，${fail} 天失敗` : ''}`;
     document.getElementById('photo-result').style.display = 'none';
+    await loadAndRender();
+  }
+
+  // ── 文字貼上批次填入 ──
+  (function initPasteSelectors() {
+    const now = new Date();
+    const yEl = document.getElementById('paste-year');
+    const mEl = document.getElementById('paste-month');
+    for (let y = now.getFullYear(); y >= now.getFullYear() - 1; y--) {
+      const o = document.createElement('option');
+      o.value = y; o.textContent = y + ' 年';
+      if (y === now.getFullYear()) o.selected = true;
+      yEl.appendChild(o);
+    }
+    for (let m = 1; m <= 12; m++) {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m + ' 月';
+      if (m === now.getMonth() + 1) o.selected = true;
+      mEl.appendChild(o);
+    }
+  })();
+
+  let pasteRows = [];
+
+  // 欄位名稱對應表（支援各種寫法）
+  const PASTE_COL_MAP = {
+    '日': 'day', '日期': 'day', 'date': 'day',
+    '客數': 'customers', '客': 'customers',
+    '現金': 'cash', '現金小計': 'cash',
+    '鍋數': 'pots', '鍋': 'pots',
+    '熊貓': 'foodpanda', 'foodpanda': 'foodpanda', '熊': 'foodpanda',
+    'uber': 'uber', 'UBER': 'uber',
+    'line pay': 'line_pay', 'linepay': 'line_pay', 'line_pay': 'line_pay', 'LINE Pay': 'line_pay',
+    '實存現金': 'cash_counted', '現金實存': 'cash_counted',
+    '零錢': 'change',
+  };
+
+  function parsePasteText() {
+    const raw = document.getElementById('paste-input').value.trim();
+    if (!raw) { document.getElementById('paste-status').textContent = '請先貼上資料'; return; }
+
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) { document.getElementById('paste-status').textContent = '至少需要標題行 + 一行資料'; return; }
+
+    // 解析標題行
+    const sep = lines[0].includes('\t') ? '\t' : /\s{2,}/;
+    const headers = lines[0].split(sep).map(h => h.trim());
+    const colKeys = headers.map(h => {
+      const lh = h.toLowerCase();
+      return PASTE_COL_MAP[h] || PASTE_COL_MAP[lh] || null;
+    });
+
+    // 解析資料行
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split(sep).map(c => c.trim());
+      const row = {};
+      colKeys.forEach((key, ci) => {
+        if (!key || !cells[ci]) return;
+        const raw = cells[ci].replace(/,/g, '').replace(/日$/, '');
+        const num = parseFloat(raw);
+        if (!isNaN(num)) row[key] = num;
+      });
+      if (row.day) rows.push(row);
+    }
+
+    if (!rows.length) { document.getElementById('paste-status').textContent = '⚠️ 找不到有效資料，請確認格式'; return; }
+
+    pasteRows = rows;
+    const y = Number(document.getElementById('paste-year').value);
+    const m = Number(document.getElementById('paste-month').value);
+    renderPasteTable(y, m);
+    document.getElementById('paste-result').style.display = '';
+    document.getElementById('paste-status').textContent = `解析到 ${rows.length} 天，請確認後送出`;
+  }
+
+  function renderPasteTable(y, m) {
+    const cols = [
+      { key: 'day', label: '日' },
+      { key: 'customers', label: '客數' },
+      { key: 'cash', label: '現金' },
+      { key: 'line_pay', label: 'LINE Pay' },
+      { key: 'uber', label: 'UBER' },
+      { key: 'foodpanda', label: '熊貓' },
+      { key: 'pots', label: '鍋數' },
+      { key: 'cash_counted', label: '實存現金' },
+      { key: 'change', label: '零錢' },
+    ];
+    const thead = '<tr>' + cols.map(c => `<th style="padding:4px 8px;font-size:12px;white-space:nowrap;border-bottom:2px solid #eee">${c.label}</th>`).join('') + '</tr>';
+    const tbody = pasteRows.map((row, ri) =>
+      '<tr>' + cols.map(c => {
+        const val = row[c.key] ?? '';
+        return `<td style="padding:4px"><input type="number" value="${val}" style="width:${c.key==='day'?'44px':'72px'};padding:3px 4px;border:1px solid #ddd;border-radius:4px;font-size:12px;text-align:right" data-row="${ri}" data-key="${c.key}" oninput="updatePasteRow(this)" /></td>`;
+      }).join('') + '</tr>'
+    ).join('');
+    const wrap = document.getElementById('paste-table-wrap');
+    wrap.innerHTML = `<table style="border-collapse:collapse;width:100%"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+    wrap.dataset.year = y; wrap.dataset.month = m;
+  }
+
+  function updatePasteRow(input) {
+    const ri = Number(input.dataset.row);
+    pasteRows[ri][input.dataset.key] = input.value === '' ? null : Number(input.value);
+  }
+
+  async function submitPasteRows() {
+    if (!currentStoreId) { alert('請先選擇店家'); return; }
+    const wrap = document.getElementById('paste-table-wrap');
+    const y = Number(wrap.dataset.year), m = Number(wrap.dataset.month);
+    const btn = document.getElementById('paste-submit-btn');
+    btn.disabled = true; btn.textContent = '寫入中...';
+
+    let ok = 0, fail = 0;
+    for (const row of pasteRows) {
+      if (!row.day) continue;
+      const date = `${y}-${String(m).padStart(2,'0')}-${String(row.day).padStart(2,'0')}`;
+      const payload = {
+        store_id: currentStoreId, date,
+        morning_customers: row.customers ?? null,
+        morning_revenue:   row.cash ?? null,
+        line_pay:          row.line_pay ?? null,
+        uber_amount:       row.uber ?? null,
+        foodpanda_amount:  row.foodpanda ?? null,
+        total_pots:        row.pots ?? null,
+        cash_counted:      row.cash_counted ?? null,
+        change_amount:     row.change ?? null,
+      };
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/store_daily_report?on_conflict=store_id,date`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) ok++; else fail++;
+      } catch { fail++; }
+    }
+    btn.disabled = false; btn.textContent = '確認批次寫入';
+    document.getElementById('paste-status').textContent = `✅ 成功寫入 ${ok} 天${fail ? `，${fail} 天失敗` : ''}`;
+    document.getElementById('paste-result').style.display = 'none';
     await loadAndRender();
   }
 </script>
