@@ -166,6 +166,12 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
 
     /* ── Mobile ── */
+    /* ── Month Nav ── */
+    .month-nav { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .month-nav button { border: 1px solid var(--border); background: white; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 16px; color: var(--text-dark); }
+    .month-nav button:hover { background: var(--cream); }
+    .month-nav h2 { font-size: 16px; font-weight: 700; color: var(--text-dark); min-width: 120px; text-align: center; }
+
     .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1); height: 60px; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px); }
     .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px; flex: 1; padding: 6px 4px; }
     .mobile-nav-item.active { color: #fff; }
@@ -211,7 +217,6 @@
     <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <span class="fill-count" id="fill-count">載入中…</span>
       <span class="status-badge draft" id="status-badge">🟡 估算中</span>
-      <input type="month" id="month-select" onchange="onMonthChange()" class="store-select" style="width:140px" />
       <select class="store-select" id="store-select" onchange="onStoreChange()" style="display:none"></select>
       <span class="store-locked" id="store-locked" style="display:none"></span>
     </div>
@@ -219,6 +224,13 @@
 
   <!-- Content -->
   <div class="content">
+
+    <!-- Month Nav -->
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">◀</button>
+      <h2 id="month-label"></h2>
+      <button onclick="changeMonth(1)">▶</button>
+    </div>
 
     <!-- Stat Cards -->
     <div class="stat-cards">
@@ -419,12 +431,24 @@
     };
   }
 
+  function updateMonthLabel() {
+    const [y, m] = currentYearMonth.split('-').map(Number);
+    document.getElementById('month-label').textContent = `${y} 年 ${m} 月`;
+  }
+
+  async function changeMonth(delta) {
+    const [y, m] = currentYearMonth.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    currentYearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    updateMonthLabel();
+    await loadData();
+  }
+
   async function init() {
     // Default month = current month
     const now = new Date();
-    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    document.getElementById('month-select').value = ym;
-    currentYearMonth = ym;
+    currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    updateMonthLabel();
 
     stores = await dbGet('stores', 'order=created_at.asc');
     if (!Array.isArray(stores)) stores = [];
@@ -455,10 +479,6 @@
     await loadData();
   }
 
-  async function onMonthChange() {
-    currentYearMonth = document.getElementById('month-select').value;
-    await loadData();
-  }
 
   async function loadData() {
     if (!currentStoreId || !currentYearMonth) return;
