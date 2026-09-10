@@ -344,6 +344,25 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  const FIXED_PRESETS = [
+    { category: '薪資',     item: '薪資' },
+    { category: '薪資',     item: '獎金' },
+    { category: '薪資',     item: '激勵金' },
+    { category: '勞工保險', item: '勞退' },
+    { category: '勞工保險', item: '勞保' },
+    { category: '勞工保險', item: '健保' },
+    { category: '勞工保險', item: '圍保（128/人）' },
+    { category: '租金',     item: '房租' },
+    { category: '租金',     item: '管理費' },
+    { category: '保險費',   item: '火險' },
+    { category: '水電',     item: '電費' },
+    { category: '水電',     item: '水費' },
+    { category: '修繕費',   item: '設備維修' },
+    { category: '通訊費',   item: '電話+網路' },
+    { category: '其他費用', item: '管理基金' },
+    { category: '其他費用', item: '工程款' },
+  ];
+
   const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
 
@@ -630,12 +649,17 @@
     const f    = v => { const n = Math.round(v * 100) / 100; return n.toLocaleString('zh-TW'); };
     const rc   = v => v >= 0 ? 'var(--green)' : 'var(--red)';
 
-    // Expense rows — show all from DB (including $0 items)
+    // Expense rows — always show all presets (filled or 0), then custom items, then daily
+    const fixedMap = {};
+    fixedExpenseList.forEach(e => { fixedMap[`${e.category}::${e.item_name}`] = Number(e.amount) || 0; });
+    const presetKeys = new Set(FIXED_PRESETS.map(p => `${p.category}::${p.item}`));
+    const customFixed = fixedExpenseList.filter(e => !presetKeys.has(`${e.category}::${e.item_name}`));
+
     const expItems = [
-      ...fixedExpenseList.map(e => ({ label: e.item_name, val: Number(e.amount) || 0 })),
+      ...FIXED_PRESETS.map(p => ({ label: p.item, val: fixedMap[`${p.category}::${p.item}`] || 0 })),
+      ...customFixed.map(e => ({ label: e.item_name, val: Number(e.amount) || 0 })),
       ...(dailyExpense > 0 ? [{ label: '日常費用（日報）', val: dailyExpense }] : [])
     ];
-    if (expItems.length === 0) expItems.push({ label: '（尚未登記）', val: 0 });
     const expRowCount = expItems.length + 1;
 
     const expRows = expItems.map((item, i) => `
