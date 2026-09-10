@@ -336,10 +336,20 @@ let selectedRole = 'staff';
 let qrInstance = null;
 
 // ── Init ─────────────────────────────────────────────────────
+const liffInitWithTimeout = (ms) => Promise.race([
+  liff.init({ liffId: LIFF_ID }),
+  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+]);
+
 (async () => {
   try {
-    await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) { show('auth'); return; }
+    await liffInitWithTimeout(8000);
+
+    if (!liff.isLoggedIn()) {
+      // External browser: auto-redirect to LINE login
+      liff.login({ redirectUri: location.href });
+      return;
+    }
 
     const idToken = liff.getIDToken();
     const { error: signInErr } = await supa.auth.signInWithIdToken({
@@ -350,7 +360,11 @@ let qrInstance = null;
 
     await loadContext();
   } catch (e) {
-    showError(e.message || 'LIFF 初始化失敗');
+    if (e.message === 'timeout') {
+      showError('連線逾時。請確認網路正常，或改用 LINE App 開啟此頁面。');
+    } else {
+      showError(e.message || 'LIFF 初始化失敗');
+    }
   }
 })();
 
