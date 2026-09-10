@@ -883,10 +883,15 @@
     });
 
     let html = '';
+    let groupIdx = 0;
     Object.entries(groups).forEach(([cat, items]) => {
+      const gid = `fg_${groupIdx++}`;
       html += `<div class="fixed-group">
-        <div class="fixed-cat-hdr">${esc(cat)}</div>
-        <div class="fixed-items-wrap">`;
+        <div class="fixed-cat-hdr">${esc(cat)}
+          <button onclick="addItemToGroup('${gid}','${esc(cat)}')"
+            style="margin-left:8px;border:none;background:transparent;color:var(--brown-mid);font-size:12px;cursor:pointer;vertical-align:middle;padding:0">＋ 新增</button>
+        </div>
+        <div class="fixed-items-wrap" id="${gid}">`;
       items.forEach(item => {
         const val = existingMap[`${cat}::${item}`] || '';
         html += `<div class="fixed-item">
@@ -927,6 +932,21 @@
     totalBar.textContent = total > 0 ? `本月合計：$${total.toLocaleString()}` : '';
   }
 
+  function addItemToGroup(gid, cat) {
+    const wrap = document.getElementById(gid);
+    if (!wrap) return;
+    const item = document.createElement('div');
+    item.className = 'fixed-item';
+    item.innerHTML = `
+      <input type="text" placeholder="項目名稱" data-cat="${esc(cat)}" data-custom-item
+        style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark)">
+      <input type="number" placeholder="0" data-custom-amount oninput="updateFixedTotal()"
+        style="width:82px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark);text-align:right">
+      <button class="del-btn" onclick="this.closest('.fixed-item').remove();updateFixedTotal()">✕</button>`;
+    wrap.appendChild(item);
+    item.querySelector('input[data-custom-item]').focus();
+  }
+
   function addCustomFixedRow() {
     const grid = document.getElementById('fixed-grid');
     let customSec = grid.querySelector('[data-custom-sec]');
@@ -955,15 +975,27 @@
     const ym = `${fYear}-${pad2(fMonth)}`;
     const records = [];
 
-    // 預設項目
-    document.querySelectorAll('#fixed-grid input[data-cat]').forEach(el => {
+    // 預設項目（有 data-item 屬性的固定欄位）
+    document.querySelectorAll('#fixed-grid input[data-cat][data-item]').forEach(el => {
       const amount = Number(el.value);
       if (amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: el.dataset.cat, item_name: el.dataset.item, amount });
     });
 
-    // 自訂項目
-    document.querySelectorAll('#fixed-grid .fixed-row:has(input[data-custom-amount])').forEach(row => {
-      const cat = row.querySelector('[data-custom-cat]')?.value.trim();
+    // 類別內新增的自訂項目（有 data-custom-item 屬性）
+    document.querySelectorAll('#fixed-grid input[data-custom-item]').forEach(nameEl => {
+      const cat = nameEl.dataset.cat || nameEl.closest('[data-custom-sec]') && '其他費用';
+      const item = nameEl.value.trim();
+      const amountEl = nameEl.closest('.fixed-item')?.querySelector('input[data-custom-amount]')
+                    || nameEl.closest('.fixed-row')?.querySelector('input[data-custom-amount]');
+      const amount = Number(amountEl?.value);
+      if (cat && item && amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount });
+    });
+
+    // 獨立自訂項目（沒有 data-cat，屬於自訂區塊）
+    document.querySelectorAll('#fixed-grid .fixed-row').forEach(row => {
+      const catEl = row.querySelector('[data-custom-cat]');
+      if (!catEl) return;
+      const cat = catEl.value.trim();
       const item = row.querySelector('[data-custom-item]')?.value.trim();
       const amount = Number(row.querySelector('[data-custom-amount]')?.value);
       if (cat && item && amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount });
