@@ -240,6 +240,14 @@
       </div>
     </div>
 
+    <!-- P&L Summary — 最頂 -->
+    <div class="section">
+      <div class="section-label">本月損益表</div>
+      <div class="card" id="pnl-card">
+        <div class="empty-state"><div class="icon">📊</div>請選擇店鋪與月份</div>
+      </div>
+    </div>
+
     <!-- Estimated Summary -->
     <div class="section">
       <div class="section-label">本月估算（日報累計）</div>
@@ -290,14 +298,6 @@
             ✏️ 到月固定費用頁面填寫／修改
           </a>
         </div>
-      </div>
-    </div>
-
-    <!-- P&L Summary -->
-    <div class="section">
-      <div class="section-label">本月損益表</div>
-      <div class="card" id="pnl-card">
-        <div class="empty-state"><div class="icon">📊</div>請先確認收入與費用資料</div>
       </div>
     </div>
 
@@ -675,7 +675,7 @@
     card.innerHTML = `
       <table class="pnl-table">
         <thead>
-          <tr><th colspan="4" style="text-align:center;font-size:13px;font-weight:700;padding:11px;letter-spacing:.04em">整月損益表（不含費用）</th></tr>
+          <tr><th colspan="4" style="text-align:center;font-size:13px;font-weight:700;padding:11px;letter-spacing:.04em">整月損益表</th></tr>
           <tr>
             <th style="width:88px">項目</th>
             <th>內容</th>
