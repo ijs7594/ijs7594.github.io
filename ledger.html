@@ -140,13 +140,17 @@
     .empty { text-align: center; padding: 30px 20px; color: var(--text-light); }
 
     /* ── 月固定費用 Grid ── */
-    .fixed-cat-header { font-size:11px;font-weight:700;color:var(--brown-mid);letter-spacing:.05em;padding:10px 0 4px;border-top:1px solid var(--border);margin-top:6px; }
-    .fixed-cat-header:first-child { border-top:none;margin-top:0;padding-top:0; }
-    .fixed-row { display:flex;align-items:center;gap:10px;padding:5px 0; }
-    .fixed-row-label { flex:1;font-size:13px;color:var(--text-dark); }
-    .fixed-row input[type=number] { width:130px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark);text-align:right; }
-    .fixed-row input[type=number]:focus { border-color:var(--brown-main);outline:none; }
-    .fixed-row .del-btn { border:none;background:transparent;color:var(--text-light);cursor:pointer;font-size:14px;padding:0 4px; }
+    .fixed-group { margin-bottom:10px; }
+    .fixed-cat-hdr { font-size:10px;font-weight:700;color:var(--brown-mid);letter-spacing:.06em;padding:2px 0;border-bottom:1px solid var(--border);margin-bottom:5px; }
+    .fixed-items-wrap { display:flex;flex-wrap:wrap;gap:4px 14px; }
+    .fixed-item { display:flex;align-items:center;gap:5px;padding:2px 0; }
+    .fixed-item-label { font-size:12px;color:var(--text-dark);white-space:nowrap; }
+    .fixed-item input[type=number] { width:82px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark);text-align:right; }
+    .fixed-item input[type=number]:focus { border-color:var(--brown-main);outline:none; }
+    .fixed-row { display:flex;align-items:center;gap:6px;padding:2px 0; }
+    .fixed-row input[type=text] { padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark); }
+    .fixed-row input[type=number] { width:82px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark);text-align:right; }
+    .fixed-row .del-btn { border:none;background:transparent;color:var(--text-light);cursor:pointer;font-size:13px;padding:0 2px; }
 
     /* ── Range query ── */
     .range-query { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
@@ -880,34 +884,34 @@
 
     let html = '';
     Object.entries(groups).forEach(([cat, items]) => {
-      html += `<div class="fixed-cat-header">${esc(cat)}</div>`;
+      html += `<div class="fixed-group">
+        <div class="fixed-cat-hdr">${esc(cat)}</div>
+        <div class="fixed-items-wrap">`;
       items.forEach(item => {
         const val = existingMap[`${cat}::${item}`] || '';
-        html += `<div class="fixed-row">
-          <div class="fixed-row-label">${esc(item)}</div>
+        html += `<div class="fixed-item">
+          <span class="fixed-item-label">${esc(item)}</span>
           <input type="number" placeholder="0" value="${val}"
             data-cat="${esc(cat)}" data-item="${esc(item)}"
             oninput="updateFixedTotal()">
         </div>`;
       });
+      html += `</div></div>`;
     });
 
     // 自訂項目
     if (customRows.length) {
-      html += `<div class="fixed-cat-header">自訂項目</div>`;
+      html += `<div class="fixed-group" data-custom-sec>
+        <div class="fixed-cat-hdr">自訂項目</div>`;
       customRows.forEach(e => {
         html += `<div class="fixed-row">
-          <input type="text" value="${esc(e.category)}" placeholder="類別"
-            style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark)"
-            data-custom-cat>
-          <input type="text" value="${esc(e.item_name)}" placeholder="項目名稱"
-            style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark)"
-            data-custom-item>
-          <input type="number" value="${e.amount || ''}" placeholder="0"
-            data-custom-amount oninput="updateFixedTotal()">
+          <input type="text" value="${esc(e.category)}" placeholder="類別" style="width:72px" data-custom-cat>
+          <input type="text" value="${esc(e.item_name)}" placeholder="項目名稱" style="width:100px" data-custom-item>
+          <input type="number" value="${e.amount || ''}" placeholder="0" data-custom-amount oninput="updateFixedTotal()">
           <button class="del-btn" onclick="this.closest('.fixed-row').remove();updateFixedTotal()">✕</button>
         </div>`;
       });
+      html += `</div>`;
     }
 
     grid.innerHTML = html;
@@ -928,9 +932,10 @@
     let customSec = grid.querySelector('[data-custom-sec]');
     if (!customSec) {
       customSec = document.createElement('div');
+      customSec.className = 'fixed-group';
       customSec.setAttribute('data-custom-sec', '');
       const hdr = document.createElement('div');
-      hdr.className = 'fixed-cat-header';
+      hdr.className = 'fixed-cat-hdr';
       hdr.textContent = '自訂項目';
       customSec.appendChild(hdr);
       grid.appendChild(customSec);
@@ -938,10 +943,8 @@
     const row = document.createElement('div');
     row.className = 'fixed-row';
     row.innerHTML = `
-      <input type="text" placeholder="類別" data-custom-cat
-        style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark)">
-      <input type="text" placeholder="項目名稱" data-custom-item
-        style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark)">
+      <input type="text" placeholder="類別" data-custom-cat style="width:72px">
+      <input type="text" placeholder="項目名稱" data-custom-item style="width:100px">
       <input type="number" placeholder="0" data-custom-amount oninput="updateFixedTotal()">
       <button class="del-btn" onclick="this.closest('.fixed-row').remove();updateFixedTotal()">✕</button>`;
     customSec.appendChild(row);
