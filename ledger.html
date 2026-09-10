@@ -516,6 +516,7 @@
     await loadItemMaster();
     await loadAll();
     await checkPriceChangeBanner();
+    if (location.hash === '#fixed') switchSection('fixed');
   }
   init();
 
