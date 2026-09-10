@@ -230,6 +230,7 @@
     <div class="section-tabs">
       <div class="section-tab active" data-tab="margin" onclick="switchSection('margin')">📊 盤點與毛利率</div>
       <div class="section-tab" data-tab="vendor" onclick="switchSection('vendor')">🚚 廠商進貨／貨款</div>
+      <div class="section-tab" data-tab="fixed" onclick="switchSection('fixed')">💰 月固定費用</div>
       <div class="section-tab" data-tab="receivable" onclick="switchSection('receivable')">📋 未收款清單</div>
     </div>
 
@@ -316,6 +317,61 @@
       </div>
     </div>
 
+    <!-- ══ 月固定費用 ══ -->
+    <div id="section-fixed" style="display:none;">
+      <div class="card">
+        <h3>選擇月份</h3>
+        <div class="period-picker">
+          <select id="fperiod-year"></select>
+          <select id="fperiod-month"></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💰 月固定費用登記</h3>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;">房租、薪資、保險等每月固定開銷在這裡登記，系統會自動帶入損益表計算淨利。</div>
+
+        <!-- 新增表單 -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:120px">
+            <label style="font-size:11px;color:var(--text-light)">類別</label>
+            <select id="fixed-cat" style="padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark)">
+              <option value="薪資">薪資</option>
+              <option value="勞工保險">勞工保險</option>
+              <option value="租金">租金</option>
+              <option value="保險費">保險費</option>
+              <option value="水電">水電</option>
+              <option value="修繕費">修繕費</option>
+              <option value="通訊費">通訊費</option>
+              <option value="折舊攤提">折舊攤提</option>
+              <option value="年終提列">年終提列</option>
+              <option value="稅捐">稅捐</option>
+              <option value="其他費用">其他費用</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px">
+            <label style="font-size:11px;color:var(--text-light)">項目名稱</label>
+            <input id="fixed-item" type="text" placeholder="例：房租、勞退" style="padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark);width:100%">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:100px">
+            <label style="font-size:11px;color:var(--text-light)">金額</label>
+            <input id="fixed-amount" type="number" placeholder="0" style="padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark);width:100%">
+          </div>
+          <button onclick="addFixedExpense()" style="padding:8px 16px;background:var(--brown-main);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">＋ 新增</button>
+        </div>
+
+        <!-- 常用快速選 -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:6px">常用快速填入：</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px" id="fixed-presets"></div>
+        </div>
+
+        <!-- 清單 -->
+        <div id="fixed-table-wrap"></div>
+        <div id="fixed-total-bar" style="display:none;margin-top:12px;padding-top:10px;border-top:2px solid var(--border);font-weight:700;font-size:14px;text-align:right;color:var(--text-dark)"></div>
+      </div>
+    </div>
+
     <!-- ══ 未收款清單 ══ -->
     <div id="section-receivable" style="display:none;">
       <div class="card">
@@ -381,6 +437,7 @@
   let mHalf = new Date().getDate() <= 15 ? '上旬' : '下旬';
   // vendor period state (independent picker, same default)
   let vYear = mYear, vMonth = mMonth;
+  let fYear = mYear, fMonth = mMonth;
 
   let inventoryCounts = [];
   let vendorPayments = [];
@@ -422,6 +479,23 @@
     document.getElementById('vperiod-year').onchange = () => { vYear = Number(document.getElementById('vperiod-year').value); loadVendor(); };
     document.getElementById('vperiod-month').onchange = () => { vMonth = Number(document.getElementById('vperiod-month').value); loadVendor(); };
 
+    // 月固定費用 picker
+    ['period-year', 'vperiod-year'].forEach(srcId => {
+      const src = document.getElementById(srcId);
+      const fSel = document.getElementById('fperiod-year');
+      if (fSel && src) fSel.innerHTML = src.innerHTML;
+    });
+    ['period-month', 'vperiod-month'].forEach(srcId => {
+      const src = document.getElementById(srcId);
+      const fSel = document.getElementById('fperiod-month');
+      if (fSel && src) fSel.innerHTML = src.innerHTML;
+    });
+    document.getElementById('fperiod-year').value = fYear;
+    document.getElementById('fperiod-month').value = fMonth;
+    document.getElementById('fperiod-year').onchange = () => { fYear = Number(document.getElementById('fperiod-year').value); loadMonthlyFixed(); };
+    document.getElementById('fperiod-month').onchange = () => { fMonth = Number(document.getElementById('fperiod-month').value); loadMonthlyFixed(); };
+    initFixedPresets();
+
     // 按鈕預設寫死「上旬」，這裡讓畫面高亮的按鈕對齊 mHalf/vHalf 實際算出來的期間（依今天日期判斷）
     document.querySelectorAll('[data-half]').forEach(el => el.classList.toggle('active', el.dataset.half === mHalf));
 
@@ -455,6 +529,7 @@
     document.querySelectorAll('.section-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
     document.getElementById('section-margin').style.display = tab === 'margin' ? 'block' : 'none';
     document.getElementById('section-vendor').style.display = tab === 'vendor' ? 'block' : 'none';
+    document.getElementById('section-fixed').style.display = tab === 'fixed' ? 'block' : 'none';
     document.getElementById('section-receivable').style.display = tab === 'receivable' ? 'block' : 'none';
   }
 
@@ -491,6 +566,7 @@
     if (!Array.isArray(receivables)) receivables = [];
     await loadMargin();
     await loadVendor();
+    await loadMonthlyFixed();
     renderReceivableTable();
     checkOverdueBanner();
   }
@@ -770,6 +846,109 @@
   function dismissPriceBanner() {
     localStorage.setItem('price_changes_seen_at', new Date().toISOString());
     document.getElementById('price-banner').style.display = 'none';
+  }
+
+  // ── 月固定費用 ──
+  let monthlyFixedExpenses = [];
+
+  const FIXED_PRESETS = [
+    { category: '薪資',     item: '薪資' },
+    { category: '薪資',     item: '獎金' },
+    { category: '薪資',     item: '激勵金' },
+    { category: '勞工保險', item: '勞退' },
+    { category: '勞工保險', item: '勞保' },
+    { category: '勞工保險', item: '健保' },
+    { category: '勞工保險', item: '圍保（128/人）' },
+    { category: '租金',     item: '房租' },
+    { category: '租金',     item: '管理費' },
+    { category: '保險費',   item: '火險' },
+    { category: '水電',     item: '電費' },
+    { category: '水電',     item: '水費' },
+    { category: '修繕費',   item: '設備維修' },
+    { category: '通訊費',   item: '電話+網路' },
+    { category: '其他費用', item: '管理基金' },
+    { category: '其他費用', item: '工程款' },
+  ];
+
+  function initFixedPresets() {
+    const el = document.getElementById('fixed-presets');
+    if (!el) return;
+    el.innerHTML = FIXED_PRESETS.map(p => `
+      <button onclick="applyPreset('${esc(p.category)}','${esc(p.item)}')"
+        style="padding:4px 10px;font-size:11px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg);color:var(--text-dark);cursor:pointer">
+        ${esc(p.category)} / ${esc(p.item)}
+      </button>`).join('');
+  }
+
+  function applyPreset(cat, item) {
+    document.getElementById('fixed-cat').value = cat;
+    document.getElementById('fixed-item').value = item;
+    document.getElementById('fixed-amount').focus();
+  }
+
+  async function loadMonthlyFixed() {
+    if (!currentStoreId) return;
+    const ym = `${fYear}-${pad2(fMonth)}`;
+    const rows = await dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${ym}&order=category.asc,item_name.asc`);
+    monthlyFixedExpenses = Array.isArray(rows) ? rows : [];
+    renderMonthlyFixed();
+  }
+
+  function renderMonthlyFixed() {
+    const el = document.getElementById('fixed-table-wrap');
+    const totalBar = document.getElementById('fixed-total-bar');
+    if (!el) return;
+
+    if (monthlyFixedExpenses.length === 0) {
+      el.innerHTML = '<div class="empty">這個月還沒有登記固定費用</div>';
+      totalBar.style.display = 'none';
+      return;
+    }
+
+    const total = monthlyFixedExpenses.reduce((s, e) => s + Number(e.amount || 0), 0);
+    el.innerHTML = `<table class="data-table">
+      <thead><tr><th>類別</th><th>項目</th><th>金額</th><th></th></tr></thead>
+      <tbody>
+        ${monthlyFixedExpenses.map(e => `<tr>
+          <td style="color:var(--text-light);font-size:12px">${esc(e.category)}</td>
+          <td>${esc(e.item_name)}</td>
+          <td>${fmt(e.amount)}</td>
+          <td class="row-actions"><button onclick="deleteFixedExpense('${e.id}')">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+    totalBar.style.display = 'block';
+    totalBar.textContent = `本月固定費用合計：${fmt(total)}`;
+  }
+
+  async function addFixedExpense() {
+    const cat = document.getElementById('fixed-cat').value.trim();
+    const item = document.getElementById('fixed-item').value.trim();
+    const amount = Number(document.getElementById('fixed-amount').value);
+    if (!item || !amount) { alert('請填寫項目名稱與金額'); return; }
+    const ym = `${fYear}-${pad2(fMonth)}`;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      document.getElementById('fixed-item').value = '';
+      document.getElementById('fixed-amount').value = '';
+      await loadMonthlyFixed();
+    } catch (err) { alert('新增失敗：' + err.message); }
+  }
+
+  async function deleteFixedExpense(id) {
+    if (!confirm('確定刪除這筆固定費用？')) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' }
+      });
+      await loadMonthlyFixed();
+    } catch { alert('刪除失敗，請再試一次'); }
   }
 
   // ── 廠商應付帳款（從日報表變動成本的廠商欄位自動彙整）──
