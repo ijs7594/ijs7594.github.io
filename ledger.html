@@ -257,7 +257,7 @@
             <div class="margin-value" id="m-begin" style="display:none">—</div>
             <input type="number" id="m-begin-input" placeholder="請填入期初估算金額"
               style="display:none;width:100%;margin-top:6px;padding:6px 8px;border:1.5px solid var(--caramel);border-radius:8px;font-size:15px;font-weight:700;color:var(--caramel);background:var(--bg);text-align:right;"
-              oninput="recalcMargin()" />
+              oninput="recalcMargin()" onblur="saveBeginEstimate()" />
           </div>
           <div class="margin-cell">
             <div class="margin-label">期末庫存（本期盤點加總，見下方逐項盤點）</div>
@@ -564,6 +564,22 @@
     recalcMargin();
 
     await loadInventoryItemsForPeriod();
+  }
+
+  async function saveBeginEstimate() {
+    if (!currentStoreId) return;
+    const val = Number(document.getElementById('m-begin-input').value);
+    if (!val) return;
+    const prev = previousPeriod(mYear, mMonth, mHalf);
+    const prevKey = periodEndDate(prev.y, prev.m, prev.half);
+    await fetch(`${SUPABASE_URL}/rest/v1/store_inventory_counts?on_conflict=store_id,period_end_date`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ store_id: currentStoreId, period_end_date: prevKey, inventory_value: val })
+    });
+    window._beginValue = val;
+    // 下次載入時自動帶入，這期重新整理後標籤改為「自動帶入」
+    document.getElementById('m-begin-label').textContent = '期初庫存（已儲存估算值）';
   }
 
   function recalcMargin() {
