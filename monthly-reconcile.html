@@ -412,7 +412,14 @@
     if (!Array.isArray(stores)) stores = [];
     const sel = document.getElementById('store-select');
     sel.innerHTML = stores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    if (stores.length > 0) {
+    const paramStore = new URLSearchParams(location.search).get('store');
+    const lockedStore = paramStore && stores.find(s => s.id === paramStore);
+    if (lockedStore) {
+      currentStoreId = lockedStore.id;
+      sel.value = currentStoreId;
+      sel.disabled = true;
+      await loadData();
+    } else if (stores.length > 0) {
       currentStoreId = stores[0].id;
       await loadData();
     }
