@@ -141,6 +141,21 @@
     .btn-confirm:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
     .btn-reopen { background: transparent; color: var(--text-light); border: 1px solid var(--border); border-radius: 10px; padding: 10px 22px; font-size: 13px; font-family: inherit; cursor: pointer; margin-left: 10px; }
 
+    /* ── P&L Table ── */
+    .pnl-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .pnl-table th { padding:9px 12px; background:var(--brown-dark); color:rgba(255,255,255,0.75); font-size:11px; font-weight:700; letter-spacing:.05em; text-align:left; }
+    .pnl-table th:nth-child(3), .pnl-table th:nth-child(4) { text-align:right; }
+    .pnl-table td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .pnl-cat { background:var(--cream); font-weight:700; font-size:12px; color:var(--text-mid); border-right:2px solid var(--border) !important; text-align:center !important; white-space:nowrap; }
+    .pnl-item { color:var(--text-dark); }
+    .pnl-amt  { text-align:right !important; font-weight:700; font-variant-numeric:tabular-nums; }
+    .pnl-pct  { text-align:right !important; color:var(--text-light); font-size:12px; white-space:nowrap; }
+    .pnl-subtotal td { background:var(--cream); font-weight:700; border-top:1px solid var(--border); }
+    .pnl-highlight td { background:#e8f0d0; font-weight:800; font-size:14px; border-top:2px solid #b8cc88; border-bottom:2px solid #b8cc88; }
+    .pnl-highlight td:nth-child(1) { padding-left:16px; }
+    .pnl-final td { background:var(--brown-dark); color:#fff; font-weight:900; font-size:15px; border:none; }
+    .pnl-final td .pnl-pct { color:rgba(255,255,255,0.55); }
+
     /* ── Empty State ── */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 13px; line-height: 1.8; }
     .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
@@ -613,56 +628,87 @@
       return;
     }
 
-    const pct = (v, base) => base > 0 ? `${(v/base*100).toFixed(1)}%` : '—';
-    const profitColor = opProfit >= 0 ? 'var(--green)' : 'var(--red)';
-    const grossColor  = grossProfit >= 0 ? 'var(--green)' : 'var(--red)';
+    const base = totalRevenue || 1;
+    const pct  = v => (v / base * 100).toFixed(2) + '%';
+    const f    = v => Math.round(v).toLocaleString('zh-TW');
+    const rc   = v => v >= 0 ? 'var(--green)' : 'var(--red)';
 
-    const section = (label) =>
-      `<div style="padding:6px 16px 4px;background:var(--cream);font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--text-light)">${label}</div>`;
+    // Build expense item rows
+    const expItems = [
+      ...fixedExpenseList.map(e => ({ label: e.item_name, val: Number(e.amount) || 0 })),
+      ...(dailyExpense > 0 ? [{ label: '日常費用（日報）', val: dailyExpense }] : [])
+    ];
+    if (expItems.length === 0) expItems.push({ label: '（尚未登記）', val: 0 });
+    const expRowCount = expItems.length + 1;
 
-    const line = (label, val, opts = {}) => {
-      const { indent=false, bold=false, color='var(--text-dark)', border=true, size=13 } = opts;
-      return `<div style="display:flex;justify-content:space-between;align-items:baseline;
-        padding:${bold ? '11px' : '9px'} 16px ${bold ? '11px' : '9px'} ${indent ? '28px' : '16px'};
-        ${border ? 'border-bottom:1px solid var(--border);' : ''}
-        font-size:${size}px;${bold ? 'font-weight:700;' : ''}">
-        <span style="color:${indent ? 'var(--text-light)' : 'var(--text-dark)'}">${label}</span>
-        <span style="font-weight:700;font-variant-numeric:tabular-nums;color:${color}">${fmt(val)}</span>
-      </div>`;
-    };
+    const expRows = expItems.map((item, i) => `
+      <tr>
+        ${i === 0 ? `<td class="pnl-cat" rowspan="${expRowCount}">＝ 營業費用</td>` : ''}
+        <td class="pnl-item">${esc(item.label)}</td>
+        <td class="pnl-amt" style="color:${item.val > 0 ? 'var(--red)' : 'var(--text-light)'}">${f(item.val)}</td>
+        <td class="pnl-pct">${pct(item.val)}</td>
+      </tr>`).join('') +
+    `<tr class="pnl-subtotal">
+      <td class="pnl-item">營業費用合計</td>
+      <td class="pnl-amt" style="color:var(--red)">${f(opExpTotal)}</td>
+      <td class="pnl-pct">${pct(opExpTotal)}</td>
+    </tr>`;
 
-    const subtotal = (label, val, pctVal, color) =>
-      `<div style="display:flex;justify-content:space-between;align-items:center;
-        padding:10px 16px;background:var(--cream);border-bottom:1px solid var(--border)">
-        <span style="font-size:13px;font-weight:700">${label}</span>
-        <span style="display:flex;gap:10px;align-items:center">
-          <span style="font-size:11px;color:var(--text-light);font-weight:500">${pctVal}</span>
-          <span style="font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:${color}">${fmt(val)}</span>
-        </span>
-      </div>`;
-
-    card.innerHTML =
-      section('一、營業收入') +
-      line('外送平台收入（LINE Pay + Uber + 熊貓）', deliveryRev, { indent: true }) +
-      line('門市收入（現金 + 未收款）', storeRev, { indent: true }) +
-      subtotal('本期總收入', totalRevenue, '', 'var(--brown-main)') +
-
-      section('二、銷貨成本') +
-      line('本期進貨（廠商貨款）', vendorTotal, { indent: true, color: 'var(--red)' }) +
-      subtotal('營業毛利', grossProfit, `毛利率 ${pct(grossProfit, totalRevenue)}`, grossColor) +
-
-      section('三、營業費用') +
-      line('月固定費用', fixedTotal, { indent: true, color: fixedTotal > 0 ? 'var(--red)' : 'var(--text-light)' }) +
-      line('日常費用（日報紀錄）', dailyExpense, { indent: true, color: dailyExpense > 0 ? 'var(--red)' : 'var(--text-light)', border: false }) +
-
-      `<div style="height:2px;background:var(--border)"></div>` +
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:${opProfit >= 0 ? 'var(--green-bg)' : 'var(--red-bg)'}">
-        <div>
-          <div style="font-size:11px;color:var(--text-light);margin-bottom:2px">本月營業利益</div>
-          <div style="font-size:11px;color:var(--text-light)">佔總收入 ${pct(opProfit, totalRevenue)}</div>
-        </div>
-        <span style="font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;color:${profitColor}">${fmt(opProfit)}</span>
-      </div>`;
+    card.innerHTML = `
+      <table class="pnl-table">
+        <thead><tr>
+          <th style="width:90px">項目</th>
+          <th>內容</th>
+          <th style="width:110px">金額</th>
+          <th style="width:72px">百分比</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td class="pnl-cat" rowspan="3">營業收入</td>
+            <td class="pnl-item">外送平台收入</td>
+            <td class="pnl-amt">${f(deliveryRev)}</td>
+            <td class="pnl-pct">${pct(deliveryRev)}</td>
+          </tr>
+          <tr>
+            <td class="pnl-item">門市銷貨收入</td>
+            <td class="pnl-amt">${f(storeRev)}</td>
+            <td class="pnl-pct">${pct(storeRev)}</td>
+          </tr>
+          <tr class="pnl-subtotal">
+            <td class="pnl-item">本期總收入</td>
+            <td class="pnl-amt">${f(totalRevenue)}</td>
+            <td class="pnl-pct">100%</td>
+          </tr>
+          <tr>
+            <td class="pnl-cat">營業成本</td>
+            <td class="pnl-item">本期進貨</td>
+            <td class="pnl-amt" style="color:var(--red)">${f(vendorTotal)}</td>
+            <td class="pnl-pct">${pct(vendorTotal)}</td>
+          </tr>
+          <tr class="pnl-highlight">
+            <td colspan="2">＝ 營業毛利</td>
+            <td class="pnl-amt" style="color:${rc(grossProfit)}">${f(grossProfit)}</td>
+            <td class="pnl-pct">${pct(grossProfit)}</td>
+          </tr>
+          ${expRows}
+          <tr>
+            <td colspan="2" style="padding:10px 16px;font-weight:700">營業利益</td>
+            <td class="pnl-amt" style="color:${rc(opProfit)}">${f(opProfit)}</td>
+            <td class="pnl-pct" style="color:${rc(opProfit)}">${pct(opProfit)}</td>
+          </tr>
+          <tr>
+            <td class="pnl-cat">＝ 所得稅</td>
+            <td class="pnl-item" style="color:var(--text-light)">—</td>
+            <td class="pnl-amt" style="color:var(--text-light)">0</td>
+            <td class="pnl-pct">0.00%</td>
+          </tr>
+          <tr class="pnl-final">
+            <td colspan="2" style="padding:13px 16px">本期損益</td>
+            <td class="pnl-amt" style="color:${opProfit >= 0 ? '#7EE8A2' : '#FF9B9B'}">${f(opProfit)}</td>
+            <td class="pnl-pct" style="color:rgba(255,255,255,0.5)">${pct(opProfit)}</td>
+          </tr>
+        </tbody>
+      </table>`;
 
     // Update stat cards
     const sv = id => document.getElementById(id);
