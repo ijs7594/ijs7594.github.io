@@ -69,6 +69,7 @@
       width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
       background: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 20px;
     }
+    .article-freq { font-size: 10px; font-weight: 700; color: var(--brown-mid); letter-spacing: .06em; margin-bottom: 4px; }
     .article-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
     .article-desc { font-size: 12.5px; color: var(--text-light); }
     .article-arrow { margin-left: auto; color: var(--text-light); font-size: 14px; flex-shrink: 0; }
@@ -177,35 +178,29 @@
       </div>
     </div>
 
-    <div class="group-label">每天要做</div>
     <div class="article-list">
       <a class="article-card" href="daily-report.html">
         <div class="article-icon">📆</div>
         <div>
+          <div class="article-freq">每天要做</div>
           <div class="article-title">填今天的日報表</div>
           <div class="article-desc">記下今天的營收跟支出，系統自動累積成損益表</div>
         </div>
         <div class="article-arrow">→</div>
       </a>
-    </div>
-
-    <div class="group-label">定期要做</div>
-    <div class="article-list">
       <a class="article-card" href="ledger.html">
         <div class="article-icon">📒</div>
         <div>
+          <div class="article-freq">定期要做</div>
           <div class="article-title">確認廠商貨款，做盤點算毛利率</div>
           <div class="article-desc">標記廠商已付款、庫存盤點、查本期食材成本率、追大客戶未收款</div>
         </div>
         <div class="article-arrow">→</div>
       </a>
-    </div>
-
-    <div class="group-label">需要時看</div>
-    <div class="article-list">
       <a class="article-card" href="store-trend.html">
         <div class="article-icon">📈</div>
         <div>
+          <div class="article-freq">需要時看</div>
           <div class="article-title">看這間店的走勢</div>
           <div class="article-desc">每日營收走勢、支出分類，看自己這間店有沒有在進步</div>
         </div>
