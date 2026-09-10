@@ -442,10 +442,8 @@
     ]);
     fixedExpenseList = Array.isArray(fixedExpenses) ? fixedExpenses : [];
     vendorPaymentList = Array.isArray(vendorRows) ? vendorRows : [];
-    renderFixedExpenses();
-    renderVendorSection();
 
-    // Compute estimated totals
+    // Compute estimated totals FIRST so renderPnL() has correct estData
     const days = new Set((reports || []).map(r => r.date)).size;
     estData = {
       cash:       (reports || []).reduce((s, r) => s + (Number(r.morning_revenue) || 0), 0),
@@ -461,6 +459,8 @@
     };
 
     renderEstimate();
+    renderFixedExpenses();
+    renderVendorSection();
 
     // Load existing reconciliation
     existingRecordId = null;
