@@ -612,17 +612,13 @@
     const vendorTotal = vendorPaymentList.reduce((s, r) =>
       s + (Number(r.amount) || 0) + (Number(r.shipping_amount) || 0), 0);
 
-    // Gross profit
     const grossProfit = totalRevenue - vendorTotal;
-
-    // Operating expenses (fixed expenses)
-    const fixedTotal = fixedExpenseList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-
-    // Daily variable from daily_expenses
+    const fixedTotal  = fixedExpenseList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const dailyExpense = estData.variable + estData.fixed;
-
-    const opExpTotal = fixedTotal + dailyExpense;
-    const opProfit   = grossProfit - opExpTotal;
+    const opExpTotal  = fixedTotal + dailyExpense;
+    const opProfit    = grossProfit - opExpTotal;
+    const bonus       = opProfit > 0 ? opProfit * 0.2 : 0;  // 績效分紅 20%
+    const netProfit   = opProfit - bonus;
 
     if (totalRevenue === 0 && vendorTotal === 0 && fixedTotal === 0) {
       card.innerHTML = '<div class="empty-state"><div class="icon">📊</div>請先確認收入與費用資料</div>';
@@ -631,10 +627,10 @@
 
     const base = totalRevenue || 1;
     const pct  = v => (v / base * 100).toFixed(2) + '%';
-    const f    = v => Math.round(v).toLocaleString('zh-TW');
+    const f    = v => { const n = Math.round(v * 100) / 100; return n.toLocaleString('zh-TW'); };
     const rc   = v => v >= 0 ? 'var(--green)' : 'var(--red)';
 
-    // Build expense item rows
+    // Expense rows — show all from DB (including $0 items)
     const expItems = [
       ...fixedExpenseList.map(e => ({ label: e.item_name, val: Number(e.amount) || 0 })),
       ...(dailyExpense > 0 ? [{ label: '日常費用（日報）', val: dailyExpense }] : [])
@@ -644,9 +640,9 @@
 
     const expRows = expItems.map((item, i) => `
       <tr>
-        ${i === 0 ? `<td class="pnl-cat" rowspan="${expRowCount}">＝ 營業費用</td>` : ''}
+        ${i === 0 ? `<td class="pnl-cat" rowspan="${expRowCount}">－ 營業費用</td>` : ''}
         <td class="pnl-item">${esc(item.label)}</td>
-        <td class="pnl-amt" style="color:${item.val > 0 ? 'var(--red)' : 'var(--text-light)'}">${f(item.val)}</td>
+        <td class="pnl-amt" style="color:${item.val > 0 ? 'var(--text-dark)' : 'var(--text-light)'}">${f(item.val)}</td>
         <td class="pnl-pct">${pct(item.val)}</td>
       </tr>`).join('') +
     `<tr class="pnl-subtotal">
@@ -657,12 +653,15 @@
 
     card.innerHTML = `
       <table class="pnl-table">
-        <thead><tr>
-          <th style="width:90px">項目</th>
-          <th>內容</th>
-          <th style="width:110px">金額</th>
-          <th style="width:72px">百分比</th>
-        </tr></thead>
+        <thead>
+          <tr><th colspan="4" style="text-align:center;font-size:13px;font-weight:700;padding:11px;letter-spacing:.04em">整月損益表（不含費用）</th></tr>
+          <tr>
+            <th style="width:88px">項目</th>
+            <th>內容</th>
+            <th style="width:108px">金額</th>
+            <th style="width:70px">百分比</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             <td class="pnl-cat" rowspan="3">營業收入</td>
@@ -680,51 +679,55 @@
             <td class="pnl-amt">${f(totalRevenue)}</td>
             <td class="pnl-pct">100%</td>
           </tr>
+
           <tr>
             <td class="pnl-cat">營業成本</td>
             <td class="pnl-item">本期進貨</td>
-            <td class="pnl-amt" style="color:var(--red)">${f(vendorTotal)}</td>
+            <td class="pnl-amt">${f(vendorTotal)}</td>
             <td class="pnl-pct">${pct(vendorTotal)}</td>
           </tr>
+
           <tr class="pnl-highlight">
             <td colspan="2">＝ 營業毛利</td>
-            <td class="pnl-amt" style="color:${rc(grossProfit)}">${f(grossProfit)}</td>
+            <td class="pnl-amt">${f(grossProfit)}</td>
             <td class="pnl-pct">${pct(grossProfit)}</td>
           </tr>
+
           ${expRows}
-          <tr style="background:var(--cream)">
-            <td colspan="2" style="padding:10px 16px;font-weight:800;font-size:14px">營業利益</td>
-            <td class="pnl-amt" style="color:${rc(opProfit)};font-size:14px">${f(opProfit)}</td>
+
+          <tr style="background:var(--cream);border-top:2px solid var(--border)">
+            <td colspan="2" style="padding:10px 16px;font-weight:800">營業利益</td>
+            <td class="pnl-amt" style="color:${rc(opProfit)}">${f(opProfit)}</td>
             <td class="pnl-pct" style="color:${rc(opProfit)}">${pct(opProfit)}</td>
           </tr>
           <tr>
             <td class="pnl-cat">績效分紅</td>
-            <td class="pnl-item" style="color:var(--text-light)">—</td>
-            <td class="pnl-amt" style="color:var(--text-light)">0</td>
-            <td class="pnl-pct">0.00%</td>
+            <td class="pnl-item" style="color:var(--text-light);font-size:11px">20% × 營業利益</td>
+            <td class="pnl-amt">${f(bonus)}</td>
+            <td class="pnl-pct">${pct(bonus)}</td>
           </tr>
           <tr>
-            <td class="pnl-cat">＝ 所得稅</td>
+            <td class="pnl-cat">－ 所得稅</td>
             <td class="pnl-item" style="color:var(--text-light)">—</td>
             <td class="pnl-amt" style="color:var(--text-light)">0</td>
             <td class="pnl-pct">0.00%</td>
           </tr>
           <tr class="pnl-final">
             <td colspan="2" style="padding:13px 16px">本期損益</td>
-            <td class="pnl-amt">${f(opProfit)}</td>
-            <td class="pnl-pct">${pct(opProfit)}</td>
+            <td class="pnl-amt">${f(netProfit)}</td>
+            <td class="pnl-pct">${pct(netProfit)}</td>
           </tr>
         </tbody>
       </table>`;
 
     // Update stat cards
     const sv = id => document.getElementById(id);
-    if (sv('stat-revenue')) sv('stat-revenue').textContent = fmt(totalRevenue);
-    if (sv('stat-cogs'))    sv('stat-cogs').textContent    = fmt(vendorTotal);
-    if (sv('stat-fixed'))   sv('stat-fixed').textContent   = fmt(fixedTotal);
+    if (sv('stat-revenue')) sv('stat-revenue').textContent = f(totalRevenue);
+    if (sv('stat-cogs'))    sv('stat-cogs').textContent    = f(vendorTotal);
+    if (sv('stat-fixed'))   sv('stat-fixed').textContent   = f(fixedTotal);
     if (sv('stat-profit')) {
-      sv('stat-profit').textContent = fmt(opProfit);
-      sv('stat-profit').style.color = opProfit >= 0 ? 'var(--green)' : 'var(--red)';
+      sv('stat-profit').textContent = f(netProfit);
+      sv('stat-profit').style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
     }
   }
 
