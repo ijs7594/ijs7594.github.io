@@ -404,6 +404,11 @@
       <div class="exp-rows" id="variable-rows"></div>
       <button class="add-exp-row-btn" onclick="addCostRow('variable')">+ 新增變動成本</button>
 
+      <div class="exp-category-label" style="margin-top:18px">🚚 外送運費</div>
+      <div style="font-size:11px;color:var(--text-light);margin:-4px 0 8px;">付給外送司機的臨時運費，計入營業成本（會降低毛利率）。</div>
+      <div class="exp-rows" id="delivery-rows"></div>
+      <button class="add-exp-row-btn" onclick="addCostRow('delivery')">+ 新增外送運費</button>
+
       <div class="field-group" style="margin-top:18px">
         <div class="field-group-label">未收款登記（機關／團體訂購，還沒收到錢，可新增多筆）</div>
         <div class="rcv-row">
@@ -516,10 +521,11 @@
   }
 
   const COST_PRESETS = {
-    cost:     ['水電費', '房租', '薪資/獎金', '設備維修', '保險費', '外送平台月費', '臨時外送運費', 'Panda Go外送服務費', '其他費用'],
-    variable: ['麵線', '大腸', '蚵仔', '魚漿/食材', '高湯原料', '蔬菜', '蛋', '包裝耗材', '清潔用品', '醬料醋料', '其他食材']
+    cost:     ['水電費', '房租', '薪資/獎金', '設備維修', '保險費', '外送平台月費', 'Panda Go外送服務費', '其他費用'],
+    variable: ['麵線', '大腸', '蚵仔', '魚漿/食材', '高湯原料', '蔬菜', '蛋', '包裝耗材', '清潔用品', '醬料醋料', '其他食材'],
+    delivery: ['臨時外送運費', '每日外送費用']
   };
-  const CATEGORY_LABEL = { cost: '費用', variable: '變動成本' };
+  const CATEGORY_LABEL = { cost: '費用', variable: '變動成本', delivery: '外送運費' };
 
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

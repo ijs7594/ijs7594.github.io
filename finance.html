@@ -320,7 +320,7 @@
     init();
   }
 
-  const CATEGORY_COLORS = { '費用': '#4a2e1a', '變動成本': '#e07b39', '其他': '#aaa' };
+  const CATEGORY_COLORS = { '費用': '#4a2e1a', '變動成本': '#e07b39', '外送運費': '#c0622f', '其他': '#aaa' };
 
   let currentDate = new Date();
   let categoryChart = null;
@@ -398,9 +398,9 @@
 
   // 傳統直式損益表：由上到下——營業收入 → 減營業成本 → 營業毛利 → 減營業費用 → 本期淨利。
   // 跟 finance.html 全店總覽表用同一套數字，只是換成單店、由上到下的呈現方式。
-  function renderPnl(revenue, variableCost, dailyExpense, fixedList) {
+  function renderPnl(revenue, variableCost, deliveryCost, dailyExpense, fixedList) {
     const fixedTotal = fixedList.reduce((s, e) => s + Number(e.amount || 0), 0);
-    const grossProfit = revenue - variableCost;
+    const grossProfit = revenue - variableCost - deliveryCost;
     const grossMargin = revenue > 0 ? (grossProfit / revenue * 100) : null;
     const netProfit = grossProfit - dailyExpense - fixedTotal;
     const netMargin = revenue > 0 ? (netProfit / revenue * 100) : null;
@@ -411,9 +411,14 @@
       `<div class="pnl-row sub"><span>${esc(e.category)}／${esc(e.item_name)}</span><span class="val">-${money(e.amount)}</span></div>`
     ).join('');
 
+    const deliveryRow = deliveryCost > 0
+      ? `<div class="pnl-row"><span>外送運費</span><span class="val neg">-${money(deliveryCost)}</span></div>`
+      : '';
+
     document.getElementById('pnl-content').innerHTML = `
       <div class="pnl-row"><span>營業收入</span><span class="val">${money(revenue)}</span></div>
       <div class="pnl-row"><span>營業成本（食材／變動成本）</span><span class="val neg">-${money(variableCost)}</span></div>
+      ${deliveryRow}
       <hr class="pnl-divider">
       <div class="pnl-row total"><span>營業毛利</span><span class="val ${valCls(grossProfit)}">${money(grossProfit)}${grossMargin != null ? ` (${grossMargin.toFixed(1)}%)` : ''}</span></div>
       <div class="pnl-row" style="margin-top:8px;"><span>營業費用</span><span></span></div>
@@ -457,7 +462,7 @@
       const cat = expenseCategory(e.description);
       catMap[cat] = (catMap[cat] || 0) + Number(e.amount || 0) + Number(e.shipping_amount || 0);
     });
-    renderPnl(totalRev, catMap['變動成本'] || 0, catMap['費用'] || 0, fixedList);
+    renderPnl(totalRev, catMap['變動成本'] || 0, catMap['外送運費'] || 0, catMap['費用'] || 0, fixedList);
     const cats = Object.keys(catMap);
     if (categoryChart) categoryChart.destroy();
     categoryChart = new Chart(document.getElementById('categoryChart'), {
