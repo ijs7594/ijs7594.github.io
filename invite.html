@@ -442,7 +442,7 @@ async function loadContext() {
   try {
     const displayName = liff.getDecodedIDToken()?.name || '使用者';
 
-    const data = await supaRpc('invite_context');
+    const data = await supaRpc('invite_context', { p_: null });
     if (data.error) throw new Error(data.error);
 
     ctx = data;
