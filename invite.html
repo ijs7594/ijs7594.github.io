@@ -337,14 +337,15 @@ async function supaSignIn(idToken) {
 }
 
 async function supaRpc(fn, params) {
+  const hasParams = params && Object.keys(params).length > 0;
   const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
     method: 'POST',
     headers: {
       'apikey': SUPA_KEY,
       'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      ...(hasParams ? { 'Content-Type': 'application/json' } : {}),
     },
-    body: JSON.stringify(params || {}),
+    body: hasParams ? JSON.stringify(params) : undefined,
   });
   const d = await res.json();
   if (!res.ok) throw new Error(d.message || d.error || `rpc ${res.status}`);
