@@ -356,11 +356,11 @@
         漏掉的欄位跳過，不影響其他欄位寫入
       </div>
       <textarea id="paste-input" placeholder="直接把表格資料貼在這裡..." style="width:100%;height:140px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box"></textarea>
-      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-        <select id="paste-year" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></select>
-        <select id="paste-month" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></select>
-        <button onclick="parsePasteText()" style="flex:1;padding:9px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">解析並預覽</button>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <select id="paste-year" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></select>
+        <select id="paste-month" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></select>
       </div>
+      <button onclick="parsePasteText()" style="margin-top:8px;width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🔍 解析並預覽</button>
       <div id="paste-result" style="margin-top:12px;display:none">
         <div style="font-size:13px;font-weight:600;margin-bottom:6px">解析結果（可修改後送出）：</div>
         <div id="paste-table-wrap" style="overflow-x:auto"></div>
