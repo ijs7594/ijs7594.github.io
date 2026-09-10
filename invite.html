@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>邀請夥伴</title>
+<style>
+  :root {
+    --bg:       #F5F0E8;
+    --surface:  #FFFFFF;
+    --border:   #DDD3C0;
+    --text:     #2C1A0E;
+    --mid:      #6B4C35;
+    --dim:      #9C7B63;
+    --accent:   #7A3B1E;
+    --accent-h: #5C2B14;
+    --green:    #2E7D32;
+    --red:      #C62828;
+    --radius:   12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:      #1A0F0A;
+      --surface: #2C1A0E;
+      --border:  #4A2E1A;
+      --text:    #F5F0E8;
+      --mid:     #C9A882;
+      --dim:     #8C6A50;
+      --accent:  #D4845A;
+      --accent-h:#E8956A;
+      --green:   #66BB6A;
+      --red:     #EF5350;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px 20px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 4px;
+  }
+  .header-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header h1 {
+    font-size: 18px; font-weight: 700;
+    color: var(--text);
+  }
+  .header .sub {
+    font-size: 12px; color: var(--dim);
+    margin-top: 1px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* Labels */
+  label {
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--mid);
+    letter-spacing: 0.03em;
+  }
+
+  /* Inputs */
+  select, input[type="text"] {
+    appearance: none;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 15px; color: var(--text);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239C7B63' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+  /* Role toggle */
+  .role-toggle {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .role-btn {
+    padding: 10px; border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--mid);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; text-align: center;
+    transition: all 0.15s;
+  }
+  .role-btn.active {
+    border-color: var(--accent); background: var(--accent);
+    color: #fff;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 14px; font-size: 16px; font-weight: 700;
+    width: 100%; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Secondary button */
+  .btn-secondary {
+    background: transparent; color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: 10px; padding: 11px;
+    font-size: 15px; font-weight: 600;
+    width: 100%; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--accent); color: #fff; }
+
+  /* QR section */
+  .qr-wrap {
+    display: flex; justify-content: center; padding: 8px 0;
+  }
+  #qr-canvas { border-radius: 8px; }
+  .link-box {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px; color: var(--mid);
+    word-break: break-all; line-height: 1.5;
+  }
+  .expiry-note {
+    font-size: 12px; color: var(--dim); text-align: center;
+  }
+
+  /* Status pill */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .pill.owner  { background: #FFF3E0; color: #E65100; }
+  .pill.admin  { background: #E8EAF6; color: #3949AB; }
+  .pill.manager{ background: #E8F5E9; color: #2E7D32; }
+
+  /* Loading spinner */
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* State sections */
+  .state { display: none; }
+  .state.active { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Error */
+  .err-msg {
+    font-size: 14px; color: var(--red);
+    background: #FEE8E8; border-radius: 8px; padding: 12px 14px;
+    line-height: 1.5;
+  }
+
+  /* Success check */
+  .success-icon {
+    width: 52px; height: 52px;
+    background: #E8F5E9; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header (always visible) -->
+  <div class="header">
+    <div class="header-icon">🤝</div>
+    <div>
+      <h1>邀請夥伴</h1>
+      <div class="sub">貴焿餐飲管理系統</div>
+    </div>
+  </div>
+
+  <!-- State: loading -->
+  <div id="s-loading" class="state active">
+    <div class="card" style="align-items:center; padding:40px 20px; gap:12px;">
+      <div class="spinner"></div>
+      <div style="font-size:14px; color:var(--dim);">初始化中…</div>
+    </div>
+  </div>
+
+  <!-- State: unauthenticated -->
+  <div id="s-auth" class="state">
+    <div class="card" style="align-items:center; text-align:center; gap:12px;">
+      <div style="font-size:32px;">👤</div>
+      <div style="font-weight:600;">請先登入</div>
+      <div style="font-size:13px; color:var(--dim);">使用 LINE 身份登入以產生邀請連結</div>
+      <button class="btn-primary" id="login-btn" style="margin-top:4px;">LINE 登入</button>
+    </div>
+  </div>
+
+  <!-- State: form -->
+  <div id="s-form" class="state">
+    <!-- user info -->
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div id="user-avatar" style="width:36px;height:36px;border-radius:50%;background:var(--border);overflow:hidden;flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:14px;font-weight:600;" id="user-name">—</div>
+        <span class="pill" id="role-pill">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>
+        選擇門店
+        <select id="store-select">
+          <option value="">請選擇…</option>
+        </select>
+      </label>
+
+      <!-- Role toggle (hidden for manager) -->
+      <div id="role-group">
+        <label style="margin-bottom:4px;">邀請角色</label>
+        <div class="role-toggle">
+          <button class="role-btn" data-role="manager" type="button">幹部</button>
+          <button class="role-btn active" data-role="staff" type="button">員工</button>
+        </div>
+      </div>
+
+      <label>
+        職位
+        <select id="position-select">
+          <option value="">請選擇…</option>
+        </select>
+      </label>
+
+      <label>
+        邀請有效期
+        <select id="expiry-select">
+          <option value="1 days">1 天</option>
+          <option value="3 days" selected>3 天</option>
+          <option value="7 days">7 天</option>
+        </select>
+      </label>
+
+      <button class="btn-primary" id="gen-btn" disabled>產生邀請連結</button>
+    </div>
+  </div>
+
+  <!-- State: result -->
+  <div id="s-result" class="state">
+    <div class="card" style="align-items:center; gap:16px;">
+      <div class="success-icon">✅</div>
+      <div style="font-weight:700; font-size:16px;">邀請連結已產生</div>
+      <div class="qr-wrap">
+        <div id="qr-canvas"></div>
+      </div>
+      <div class="link-box" id="link-text">—</div>
+      <div class="expiry-note" id="expiry-note">—</div>
+      <button class="btn-primary" id="copy-btn">複製連結</button>
+      <button class="btn-secondary" id="reset-btn">再產生一個</button>
+    </div>
+  </div>
+
+  <!-- State: error -->
+  <div id="s-error" class="state">
+    <div class="card" style="gap:12px;">
+      <div class="err-msg" id="err-msg">發生錯誤</div>
+      <button class="btn-secondary" id="retry-btn">返回</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- Supabase -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js"></script>
+<!-- QR Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+const LIFF_ID       = '2010930752-6XG2AGCF';
+const SUPA_URL      = 'https://nrmgatbpzhtexnhlcjqa.supabase.co';
+const SUPA_KEY      = 'sb_publishable_SdShm_tU9_Ls5KPmMCzWXg_amnhAWso';
+const JOIN_BASE_URL = 'https://ijs7594.github.io/join.html?token=';
+
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── State helpers ────────────────────────────────────────────
+let currentState = 'loading';
+function show(id) {
+  document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  currentState = id;
+}
+
+// ── Context ──────────────────────────────────────────────────
+let ctx = null;      // invite_context() result
+let selectedRole = 'staff';
+let qrInstance = null;
+
+// ── Init ─────────────────────────────────────────────────────
+(async () => {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { show('auth'); return; }
+
+    const idToken = liff.getIDToken();
+    const { error: signInErr } = await supa.auth.signInWithIdToken({
+      provider: 'custom:line',
+      token: idToken,
+    });
+    if (signInErr) throw signInErr;
+
+    await loadContext();
+  } catch (e) {
+    showError(e.message || 'LIFF 初始化失敗');
+  }
+})();
+
+async function loadContext() {
+  show('loading');
+  try {
+    const { data: profile } = await supa.auth.getUser();
+    const displayName = liff.getDecodedIDToken()?.name || profile?.user?.email || '使用者';
+
+    const { data, error } = await supa.rpc('invite_context');
+    if (error) throw error;
+    if (data.error) throw new Error(data.error);
+
+    ctx = data;
+    renderForm(displayName);
+    show('form');
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function renderForm(displayName) {
+  // Avatar
+  const avatarEl = document.getElementById('user-avatar');
+  const avatarUrl = liff.getDecodedIDToken()?.picture;
+  if (avatarUrl) {
+    const img = document.createElement('img');
+    img.src = avatarUrl; img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    avatarEl.appendChild(img);
+  }
+  document.getElementById('user-name').textContent = displayName;
+
+  // Role pill
+  const pill = document.getElementById('role-pill');
+  const roleLabels = { owner: '執行長', admin: '管理員', manager: '店長' };
+  pill.textContent = roleLabels[ctx.role] || ctx.role;
+  pill.className = 'pill ' + (ctx.role === 'owner' ? 'owner' : ctx.role === 'admin' ? 'admin' : 'manager');
+
+  // Manager: hide role toggle, force staff
+  if (ctx.role === 'manager') {
+    document.getElementById('role-group').style.display = 'none';
+    selectedRole = 'staff';
+  }
+
+  // Stores
+  const storeEl = document.getElementById('store-select');
+  ctx.stores.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name;
+    storeEl.appendChild(o);
+  });
+  if (ctx.stores.length === 1) storeEl.value = ctx.stores[0].id;
+
+  // Position: render initially filtered by selectedRole
+  renderPositions();
+
+  // Role toggle buttons
+  document.querySelectorAll('.role-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedRole = btn.dataset.role;
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPositions();
+      validateForm();
+    });
+  });
+
+  storeEl.addEventListener('change', validateForm);
+  document.getElementById('position-select').addEventListener('change', validateForm);
+  document.getElementById('gen-btn').addEventListener('click', generateInvite);
+
+  validateForm();
+}
+
+function renderPositions() {
+  const posEl = document.getElementById('position-select');
+  const prev = posEl.value;
+  posEl.innerHTML = '<option value="">請選擇…</option>';
+
+  const filtered = ctx.role !== 'manager' && selectedRole === 'manager'
+    ? ctx.positions.filter(p => !p.invitable_by_manager)
+    : ctx.positions.filter(p => p.invitable_by_manager);
+
+  // fallback: if filter yields nothing, show all
+  const toShow = filtered.length > 0 ? filtered : ctx.positions;
+
+  toShow.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    if (p.id === prev) o.selected = true;
+    posEl.appendChild(o);
+  });
+}
+
+function validateForm() {
+  const ok = document.getElementById('store-select').value &&
+             document.getElementById('position-select').value;
+  document.getElementById('gen-btn').disabled = !ok;
+}
+
+async function generateInvite() {
+  const storeId    = document.getElementById('store-select').value;
+  const positionId = document.getElementById('position-select').value;
+  const expiry     = document.getElementById('expiry-select').value;
+  const invRole    = ctx.role === 'manager' ? 'staff' : selectedRole;
+
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('gen-btn').textContent = '產生中…';
+
+  try {
+    const { data: rawToken, error } = await supa.rpc('create_invite', {
+      p_store_id:    storeId,
+      p_position_id: positionId,
+      p_invited_role: invRole,
+      p_expires_in:  expiry,
+    });
+    if (error) throw error;
+
+    const link = JOIN_BASE_URL + rawToken;
+    showResult(link, expiry);
+  } catch (e) {
+    const msgs = {
+      insufficient_role:              '權限不足',
+      manager_can_only_invite_staff:  '店長只能邀請員工職位',
+      position_not_invitable_by_manager: '此職位無法由店長邀請',
+      invalid_store:                  '門店不存在',
+      invalid_position:               '職位不存在',
+      not_member:                     '您不是系統成員',
+    };
+    showError(msgs[e.message] || e.message || '產生邀請失敗');
+    document.getElementById('gen-btn').disabled = false;
+    document.getElementById('gen-btn').textContent = '產生邀請連結';
+  }
+}
+
+function showResult(link, expiry) {
+  document.getElementById('link-text').textContent = link;
+
+  const days = parseInt(expiry);
+  const expire = new Date(Date.now() + days * 86400000);
+  document.getElementById('expiry-note').textContent =
+    `有效至 ${expire.toLocaleDateString('zh-TW')} ${expire.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'})}`;
+
+  // QR Code
+  document.getElementById('qr-canvas').innerHTML = '';
+  qrInstance = new QRCode(document.getElementById('qr-canvas'), {
+    text: link,
+    width: 200, height: 200,
+    colorDark: '#2C1A0E', colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M,
+  });
+
+  document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '已複製 ✓';
+      setTimeout(() => { btn.textContent = '複製連結'; }, 2000);
+    });
+  };
+
+  document.getElementById('reset-btn').onclick = () => {
+    document.getElementById('gen-btn').textContent = '產生邀請連結';
+    document.getElementById('qr-canvas').innerHTML = '';
+    renderPositions();
+    validateForm();
+    show('form');
+  };
+
+  show('result');
+}
+
+function showError(msg) {
+  document.getElementById('err-msg').textContent = msg;
+  document.getElementById('retry-btn').onclick = loadContext;
+  show('error');
+}
+
+document.getElementById('login-btn').onclick = () => liff.login();
+</script>
+</body>
+</html>
