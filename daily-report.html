@@ -1313,7 +1313,7 @@
         body: JSON.stringify({ image_base64: base64, media_type: 'image/jpeg', year: y, month: m })
       });
       const data = await resp.json();
-      if (!data.rows || !data.rows.length) { statusEl.textContent = '⚠️ 無法解析，請確認照片清晰度'; btn.disabled = false; return; }
+      if (!data.rows || !data.rows.length) { statusEl.textContent = '⚠️ 無法解析：' + JSON.stringify(data).slice(0, 120); btn.disabled = false; return; }
       photoRows = data.rows;
       renderPhotoTable(y, m);
       document.getElementById('photo-result').style.display = '';
