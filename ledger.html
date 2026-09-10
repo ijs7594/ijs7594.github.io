@@ -139,6 +139,15 @@
     .total-row td { font-weight: 700; background: var(--cream); }
     .empty { text-align: center; padding: 30px 20px; color: var(--text-light); }
 
+    /* ── 月固定費用 Grid ── */
+    .fixed-cat-header { font-size:11px;font-weight:700;color:var(--brown-mid);letter-spacing:.05em;padding:10px 0 4px;border-top:1px solid var(--border);margin-top:6px; }
+    .fixed-cat-header:first-child { border-top:none;margin-top:0;padding-top:0; }
+    .fixed-row { display:flex;align-items:center;gap:10px;padding:5px 0; }
+    .fixed-row-label { flex:1;font-size:13px;color:var(--text-dark); }
+    .fixed-row input[type=number] { width:130px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark);text-align:right; }
+    .fixed-row input[type=number]:focus { border-color:var(--brown-main);outline:none; }
+    .fixed-row .del-btn { border:none;background:transparent;color:var(--text-light);cursor:pointer;font-size:14px;padding:0 4px; }
+
     /* ── Range query ── */
     .range-query { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
     .range-query input { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; }
@@ -329,46 +338,14 @@
 
       <div class="card">
         <h3>💰 月固定費用登記</h3>
-        <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;">房租、薪資、保險等每月固定開銷在這裡登記，系統會自動帶入損益表計算淨利。</div>
-
-        <!-- 新增表單 -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:120px">
-            <label style="font-size:11px;color:var(--text-light)">類別</label>
-            <select id="fixed-cat" style="padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark)">
-              <option value="薪資">薪資</option>
-              <option value="勞工保險">勞工保險</option>
-              <option value="租金">租金</option>
-              <option value="保險費">保險費</option>
-              <option value="水電">水電</option>
-              <option value="修繕費">修繕費</option>
-              <option value="通訊費">通訊費</option>
-              <option value="折舊攤提">折舊攤提</option>
-              <option value="年終提列">年終提列</option>
-              <option value="稅捐">稅捐</option>
-              <option value="其他費用">其他費用</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px">
-            <label style="font-size:11px;color:var(--text-light)">項目名稱</label>
-            <input id="fixed-item" type="text" placeholder="例：房租、勞退" style="padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark);width:100%">
-          </div>
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:100px">
-            <label style="font-size:11px;color:var(--text-light)">金額</label>
-            <input id="fixed-amount" type="number" placeholder="0" style="padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark);width:100%">
-          </div>
-          <button onclick="addFixedExpense()" style="padding:8px 16px;background:var(--brown-main);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">＋ 新增</button>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:16px;">直接填金額，不需要的項目留空，填好後按「儲存本月費用」。</div>
+        <div id="fixed-grid"></div>
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:14px">
+          <button onclick="addCustomFixedRow()" style="padding:7px 14px;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--text-light);font-size:13px;cursor:pointer">＋ 新增自訂項目</button>
+          <button onclick="saveAllFixed()" style="padding:8px 20px;background:var(--brown-main);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">💾 儲存本月費用</button>
+          <span id="fixed-save-msg" style="font-size:12px;color:var(--green,#3a8a4a)"></span>
         </div>
-
-        <!-- 常用快速選 -->
-        <div style="margin-bottom:16px">
-          <div style="font-size:11px;color:var(--text-light);margin-bottom:6px">常用快速填入：</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px" id="fixed-presets"></div>
-        </div>
-
-        <!-- 清單 -->
-        <div id="fixed-table-wrap"></div>
-        <div id="fixed-total-bar" style="display:none;margin-top:12px;padding-top:10px;border-top:2px solid var(--border);font-weight:700;font-size:14px;text-align:right;color:var(--text-dark)"></div>
+        <div id="fixed-total-bar" style="margin-top:12px;font-weight:700;font-size:14px;text-align:right;color:var(--text-dark)"></div>
       </div>
     </div>
 
@@ -871,85 +848,144 @@
   let monthlyFixedExpenses = [];
 
 
-  function initFixedPresets() {
-    const el = document.getElementById('fixed-presets');
-    if (!el) return;
-    el.innerHTML = FIXED_PRESETS.map(p => `
-      <button onclick="applyPreset('${esc(p.category)}','${esc(p.item)}')"
-        style="padding:4px 10px;font-size:11px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg);color:var(--text-dark);cursor:pointer">
-        ${esc(p.category)} / ${esc(p.item)}
-      </button>`).join('');
-  }
-
-  function applyPreset(cat, item) {
-    document.getElementById('fixed-cat').value = cat;
-    document.getElementById('fixed-item').value = item;
-    document.getElementById('fixed-amount').focus();
-  }
+  function initFixedPresets() { /* no-op, grid is rendered by renderFixedGrid */ }
 
   async function loadMonthlyFixed() {
     if (!currentStoreId) return;
     const ym = `${fYear}-${pad2(fMonth)}`;
     const rows = await dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${ym}&order=category.asc,item_name.asc`);
     monthlyFixedExpenses = Array.isArray(rows) ? rows : [];
-    renderMonthlyFixed();
+    renderFixedGrid();
   }
 
-  function renderMonthlyFixed() {
-    const el = document.getElementById('fixed-table-wrap');
+  function renderFixedGrid() {
+    const grid = document.getElementById('fixed-grid');
     const totalBar = document.getElementById('fixed-total-bar');
-    if (!el) return;
+    if (!grid) return;
 
-    if (monthlyFixedExpenses.length === 0) {
-      el.innerHTML = '<div class="empty">這個月還沒有登記固定費用</div>';
-      totalBar.style.display = 'none';
-      return;
+    // 建立既有資料 map，key = "category::item_name"
+    const existingMap = {};
+    monthlyFixedExpenses.forEach(e => { existingMap[`${e.category}::${e.item_name}`] = e.amount; });
+
+    // 計算預設項目不含的「自訂」項目
+    const presetKeys = new Set(FIXED_PRESETS.map(p => `${p.category}::${p.item}`));
+    const customRows = monthlyFixedExpenses.filter(e => !presetKeys.has(`${e.category}::${e.item_name}`));
+
+    // 依類別分組
+    const groups = {};
+    FIXED_PRESETS.forEach(p => {
+      if (!groups[p.category]) groups[p.category] = [];
+      groups[p.category].push(p.item);
+    });
+
+    let html = '';
+    Object.entries(groups).forEach(([cat, items]) => {
+      html += `<div class="fixed-cat-header">${esc(cat)}</div>`;
+      items.forEach(item => {
+        const val = existingMap[`${cat}::${item}`] || '';
+        html += `<div class="fixed-row">
+          <div class="fixed-row-label">${esc(item)}</div>
+          <input type="number" placeholder="0" value="${val}"
+            data-cat="${esc(cat)}" data-item="${esc(item)}"
+            oninput="updateFixedTotal()">
+        </div>`;
+      });
+    });
+
+    // 自訂項目
+    if (customRows.length) {
+      html += `<div class="fixed-cat-header">自訂項目</div>`;
+      customRows.forEach(e => {
+        html += `<div class="fixed-row">
+          <input type="text" value="${esc(e.category)}" placeholder="類別"
+            style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark)"
+            data-custom-cat>
+          <input type="text" value="${esc(e.item_name)}" placeholder="項目名稱"
+            style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark)"
+            data-custom-item>
+          <input type="number" value="${e.amount || ''}" placeholder="0"
+            data-custom-amount oninput="updateFixedTotal()">
+          <button class="del-btn" onclick="this.closest('.fixed-row').remove();updateFixedTotal()">✕</button>
+        </div>`;
+      });
     }
 
-    const total = monthlyFixedExpenses.reduce((s, e) => s + Number(e.amount || 0), 0);
-    el.innerHTML = `<table class="data-table">
-      <thead><tr><th>類別</th><th>項目</th><th>金額</th><th></th></tr></thead>
-      <tbody>
-        ${monthlyFixedExpenses.map(e => `<tr>
-          <td style="color:var(--text-light);font-size:12px">${esc(e.category)}</td>
-          <td>${esc(e.item_name)}</td>
-          <td>${fmt(e.amount)}</td>
-          <td class="row-actions"><button onclick="deleteFixedExpense('${e.id}')">🗑</button></td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`;
-    totalBar.style.display = 'block';
-    totalBar.textContent = `本月固定費用合計：${fmt(total)}`;
+    grid.innerHTML = html;
+    updateFixedTotal();
   }
 
-  async function addFixedExpense() {
-    const cat = document.getElementById('fixed-cat').value.trim();
-    const item = document.getElementById('fixed-item').value.trim();
-    const amount = Number(document.getElementById('fixed-amount').value);
-    if (!item || !amount) { alert('請填寫項目名稱與金額'); return; }
+  function updateFixedTotal() {
+    const totalBar = document.getElementById('fixed-total-bar');
+    if (!totalBar) return;
+    let total = 0;
+    document.querySelectorAll('#fixed-grid input[data-cat]').forEach(el => { total += Number(el.value) || 0; });
+    document.querySelectorAll('#fixed-grid input[data-custom-amount]').forEach(el => { total += Number(el.value) || 0; });
+    totalBar.textContent = total > 0 ? `本月合計：$${total.toLocaleString()}` : '';
+  }
+
+  function addCustomFixedRow() {
+    const grid = document.getElementById('fixed-grid');
+    let customSec = grid.querySelector('[data-custom-sec]');
+    if (!customSec) {
+      customSec = document.createElement('div');
+      customSec.setAttribute('data-custom-sec', '');
+      const hdr = document.createElement('div');
+      hdr.className = 'fixed-cat-header';
+      hdr.textContent = '自訂項目';
+      customSec.appendChild(hdr);
+      grid.appendChild(customSec);
+    }
+    const row = document.createElement('div');
+    row.className = 'fixed-row';
+    row.innerHTML = `
+      <input type="text" placeholder="類別" data-custom-cat
+        style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--input-bg,#fff);color:var(--text-dark)">
+      <input type="text" placeholder="項目名稱" data-custom-item
+        style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--input-bg,#fff);color:var(--text-dark)">
+      <input type="number" placeholder="0" data-custom-amount oninput="updateFixedTotal()">
+      <button class="del-btn" onclick="this.closest('.fixed-row').remove();updateFixedTotal()">✕</button>`;
+    customSec.appendChild(row);
+    row.querySelector('input[data-custom-cat]').focus();
+  }
+
+  async function saveAllFixed() {
     const ym = `${fYear}-${pad2(fMonth)}`;
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses`, {
-        method: 'POST',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount })
-      });
-      if (!res.ok) throw new Error(await res.text());
-      document.getElementById('fixed-item').value = '';
-      document.getElementById('fixed-amount').value = '';
-      await loadMonthlyFixed();
-    } catch (err) { alert('新增失敗：' + err.message); }
-  }
+    const records = [];
 
-  async function deleteFixedExpense(id) {
-    if (!confirm('確定刪除這筆固定費用？')) return;
+    // 預設項目
+    document.querySelectorAll('#fixed-grid input[data-cat]').forEach(el => {
+      const amount = Number(el.value);
+      if (amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: el.dataset.cat, item_name: el.dataset.item, amount });
+    });
+
+    // 自訂項目
+    document.querySelectorAll('#fixed-grid .fixed-row:has(input[data-custom-amount])').forEach(row => {
+      const cat = row.querySelector('[data-custom-cat]')?.value.trim();
+      const item = row.querySelector('[data-custom-item]')?.value.trim();
+      const amount = Number(row.querySelector('[data-custom-amount]')?.value);
+      if (cat && item && amount > 0) records.push({ store_id: currentStoreId, year_month: ym, category: cat, item_name: item, amount });
+    });
+
+    const msg = document.getElementById('fixed-save-msg');
+    msg.textContent = '儲存中…';
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses?id=eq.${id}`, {
+      // 先刪本月所有記錄，再重新插入
+      await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses?store_id=eq.${currentStoreId}&year_month=eq.${ym}`, {
         method: 'DELETE',
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer: 'return=minimal' }
       });
+      if (records.length > 0) {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/store_fixed_expenses`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify(records)
+        });
+        if (!res.ok) throw new Error(await res.text());
+      }
+      msg.textContent = `✓ 已儲存 ${records.length} 筆`;
+      setTimeout(() => { msg.textContent = ''; }, 3000);
       await loadMonthlyFixed();
-    } catch { alert('刪除失敗，請再試一次'); }
+    } catch (err) { msg.textContent = ''; alert('儲存失敗：' + err.message); }
   }
 
   // ── 廠商應付帳款（從日報表變動成本的廠商欄位自動彙整）──
