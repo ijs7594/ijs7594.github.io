@@ -421,16 +421,20 @@ let qrInstance = null;
     }
     dbg('7. ID Token ✓ (len=' + idToken.length + ')');
 
+    let tokenPayload = null;
     try {
-      const payload = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-      dbg('7b. iss=' + payload.iss + ' aud=' + payload.aud + ' exp=' + new Date(payload.exp*1000).toLocaleTimeString());
+      tokenPayload = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      dbg('7b. iss=' + tokenPayload.iss + ' aud=' + tokenPayload.aud + ' exp=' + new Date(tokenPayload.exp*1000).toLocaleTimeString());
     } catch(e) { dbg('7b. decode err: ' + e.message); }
 
     dbg('8. Supabase signIn…');
     try {
       accessToken = await supaSignIn(idToken);
     } catch (authErr) {
-      showError('Supabase 登入失敗：' + authErr.message);
+      const hint = tokenPayload
+        ? `\naud=${tokenPayload.aud}\niss=${tokenPayload.iss}`
+        : '';
+      showError('Supabase 登入失敗：' + authErr.message + hint);
       return;
     }
     dbg('9. Supabase 登入 ✓');
@@ -608,7 +612,7 @@ function showResult(link, expiry) {
 }
 
 function showError(msg) {
-  document.getElementById('err-msg').textContent = msg;
+  document.getElementById('err-msg').innerHTML = msg.replace(/\n/g, '<br>');
   document.getElementById('retry-btn').onclick = loadContext;
   show('error');
 }
