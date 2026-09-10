@@ -421,6 +421,11 @@ let qrInstance = null;
     }
     dbg('7. ID Token ✓ (len=' + idToken.length + ')');
 
+    try {
+      const payload = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      dbg('7b. iss=' + payload.iss + ' aud=' + payload.aud + ' exp=' + new Date(payload.exp*1000).toLocaleTimeString());
+    } catch(e) { dbg('7b. decode err: ' + e.message); }
+
     dbg('8. Supabase signIn…');
     try {
       accessToken = await supaSignIn(idToken);
