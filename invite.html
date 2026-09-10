@@ -313,9 +313,7 @@
 
 <!-- LIFF SDK -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<!-- Supabase -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js"></script>
-<!-- QR Code -->
+<!-- QR Code (only external dependency remaining) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
@@ -324,7 +322,34 @@ const SUPA_URL      = 'https://nrmgatbpzhtexnhlcjqa.supabase.co';
 const SUPA_KEY      = 'sb_publishable_SdShm_tU9_Ls5KPmMCzWXg_amnhAWso';
 const JOIN_BASE_URL = 'https://ijs7594.github.io/join.html?token=';
 
-let supa; // initialized inside IIFE after SDK check
+let accessToken = null; // Supabase JWT, set after sign-in
+
+// ── Supabase REST helpers (no SDK — LINE WebView blocks cdnjs) ──
+async function supaSignIn(idToken) {
+  const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=id_token`, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'custom:line', id_token: idToken }),
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.error_description || d.msg || `auth ${res.status}`);
+  return d.access_token;
+}
+
+async function supaRpc(fn, params) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params || {}),
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.message || d.error || `rpc ${res.status}`);
+  return d;
+}
 
 // ── Debug logger ─────────────────────────────────────────────
 function dbg(msg) {
@@ -342,71 +367,81 @@ function show(id) {
 }
 
 // ── Context ──────────────────────────────────────────────────
-let ctx = null;      // invite_context() result
+let ctx = null;
 let selectedRole = 'staff';
 let qrInstance = null;
 
 // ── Init ─────────────────────────────────────────────────────
-const liffInitWithTimeout = (ms) => Promise.race([
-  liff.init({ liffId: LIFF_ID }),
-  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-]);
-
 (async () => {
   try {
-    dbg('1. 頁面啟動 v5');
+    dbg('1. 頁面啟動 v6');
 
-    // SDK checks
-    dbg('2. LIFF SDK: ' + (typeof liff !== 'undefined' ? '✓' : '✗ 未載入'));
-    if (typeof liff === 'undefined') throw new Error('LIFF SDK 未載入');
+    if (typeof liff === 'undefined') {
+      showError('LIFF SDK 未載入，請檢查網路後重試');
+      return;
+    }
+    dbg('2. LIFF SDK ✓');
 
-    dbg('3. Supabase SDK: ' + (typeof supabase !== 'undefined' ? '✓' : '✗ 未載入'));
-    if (typeof supabase === 'undefined') throw new Error('Supabase SDK 未載入');
-
-    // Init Supabase here (after SDK check)
-    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-    dbg('4. Supabase client 建立 ✓');
-
-    dbg('5. liff.init()…');
-    await liffInitWithTimeout(6000);
-    dbg('6. liff.init() 完成');
-    dbg('7. isLoggedIn: ' + liff.isLoggedIn());
+    dbg('3. liff.init()…');
+    try {
+      await Promise.race([
+        liff.init({ liffId: LIFF_ID }),
+        new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000)),
+      ]);
+    } catch (initErr) {
+      const ep = location.origin + location.pathname;
+      showError(
+        initErr.message === 'timeout'
+          ? `liff.init() 逾時(8s)。請確認 LIFF Endpoint URL 設為：${ep}`
+          : `liff.init() 失敗：${initErr.message}`
+      );
+      return;
+    }
+    dbg('4. liff.init() ✓');
+    dbg('5. isInClient: ' + liff.isInClient() + ' / isLoggedIn: ' + liff.isLoggedIn());
 
     if (!liff.isLoggedIn()) {
-      dbg('8. 跳轉 LINE 登入…');
-      liff.login({ redirectUri: location.href });
+      if (liff.isInClient()) {
+        // 在 LINE App 內，init 應自動登入；走到這裡代表異常
+        showError('在 LINE App 內但未自動登入，請關閉此頁後重新從 LINE 開啟');
+        return;
+      }
+      // 外部瀏覽器：手動跳轉 LINE 登入（用乾淨 URL 避免 state 參數干擾）
+      dbg('6. 外部瀏覽器，跳轉 LINE 登入…');
+      liff.login({ redirectUri: location.origin + location.pathname });
       return;
     }
 
-    dbg('8. 取得 ID Token…');
+    dbg('6. 取得 ID Token…');
     const idToken = liff.getIDToken();
-    dbg('9. signInWithIdToken…');
-    const { error: signInErr } = await supa.auth.signInWithIdToken({
-      provider: 'custom:line',
-      token: idToken,
-    });
-    if (signInErr) throw signInErr;
-    dbg('10. Supabase 登入成功，載入資料…');
+    if (!idToken) {
+      showError('getIDToken() 回傳空值。請確認 LIFF App Scope 已勾選 openid');
+      return;
+    }
+    dbg('7. ID Token ✓ (len=' + idToken.length + ')');
+
+    dbg('8. Supabase signIn…');
+    try {
+      accessToken = await supaSignIn(idToken);
+    } catch (authErr) {
+      showError('Supabase 登入失敗：' + authErr.message);
+      return;
+    }
+    dbg('9. Supabase 登入 ✓');
 
     await loadContext();
   } catch (e) {
-    dbg('ERROR: ' + (e.message || String(e)));
-    if (e.message === 'timeout') {
-      showError('連線逾時 (6s)。LIFF 設定可能尚未生效，請等幾分鐘後重試。');
-    } else {
-      showError(e.message || 'LIFF 初始化失敗');
-    }
+    dbg('UNCAUGHT: ' + (e.message || String(e)));
+    showError('未知錯誤：' + (e.message || String(e)));
   }
 })();
 
 async function loadContext() {
   show('loading');
   try {
-    const { data: profile } = await supa.auth.getUser();
-    const displayName = liff.getDecodedIDToken()?.name || profile?.user?.email || '使用者';
+    const displayName = liff.getDecodedIDToken()?.name || '使用者';
 
-    const { data, error } = await supa.rpc('invite_context');
-    if (error) throw error;
+    const data = await supaRpc('invite_context');
     if (data.error) throw new Error(data.error);
 
     ctx = data;
@@ -506,13 +541,12 @@ async function generateInvite() {
   document.getElementById('gen-btn').textContent = '產生中…';
 
   try {
-    const { data: rawToken, error } = await supa.rpc('create_invite', {
+    const rawToken = await supaRpc('create_invite', {
       p_store_id:    storeId,
       p_position_id: positionId,
       p_invited_role: invRole,
       p_expires_in:  expiry,
     });
-    if (error) throw error;
 
     const link = JOIN_BASE_URL + rawToken;
     showResult(link, expiry);
