@@ -289,29 +289,38 @@
   </div>
 </div>
 
-<!-- Fixed Expenses -->
+<!-- Vendor Payments -->
 <div class="section">
-  <div class="section-label">月度固定費用（房租／保險／自動扣款等）</div>
+  <div class="section-label">廠商進貨貨款（本期進貨）</div>
+  <div class="card" id="vendor-card">
+    <div class="empty-state"><div class="icon">🚚</div>載入中…</div>
+  </div>
+</div>
+
+<!-- Fixed Expenses (read-only, edit in fixed-expenses.html) -->
+<div class="section">
+  <div class="section-label">月固定費用</div>
   <div class="card">
     <div id="fixed-exp-list"></div>
     <div class="fixed-exp-total">
       <span>本月固定費用合計</span>
       <span id="fixed-exp-total-val">$0</span>
     </div>
-    <div class="fixed-exp-form">
-      <select id="fixed-exp-cat">
-        <option>薪資支出</option><option>勞退</option><option>租金支出</option>
-        <option>保險費</option><option>水電瓦斯</option><option>修繕費</option>
-        <option>郵電費</option><option>文具五金</option><option>年終提列</option>
-        <option>稅捐</option><option>燃料費</option><option>折舊攤提</option>
-        <option>廣告費</option><option>其他費用</option>
-      </select>
-      <input type="text" id="fixed-exp-name" placeholder="項目名稱，例：房租" />
-      <input type="number" id="fixed-exp-amt" placeholder="金額" />
-      <button onclick="addFixedExpense()">新增</button>
+    <div style="padding:10px 16px;border-top:1px solid var(--border)">
+      <a id="fixed-exp-edit-link" href="fixed-expenses.html"
+         style="font-size:12px;color:var(--caramel);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+        ✏️ 到月固定費用頁面填寫／修改
+      </a>
     </div>
   </div>
-  <div style="font-size:11px;color:var(--sub);padding:8px 2px 0;">這裡跟日報表的「費用」是分開算的兩筆錢，不會重複計算——固定費用是每月月結時登記一次，不是每天登記。</div>
+</div>
+
+<!-- P&L Summary -->
+<div class="section">
+  <div class="section-label">本月損益表</div>
+  <div class="card" id="pnl-card">
+    <div class="empty-state"><div class="icon">📊</div>請先確認收入與費用資料</div>
+  </div>
 </div>
 
 <!-- Difference -->
@@ -353,6 +362,7 @@
   let existingRecordId = null;
   let isConfirmed = false;
   let fixedExpenseList = [];
+  let vendorPaymentList = [];
 
   const fmt = n => '$' + Math.round(n).toLocaleString('zh-TW');
 
@@ -439,15 +449,18 @@
     if (!currentStoreId || !currentYearMonth) return;
     const { start, end } = getMonthRange(currentYearMonth);
 
-    // Fetch daily reports + expenses in parallel
-    const [reports, expenses, existing, fixedExpenses] = await Promise.all([
+    // Fetch all data in parallel
+    const [reports, expenses, vendorRows, existing, fixedExpenses] = await Promise.all([
       dbGet('store_daily_report', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`),
-      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}`),
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&vendor_name=is.null`),
+      dbGet('store_daily_expenses', `store_id=eq.${currentStoreId}&date=gte.${start}&date=lte.${end}&vendor_name=not.is.null`),
       dbGet('monthly_reconciliation', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}`),
-      dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}&order=created_at.asc`)
+      dbGet('store_fixed_expenses', `store_id=eq.${currentStoreId}&year_month=eq.${currentYearMonth}&order=category.asc,item_name.asc`)
     ]);
     fixedExpenseList = Array.isArray(fixedExpenses) ? fixedExpenses : [];
+    vendorPaymentList = Array.isArray(vendorRows) ? vendorRows : [];
     renderFixedExpenses();
+    renderVendorSection();
 
     // Compute estimated totals
     const days = new Set((reports || []).map(r => r.date)).size;
@@ -496,43 +509,151 @@
 
     document.getElementById('fill-count').textContent = `已填 ${estData.days} 天日報`;
 
+    const deliveryRev = estData.linepay + estData.uber + estData.foodpanda;
     document.getElementById('est-card').innerHTML = estData.days === 0
       ? `<div class="empty-state"><div class="icon">📋</div>本月尚無日報資料</div>`
       : `
-        <div class="est-row"><span class="est-label">現場現金</span><span class="est-value">${fmt(estData.cash)}</span></div>
-        <div class="est-row"><span class="est-label">LINE Pay（估）</span><span class="est-value">${fmt(estData.linepay)}</span></div>
-        <div class="est-row"><span class="est-label">Uber Eats（估）</span><span class="est-value">${fmt(estData.uber)}</span></div>
-        <div class="est-row"><span class="est-label">熊貓（估）</span><span class="est-value">${fmt(estData.foodpanda)}</span></div>
-        ${estData.uncollected > 0 ? `<div class="est-row"><span class="est-label">當日未收款</span><span class="est-value">${fmt(estData.uncollected)}</span></div>` : ''}
+        <div class="est-row"><span class="est-label">外送平台收入<small style="display:block;font-size:10px;color:var(--sub)">LINE Pay + Uber + 熊貓</small></span><span class="est-value">${fmt(deliveryRev)}</span></div>
+        <div class="est-row"><span class="est-label">門市驗貨收入<small style="display:block;font-size:10px;color:var(--sub)">現場現金${estData.uncollected > 0 ? ' + 未收款' : ''}</small></span><span class="est-value">${fmt(estData.cash + estData.uncollected)}</span></div>
         <div class="est-divider"></div>
-        <div class="est-row"><span class="est-label">總營收（估）</span><span class="est-value total">${fmt(totalEst)}</span></div>
-        <div class="est-divider"></div>
-        <div class="est-row"><span class="est-label">變動成本</span><span class="est-value cost">${fmt(estData.variable)}<small style="font-size:11px;font-weight:400;color:var(--sub);margin-left:4px">食材成本率 ${costRate}%</small></span></div>
-        <div class="est-row"><span class="est-label">固定費用</span><span class="est-value cost">${fmt(estData.fixed)}</span></div>
-        <div class="est-row"><span class="est-label">食材毛利（估）</span><span class="est-value profit">${fmt(totalEst - estData.variable)}</span></div>
+        <div class="est-row"><span class="est-label">本期總收入（估）</span><span class="est-value total">${fmt(totalEst)}</span></div>
       `;
 
     document.getElementById('btn-confirm').disabled = estData.days === 0;
   }
 
-  // ── 月度固定費用（房租/保險/自動扣款等）：跟日報表的「費用」完全分開的
-  // 另一筆錢，每月手動登記一次，不參與日報表的現金小計計算 ──
+  function renderVendorSection() {
+    const card = document.getElementById('vendor-card');
+    if (!card) return;
+    if (vendorPaymentList.length === 0) {
+      card.innerHTML = '<div class="empty-state"><div class="icon">🚚</div>本月尚無廠商進貨記錄</div>';
+      return;
+    }
+    // Group by vendor_name
+    const map = {};
+    vendorPaymentList.forEach(r => {
+      const d = new Date(r.date).getDate();
+      const v = r.vendor_name;
+      if (!map[v]) map[v] = { first: 0, second: 0 };
+      const amt = (Number(r.amount) || 0) + (Number(r.shipping_amount) || 0);
+      if (d <= 15) map[v].first += amt; else map[v].second += amt;
+    });
+    const vendors = Object.entries(map).sort((a, b) => a[0].localeCompare(b[0], 'zh-TW'));
+    const totalFirst  = vendors.reduce((s, [, v]) => s + v.first, 0);
+    const totalSecond = vendors.reduce((s, [, v]) => s + v.second, 0);
+    const totalAll    = totalFirst + totalSecond;
+
+    let html = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--cream)">
+        <th style="padding:8px 10px;text-align:left;color:var(--sub);font-weight:700">廠商</th>
+        <th style="padding:8px 6px;text-align:right;color:var(--sub);font-weight:700">1-15</th>
+        <th style="padding:8px 6px;text-align:right;color:var(--sub);font-weight:700">16-月底</th>
+        <th style="padding:8px 10px;text-align:right;color:var(--sub);font-weight:700">整月</th>
+      </tr></thead><tbody>`;
+    vendors.forEach(([name, v]) => {
+      html += `<tr style="border-top:1px solid var(--border)">
+        <td style="padding:8px 10px;color:var(--text)">${esc(name)}</td>
+        <td style="padding:8px 6px;text-align:right;color:var(--sub)">${v.first > 0 ? fmt(v.first) : '—'}</td>
+        <td style="padding:8px 6px;text-align:right;color:var(--sub)">${v.second > 0 ? fmt(v.second) : '—'}</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--text)">${fmt(v.first + v.second)}</td>
+      </tr>`;
+    });
+    html += `<tr style="border-top:2px solid var(--border);background:var(--cream)">
+      <td style="padding:9px 10px;font-weight:700">合計</td>
+      <td style="padding:9px 6px;text-align:right;font-weight:700">${fmt(totalFirst)}</td>
+      <td style="padding:9px 6px;text-align:right;font-weight:700">${fmt(totalSecond)}</td>
+      <td style="padding:9px 10px;text-align:right;font-weight:800;color:var(--red)">${fmt(totalAll)}</td>
+    </tr></tbody></table>`;
+    card.innerHTML = html;
+    renderPnL();
+  }
+
   function renderFixedExpenses() {
     const list = document.getElementById('fixed-exp-list');
-    list.innerHTML = fixedExpenseList.length === 0
-      ? '<div class="empty-state" style="padding:20px;"><div class="icon">🧾</div>本月尚未登記固定費用</div>'
-      : fixedExpenseList.map(e => `
-        <div class="fixed-exp-row">
-          <div class="fixed-exp-info">
-            <div class="fixed-exp-cat">${esc(e.category)}</div>
-            <div class="fixed-exp-name">${esc(e.item_name)}</div>
-          </div>
-          <span class="fixed-exp-amt">${fmt(e.amount)}</span>
-          <button class="fixed-exp-del" onclick="deleteFixedExpense('${e.id}')">✕</button>
-        </div>
-      `).join('');
+    // Update edit link with store param
+    const editLink = document.getElementById('fixed-exp-edit-link');
+    if (editLink && currentStoreId) {
+      const p = new URLSearchParams(location.search);
+      editLink.href = `fixed-expenses.html?store=${currentStoreId}${p.get('from') === 'staff' ? '&from=staff' : ''}`;
+    }
+    if (fixedExpenseList.length === 0) {
+      list.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="icon">🧾</div>本月尚未登記固定費用</div>';
+    } else {
+      // Group by category
+      const cats = {};
+      fixedExpenseList.forEach(e => {
+        if (!cats[e.category]) cats[e.category] = [];
+        cats[e.category].push(e);
+      });
+      list.innerHTML = Object.entries(cats).map(([cat, items]) => `
+        <div style="border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--sub);padding:6px 16px 2px;letter-spacing:.06em">${esc(cat)}</div>
+          ${items.map(e => `
+            <div class="fixed-exp-row" style="padding-left:24px">
+              <div class="fixed-exp-name" style="flex:1;font-size:13px;color:var(--text)">${esc(e.item_name)}</div>
+              <span class="fixed-exp-amt">${fmt(e.amount)}</span>
+            </div>`).join('')}
+        </div>`).join('');
+    }
     const total = fixedExpenseList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
     document.getElementById('fixed-exp-total-val').textContent = fmt(total);
+    renderPnL();
+  }
+
+  function renderPnL() {
+    const card = document.getElementById('pnl-card');
+    if (!card) return;
+
+    // Revenue
+    const totalRevenue = estData.cash + estData.linepay + estData.uber + estData.foodpanda + estData.uncollected;
+    const deliveryRev  = estData.linepay + estData.uber + estData.foodpanda;
+    const storeRev     = estData.cash + estData.uncollected;
+
+    // Vendor cost (本期進貨)
+    const vendorTotal = vendorPaymentList.reduce((s, r) =>
+      s + (Number(r.amount) || 0) + (Number(r.shipping_amount) || 0), 0);
+
+    // Gross profit
+    const grossProfit = totalRevenue - vendorTotal;
+
+    // Operating expenses (fixed expenses)
+    const fixedTotal = fixedExpenseList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    // Daily variable from daily_expenses
+    const dailyExpense = estData.variable + estData.fixed;
+
+    const opExpTotal = fixedTotal + dailyExpense;
+    const opProfit   = grossProfit - opExpTotal;
+
+    if (totalRevenue === 0 && vendorTotal === 0 && fixedTotal === 0) {
+      card.innerHTML = '<div class="empty-state"><div class="icon">📊</div>請先確認收入與費用資料</div>';
+      return;
+    }
+
+    const row = (label, val, isBold, colorClass = '', indent = false) => {
+      const style = `display:flex;justify-content:space-between;padding:${indent ? '8px 16px 8px 28px' : '10px 16px'};border-bottom:1px solid var(--border);font-size:${isBold ? '14' : '13'}px;${isBold ? 'font-weight:700' : ''}`;
+      const valStyle = `font-weight:700;font-variant-numeric:tabular-nums;color:${colorClass === 'profit' ? 'var(--green)' : colorClass === 'cost' ? 'var(--red)' : 'var(--text)'}`;
+      return `<div style="${style}"><span style="color:${indent ? 'var(--sub)' : 'var(--text)'}">${label}</span><span style="${valStyle}">${fmt(val)}</span></div>`;
+    };
+    const divider = () => `<div style="height:4px;background:var(--cream)"></div>`;
+    const pct = (v, base) => base > 0 ? ` <small style="font-size:11px;font-weight:400;color:var(--sub)">${(v/base*100).toFixed(1)}%</small>` : '';
+
+    card.innerHTML =
+      row('外送平台收入', deliveryRev, false, '', true) +
+      row('門市驗貨收入', storeRev, false, '', true) +
+      row('本期總收入', totalRevenue, true) +
+      divider() +
+      row('本期進貨（廠商貨款）', vendorTotal, false, 'cost', true) +
+      row('營業毛利', grossProfit, true, grossProfit >= 0 ? 'profit' : 'cost') +
+      divider() +
+      (fixedTotal > 0 ? row('月固定費用', fixedTotal, false, 'cost', true) : '') +
+      (dailyExpense > 0 ? row('日常費用（日報）', dailyExpense, false, 'cost', true) : '') +
+      row('費用合計', opExpTotal, false, 'cost') +
+      divider() +
+      `<div style="display:flex;justify-content:space-between;padding:14px 16px;font-size:16px;font-weight:800;background:var(--cream)">
+        <span>營業利益</span>
+        <span style="color:${opProfit >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(opProfit)}${pct(opProfit, totalRevenue)}</span>
+      </div>`;
   }
 
   function esc(s) {
