@@ -328,25 +328,6 @@
     </div>
 
     <!-- 紙本照片批次上傳 -->
-    <div class="entry-card" id="photo-upload-card">
-      <h3>📷 上傳紙本日報照片（批次填入）</h3>
-      <p style="font-size:13px;color:var(--text-light);margin:4px 0 12px">拍下手寫日報表 → AI 自動讀取 → 確認後一次填入多天</p>
-      <input type="file" id="photo-file" accept="image/*" capture="environment" style="font-size:13px;width:100%" onchange="onPhotoSelected()" />
-      <div id="photo-preview" style="margin-top:10px;display:none">
-        <img id="photo-img" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border)" />
-      </div>
-      <button id="photo-parse-btn" onclick="parsePhoto()" style="display:none;margin-top:10px;width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🤖 AI 解析照片</button>
-      <div id="photo-result" style="margin-top:12px;display:none">
-        <div style="font-size:13px;font-weight:600;margin-bottom:6px">解析結果（可修改後送出）：</div>
-        <div id="photo-table-wrap" style="overflow-x:auto"></div>
-        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
-          <button onclick="document.getElementById('photo-result').style.display='none'" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer">取消</button>
-          <button id="photo-submit-btn" onclick="submitPhotoRows()" style="padding:7px 16px;background:#2D9E6B;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">確認批次寫入</button>
-        </div>
-      </div>
-      <div id="photo-status" style="margin-top:8px;font-size:13px;color:var(--text-light)"></div>
-    </div>
-
     <!-- 文字貼上批次填入 -->
     <div class="entry-card" id="text-paste-card">
       <h3>📋 貼上文字資料（批次填入）</h3>
