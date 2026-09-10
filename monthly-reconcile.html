@@ -613,29 +613,55 @@
       return;
     }
 
-    const row = (label, val, isBold, colorClass = '', indent = false) => {
-      const style = `display:flex;justify-content:space-between;padding:${indent ? '8px 16px 8px 28px' : '10px 16px'};border-bottom:1px solid var(--border);font-size:${isBold ? '14' : '13'}px;${isBold ? 'font-weight:700' : ''}`;
-      const valStyle = `font-weight:700;font-variant-numeric:tabular-nums;color:${colorClass === 'profit' ? 'var(--green)' : colorClass === 'cost' ? 'var(--red)' : 'var(--text)'}`;
-      return `<div style="${style}"><span style="color:${indent ? 'var(--sub)' : 'var(--text)'}">${label}</span><span style="${valStyle}">${fmt(val)}</span></div>`;
+    const pct = (v, base) => base > 0 ? `${(v/base*100).toFixed(1)}%` : '—';
+    const profitColor = opProfit >= 0 ? 'var(--green)' : 'var(--red)';
+    const grossColor  = grossProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+    const section = (label) =>
+      `<div style="padding:6px 16px 4px;background:var(--cream);font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--text-light)">${label}</div>`;
+
+    const line = (label, val, opts = {}) => {
+      const { indent=false, bold=false, color='var(--text-dark)', border=true, size=13 } = opts;
+      return `<div style="display:flex;justify-content:space-between;align-items:baseline;
+        padding:${bold ? '11px' : '9px'} 16px ${bold ? '11px' : '9px'} ${indent ? '28px' : '16px'};
+        ${border ? 'border-bottom:1px solid var(--border);' : ''}
+        font-size:${size}px;${bold ? 'font-weight:700;' : ''}">
+        <span style="color:${indent ? 'var(--text-light)' : 'var(--text-dark)'}">${label}</span>
+        <span style="font-weight:700;font-variant-numeric:tabular-nums;color:${color}">${fmt(val)}</span>
+      </div>`;
     };
-    const divider = () => `<div style="height:4px;background:var(--cream)"></div>`;
-    const pct = (v, base) => base > 0 ? ` <small style="font-size:11px;font-weight:400;color:var(--sub)">${(v/base*100).toFixed(1)}%</small>` : '';
+
+    const subtotal = (label, val, pctVal, color) =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;
+        padding:10px 16px;background:var(--cream);border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;font-weight:700">${label}</span>
+        <span style="display:flex;gap:10px;align-items:center">
+          <span style="font-size:11px;color:var(--text-light);font-weight:500">${pctVal}</span>
+          <span style="font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:${color}">${fmt(val)}</span>
+        </span>
+      </div>`;
 
     card.innerHTML =
-      row('外送平台收入', deliveryRev, false, '', true) +
-      row('門市驗貨收入', storeRev, false, '', true) +
-      row('本期總收入', totalRevenue, true) +
-      divider() +
-      row('本期進貨（廠商貨款）', vendorTotal, false, 'cost', true) +
-      row('營業毛利', grossProfit, true, grossProfit >= 0 ? 'profit' : 'cost') +
-      divider() +
-      (fixedTotal > 0 ? row('月固定費用', fixedTotal, false, 'cost', true) : '') +
-      (dailyExpense > 0 ? row('日常費用（日報）', dailyExpense, false, 'cost', true) : '') +
-      row('費用合計', opExpTotal, false, 'cost') +
-      divider() +
-      `<div style="display:flex;justify-content:space-between;padding:14px 16px;font-size:16px;font-weight:800;background:var(--cream)">
-        <span>營業利益</span>
-        <span style="color:${opProfit >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(opProfit)}${pct(opProfit, totalRevenue)}</span>
+      section('一、營業收入') +
+      line('外送平台收入（LINE Pay + Uber + 熊貓）', deliveryRev, { indent: true }) +
+      line('門市收入（現金 + 未收款）', storeRev, { indent: true }) +
+      subtotal('本期總收入', totalRevenue, '', 'var(--brown-main)') +
+
+      section('二、銷貨成本') +
+      line('本期進貨（廠商貨款）', vendorTotal, { indent: true, color: 'var(--red)' }) +
+      subtotal('營業毛利', grossProfit, `毛利率 ${pct(grossProfit, totalRevenue)}`, grossColor) +
+
+      section('三、營業費用') +
+      line('月固定費用', fixedTotal, { indent: true, color: fixedTotal > 0 ? 'var(--red)' : 'var(--text-light)' }) +
+      line('日常費用（日報紀錄）', dailyExpense, { indent: true, color: dailyExpense > 0 ? 'var(--red)' : 'var(--text-light)', border: false }) +
+
+      `<div style="height:2px;background:var(--border)"></div>` +
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:${opProfit >= 0 ? 'var(--green-bg)' : 'var(--red-bg)'}">
+        <div>
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:2px">本月營業利益</div>
+          <div style="font-size:11px;color:var(--text-light)">佔總收入 ${pct(opProfit, totalRevenue)}</div>
+        </div>
+        <span style="font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;color:${profitColor}">${fmt(opProfit)}</span>
       </div>`;
 
     // Update stat cards
