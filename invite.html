@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>邀請夥伴</title>
 <style>
   :root {
@@ -220,8 +223,8 @@
   <div id="s-loading" class="state active">
     <div class="card" style="align-items:center; padding:40px 20px; gap:12px;">
       <div class="spinner"></div>
-      <div style="font-size:14px; color:var(--dim);" id="loading-msg">初始化中…</div>
-      <div id="debug-log" style="font-size:11px;color:var(--dim);width:100%;line-height:1.8;"></div>
+      <div style="font-size:14px; color:var(--dim);" id="loading-msg">初始化中… v5</div>
+      <div id="debug-log" style="font-size:11px;color:var(--dim);width:100%;line-height:1.8;text-align:left;"></div>
     </div>
   </div>
 
@@ -321,7 +324,7 @@ const SUPA_URL      = 'https://nrmgatbpzhtexnhlcjqa.supabase.co';
 const SUPA_KEY      = 'sb_publishable_SdShm_tU9_Ls5KPmMCzWXg_amnhAWso';
 const JOIN_BASE_URL = 'https://ijs7594.github.io/join.html?token=';
 
-const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+let supa; // initialized inside IIFE after SDK check
 
 // ── Debug logger ─────────────────────────────────────────────
 function dbg(msg) {
@@ -351,33 +354,43 @@ const liffInitWithTimeout = (ms) => Promise.race([
 
 (async () => {
   try {
-    dbg('1. 頁面啟動');
-    dbg('2. LIFF SDK: ' + (typeof liff !== 'undefined' ? '載入 ✓' : '未載入 ✗'));
-    dbg('3. 呼叫 liff.init()…');
+    dbg('1. 頁面啟動 v5');
 
+    // SDK checks
+    dbg('2. LIFF SDK: ' + (typeof liff !== 'undefined' ? '✓' : '✗ 未載入'));
+    if (typeof liff === 'undefined') throw new Error('LIFF SDK 未載入');
+
+    dbg('3. Supabase SDK: ' + (typeof supabase !== 'undefined' ? '✓' : '✗ 未載入'));
+    if (typeof supabase === 'undefined') throw new Error('Supabase SDK 未載入');
+
+    // Init Supabase here (after SDK check)
+    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+    dbg('4. Supabase client 建立 ✓');
+
+    dbg('5. liff.init()…');
     await liffInitWithTimeout(6000);
-    dbg('4. liff.init() 完成');
-    dbg('5. isLoggedIn: ' + liff.isLoggedIn());
+    dbg('6. liff.init() 完成');
+    dbg('7. isLoggedIn: ' + liff.isLoggedIn());
 
     if (!liff.isLoggedIn()) {
-      dbg('6. 跳轉 LINE 登入…');
+      dbg('8. 跳轉 LINE 登入…');
       liff.login({ redirectUri: location.href });
       return;
     }
 
-    dbg('6. 取得 ID Token…');
+    dbg('8. 取得 ID Token…');
     const idToken = liff.getIDToken();
-    dbg('7. signInWithIdToken…');
+    dbg('9. signInWithIdToken…');
     const { error: signInErr } = await supa.auth.signInWithIdToken({
       provider: 'custom:line',
       token: idToken,
     });
     if (signInErr) throw signInErr;
-    dbg('8. Supabase 登入成功，載入資料…');
+    dbg('10. Supabase 登入成功，載入資料…');
 
     await loadContext();
   } catch (e) {
-    dbg('ERROR: ' + e.message);
+    dbg('ERROR: ' + (e.message || String(e)));
     if (e.message === 'timeout') {
       showError('連線逾時 (6s)。LIFF 設定可能尚未生效，請等幾分鐘後重試。');
     } else {
