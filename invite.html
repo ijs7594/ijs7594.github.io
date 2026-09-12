@@ -676,9 +676,38 @@ function showResult(link, expiry) {
     correctLevel: QRCode.CorrectLevel.M,
   });
 
-  document.getElementById('line-share-btn').onclick = () => {
-    const msg = '邀請你加入貴焿餐飲管理系統\n點下方連結，用 LINE 登入即完成加入 👇\n' + link;
-    window.open('https://line.me/R/msg/text/?' + encodeURIComponent(msg), '_blank');
+  document.getElementById('line-share-btn').onclick = async () => {
+    if (liff.isApiAvailable('shareTargetPicker')) {
+      await liff.shareTargetPicker([
+        {
+          type: 'flex',
+          altText: '貴焿餐飲管理系統邀請',
+          contents: {
+            type: 'bubble',
+            body: {
+              type: 'box', layout: 'vertical', spacing: 'md',
+              contents: [
+                { type: 'text', text: '貴焿餐飲管理系統', weight: 'bold', size: 'lg', color: '#2C1A0E' },
+                { type: 'text', text: '邀請你加入團隊，點下方按鈕用 LINE 登入即完成加入。', wrap: true, size: 'sm', color: '#6B4C35' }
+              ]
+            },
+            footer: {
+              type: 'box', layout: 'vertical',
+              contents: [
+                {
+                  type: 'button', style: 'primary', color: '#7A3B1E',
+                  action: { type: 'uri', label: '接受邀請', uri: link }
+                }
+              ]
+            }
+          }
+        }
+      ]);
+    } else {
+      // fallback：外部瀏覽器用舊方式
+      const msg = '邀請你加入貴焿餐飲管理系統，點連結完成加入：\n' + link;
+      window.open('https://line.me/R/msg/text/?' + encodeURIComponent(msg), '_blank');
+    }
   };
 
   document.getElementById('copy-btn').onclick = () => {
