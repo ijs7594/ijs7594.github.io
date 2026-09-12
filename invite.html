@@ -618,7 +618,9 @@ function validateForm() {
 async function generateInvite() {
   const positionId = document.getElementById('position-select').value;
   const expiry     = document.getElementById('expiry-select').value;
-  const invRole    = ctx.role === 'manager' ? 'staff' : selectedRole;
+  const invRole    = selectedScope === 'org' ? 'manager'
+                   : ctx.role === 'manager' ? 'staff'
+                   : selectedRole;
 
   const params = {
     p_scope:        selectedScope,
