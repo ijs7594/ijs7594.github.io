@@ -582,13 +582,13 @@ function renderPositions() {
 
   let toShow;
   if (selectedScope === 'org') {
-    // 總部邀請：只顯示非店務職位（invitable_by_manager = false）
-    toShow = ctx.positions.filter(p => !p.invitable_by_manager);
+    toShow = ctx.positions.filter(p => p.scope === 'org' || p.scope === 'both');
   } else {
+    const storePosns = ctx.positions.filter(p => p.scope === 'store' || p.scope === 'both');
     const filtered = ctx.role !== 'manager' && selectedRole === 'manager'
-      ? ctx.positions.filter(p => !p.invitable_by_manager)
-      : ctx.positions.filter(p => p.invitable_by_manager);
-    toShow = filtered.length > 0 ? filtered : ctx.positions;
+      ? storePosns.filter(p => !p.invitable_by_manager)
+      : storePosns.filter(p => p.invitable_by_manager);
+    toShow = filtered.length > 0 ? filtered : storePosns;
   }
 
   toShow.forEach(p => {
