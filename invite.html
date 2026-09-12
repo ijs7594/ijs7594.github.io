@@ -582,8 +582,8 @@ function renderPositions() {
 
   let toShow;
   if (selectedScope === 'org') {
-    // 總部邀請：顯示所有職位
-    toShow = ctx.positions;
+    // 總部邀請：只顯示非店務職位（invitable_by_manager = false）
+    toShow = ctx.positions.filter(p => !p.invitable_by_manager);
   } else {
     const filtered = ctx.role !== 'manager' && selectedRole === 'manager'
       ? ctx.positions.filter(p => !p.invitable_by_manager)
