@@ -148,6 +148,13 @@
     transition: all 0.15s;
   }
   .btn-secondary:hover { background: var(--accent); color: #fff; }
+  .btn-line {
+    background: #06C755; color: #fff; border: none;
+    border-radius: 10px; padding: 14px;
+    font-size: 16px; font-weight: 700;
+    width: 100%; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-line:hover { background: #05a548; }
 
   /* QR section */
   .qr-wrap {
@@ -314,6 +321,7 @@
       </div>
       <div class="link-box" id="link-text">—</div>
       <div class="expiry-note" id="expiry-note">—</div>
+      <button class="btn-line" id="line-share-btn">用 LINE 分享</button>
       <button class="btn-primary" id="copy-btn">複製連結</button>
       <button class="btn-secondary" id="reset-btn">再產生一個</button>
     </div>
@@ -665,6 +673,11 @@ function showResult(link, expiry) {
     colorDark: '#2C1A0E', colorLight: '#FFFFFF',
     correctLevel: QRCode.CorrectLevel.M,
   });
+
+  document.getElementById('line-share-btn').onclick = () => {
+    const msg = '邀請你加入貴焿餐飲管理系統，點連結完成加入：\n' + link;
+    window.open('https://line.me/R/msg/text/?' + encodeURIComponent(msg), '_blank');
+  };
 
   document.getElementById('copy-btn').onclick = () => {
     navigator.clipboard.writeText(link).then(() => {
