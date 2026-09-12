@@ -250,14 +250,32 @@
     </div>
 
     <div class="card">
-      <label>
+      <!-- Scope toggle (owner/admin only) -->
+      <div id="scope-group">
+        <label style="margin-bottom:4px;">邀請範圍</label>
+        <div class="role-toggle">
+          <button class="role-btn active" data-scope="store" type="button">門店</button>
+          <button class="role-btn" data-scope="org" type="button">總部</button>
+        </div>
+      </div>
+
+      <!-- Store selection (scope=store) -->
+      <label id="store-group">
         選擇門店
         <select id="store-select">
           <option value="">請選擇…</option>
         </select>
       </label>
 
-      <!-- Role toggle (hidden for manager) -->
+      <!-- Org selection (scope=org) -->
+      <label id="org-group" style="display:none;">
+        選擇單位
+        <select id="org-select">
+          <option value="">請選擇…</option>
+        </select>
+      </label>
+
+      <!-- Role toggle (hidden for manager or scope=org) -->
       <div id="role-group">
         <label style="margin-bottom:4px;">邀請角色</label>
         <div class="role-toggle">
@@ -371,7 +389,8 @@ function show(id) {
 
 // ── Context ──────────────────────────────────────────────────
 let ctx = null;
-let selectedRole = 'staff';
+let selectedRole  = 'staff';
+let selectedScope = 'store';
 let qrInstance = null;
 
 // ── Init ─────────────────────────────────────────────────────
@@ -493,11 +512,22 @@ function renderForm(displayName) {
   pill.textContent = roleLabels[ctx.role] || ctx.role;
   pill.className = 'pill ' + (ctx.role === 'owner' ? 'owner' : ctx.role === 'admin' ? 'admin' : 'manager');
 
-  // Manager: hide role toggle, force staff
-  if (ctx.role === 'manager') {
-    document.getElementById('role-group').style.display = 'none';
+  // Manager: 只能選門店，隱藏 scope + role toggle
+  const isManager = ctx.role === 'manager';
+  if (isManager) {
+    document.getElementById('scope-group').style.display = 'none';
+    document.getElementById('role-group').style.display  = 'none';
     selectedRole = 'staff';
   }
+
+  // Orgs
+  const orgEl = document.getElementById('org-select');
+  (ctx.orgs || []).forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.id; opt.textContent = o.name;
+    orgEl.appendChild(opt);
+  });
+  if ((ctx.orgs || []).length === 1) orgEl.value = ctx.orgs[0].id;
 
   // Stores
   const storeEl = document.getElementById('store-select');
@@ -508,14 +538,28 @@ function renderForm(displayName) {
   });
   if (ctx.stores.length === 1) storeEl.value = ctx.stores[0].id;
 
-  // Position: render initially filtered by selectedRole
-  renderPositions();
+  // Scope toggle
+  document.querySelectorAll('[data-scope]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedScope = btn.dataset.scope;
+      document.querySelectorAll('[data-scope]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const isOrg = selectedScope === 'org';
+      document.getElementById('store-group').style.display = isOrg ? 'none' : '';
+      document.getElementById('org-group').style.display   = isOrg ? '' : 'none';
+      // org scope: 顯示所有職位，隱藏角色 toggle
+      document.getElementById('role-group').style.display  = isOrg ? 'none' : '';
+      if (isOrg) selectedRole = 'staff';
+      renderPositions();
+      validateForm();
+    });
+  });
 
   // Role toggle buttons
-  document.querySelectorAll('.role-btn').forEach(btn => {
+  document.querySelectorAll('[data-role]').forEach(btn => {
     btn.addEventListener('click', () => {
       selectedRole = btn.dataset.role;
-      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-role]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderPositions();
       validateForm();
@@ -523,9 +567,11 @@ function renderForm(displayName) {
   });
 
   storeEl.addEventListener('change', validateForm);
+  orgEl.addEventListener('change', validateForm);
   document.getElementById('position-select').addEventListener('change', validateForm);
   document.getElementById('gen-btn').addEventListener('click', generateInvite);
 
+  renderPositions();
   validateForm();
 }
 
@@ -534,12 +580,16 @@ function renderPositions() {
   const prev = posEl.value;
   posEl.innerHTML = '<option value="">請選擇…</option>';
 
-  const filtered = ctx.role !== 'manager' && selectedRole === 'manager'
-    ? ctx.positions.filter(p => !p.invitable_by_manager)
-    : ctx.positions.filter(p => p.invitable_by_manager);
-
-  // fallback: if filter yields nothing, show all
-  const toShow = filtered.length > 0 ? filtered : ctx.positions;
+  let toShow;
+  if (selectedScope === 'org') {
+    // 總部邀請：顯示所有職位
+    toShow = ctx.positions;
+  } else {
+    const filtered = ctx.role !== 'manager' && selectedRole === 'manager'
+      ? ctx.positions.filter(p => !p.invitable_by_manager)
+      : ctx.positions.filter(p => p.invitable_by_manager);
+    toShow = filtered.length > 0 ? filtered : ctx.positions;
+  }
 
   toShow.forEach(p => {
     const o = document.createElement('option');
@@ -550,27 +600,37 @@ function renderPositions() {
 }
 
 function validateForm() {
-  const ok = document.getElementById('store-select').value &&
-             document.getElementById('position-select').value;
+  const scopeOk = selectedScope === 'org'
+    ? !!document.getElementById('org-select').value
+    : !!document.getElementById('store-select').value;
+  const ok = scopeOk && !!document.getElementById('position-select').value;
   document.getElementById('gen-btn').disabled = !ok;
 }
 
 async function generateInvite() {
-  const storeId    = document.getElementById('store-select').value;
   const positionId = document.getElementById('position-select').value;
   const expiry     = document.getElementById('expiry-select').value;
   const invRole    = ctx.role === 'manager' ? 'staff' : selectedRole;
+
+  const params = {
+    p_scope:        selectedScope,
+    p_position_id:  positionId,
+    p_invited_role: invRole,
+    p_expires_in:   expiry,
+  };
+  if (selectedScope === 'store') {
+    params.p_store_id = document.getElementById('store-select').value;
+    params.p_org_id   = null;
+  } else {
+    params.p_org_id   = document.getElementById('org-select').value;
+    params.p_store_id = null;
+  }
 
   document.getElementById('gen-btn').disabled = true;
   document.getElementById('gen-btn').textContent = '產生中…';
 
   try {
-    const rawToken = await supaRpc('create_invite', {
-      p_store_id:    storeId,
-      p_position_id: positionId,
-      p_invited_role: invRole,
-      p_expires_in:  expiry,
-    });
+    const rawToken = await supaRpc('create_invite', params);
 
     const link = JOIN_BASE_URL + rawToken;
     showResult(link, expiry);
