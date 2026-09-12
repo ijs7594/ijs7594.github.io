@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>加入貴焿</title>
+<style>
+  :root {
+    --bg:       #F5F0E8;
+    --surface:  #FFFFFF;
+    --border:   #DDD3C0;
+    --text:     #2C1A0E;
+    --mid:      #6B4C35;
+    --dim:      #9C7B63;
+    --accent:   #7A3B1E;
+    --accent-h: #5C2B14;
+    --green:    #2E7D32;
+    --red:      #C62828;
+    --radius:   12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:      #1A0F0A;
+      --surface: #2C1A0E;
+      --border:  #4A2E1A;
+      --text:    #F5F0E8;
+      --mid:     #C9A882;
+      --dim:     #8C6A50;
+      --accent:  #D4845A;
+      --accent-h:#E8956A;
+      --green:   #66BB6A;
+      --red:     #EF5350;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    font-size: 15px; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .wrap {
+    width: 100%; max-width: 420px;
+    padding: 24px 20px 48px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .header { display: flex; align-items: center; gap: 10px; padding-bottom: 4px; }
+  .header-icon {
+    width: 36px; height: 36px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .header .sub { font-size: 12px; color: var(--dim); margin-top: 1px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .state { display: none; }
+  .state.active { display: flex; flex-direction: column; gap: 20px; }
+  .err-msg {
+    font-size: 14px; color: var(--red);
+    background: #FEE8E8; border-radius: 8px; padding: 12px 14px; line-height: 1.5;
+  }
+  .success-icon {
+    width: 60px; height: 60px; background: #E8F5E9; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; margin: 0 auto;
+  }
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--dim); }
+  .info-value { font-weight: 600; color: var(--text); }
+  .role-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  }
+  .role-badge.manager { background: #E8F5E9; color: #2E7D32; }
+  .role-badge.staff   { background: #E3F2FD; color: #1565C0; }
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 700;
+    width: 100%; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent; color: var(--accent);
+    border: 1.5px solid var(--accent); border-radius: 10px; padding: 11px;
+    font-size: 15px; font-weight: 600; width: 100%; cursor: pointer;
+  }
+  .btn-secondary:hover { background: var(--accent); color: #fff; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--mid); }
+  textarea, input[type="text"] {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 11px 14px; font-size: 15px; color: var(--text);
+    width: 100%; outline: none; font-family: inherit; resize: vertical;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, input:focus { border-color: var(--accent); }
+  .notice {
+    font-size: 13px; color: var(--dim); line-height: 1.6;
+    background: var(--bg); border-radius: 8px; padding: 12px 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-icon">🤝</div>
+    <div>
+      <h1>加入貴焿</h1>
+      <div class="sub">貴焿餐飲管理系統</div>
+    </div>
+  </div>
+
+  <!-- loading -->
+  <div id="s-loading" class="state active">
+    <div class="card" style="align-items:center; padding:40px 20px; gap:12px;">
+      <div class="spinner"></div>
+      <div style="font-size:14px; color:var(--dim);" id="loading-msg">驗證中…</div>
+    </div>
+  </div>
+
+  <!-- success (with token) -->
+  <div id="s-success" class="state">
+    <div class="card" style="align-items:center; gap:16px; text-align:center;">
+      <div class="success-icon">🎉</div>
+      <div style="font-weight:700; font-size:18px;">歡迎加入！</div>
+      <div style="font-size:14px; color:var(--dim);" id="welcome-name"></div>
+    </div>
+    <div class="card" style="gap:0;">
+      <div class="info-row">
+        <span class="info-label">門店</span>
+        <span class="info-value" id="result-store">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">職位</span>
+        <span class="info-value" id="result-position">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">角色</span>
+        <span id="result-role">—</span>
+      </div>
+    </div>
+    <div class="notice">你已成功加入系統，請返回 LINE 使用相關功能。</div>
+  </div>
+
+  <!-- error -->
+  <div id="s-error" class="state">
+    <div class="card" style="gap:12px;">
+      <div class="err-msg" id="err-msg">發生錯誤</div>
+      <button class="btn-secondary" id="retry-btn">重試</button>
+    </div>
+  </div>
+
+  <!-- no token: join request form -->
+  <div id="s-request" class="state">
+    <div class="card" style="gap:12px;">
+      <div style="font-size:14px; color:var(--mid); line-height:1.6;">
+        這個連結沒有邀請碼。你可以送出加入申請，管理員審核後會通知你。
+      </div>
+      <label>
+        姓名
+        <input type="text" id="req-name" placeholder="你的姓名">
+      </label>
+      <label>
+        附言（選填）
+        <textarea id="req-msg" rows="3" placeholder="想讓管理員知道的事…"></textarea>
+      </label>
+      <div class="notice">申請送出後不會立即取得任何系統權限，需等待管理員核准。</div>
+      <button class="btn-primary" id="req-btn" disabled>送出申請</button>
+    </div>
+  </div>
+
+  <!-- request sent -->
+  <div id="s-sent" class="state">
+    <div class="card" style="align-items:center; gap:16px; text-align:center; padding:40px 20px;">
+      <div style="font-size:48px;">📬</div>
+      <div style="font-weight:700; font-size:17px;">申請已送出</div>
+      <div style="font-size:14px; color:var(--dim); line-height:1.6;">
+        管理員審核後會透過 LINE 通知你。<br>在此之前你無法存取系統功能。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID   = '2010930752-6XG2AGCF';
+const SUPA_URL  = 'https://zsowgiobylacwabjjvub.supabase.co';
+const SUPA_KEY  = 'sb_publishable_X3HEDV1lG1ZYf1SQ3Lvc2A_huzbsrGb';
+
+let accessToken = null;
+
+// ── Supabase helpers ─────────────────────────────────────────
+async function lineAuth(idToken) {
+  const res = await fetch(`${SUPA_URL}/functions/v1/line-auth`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
+    body: JSON.stringify({ id_token: idToken }),
+  });
+  const d = await res.json();
+  if (!res.ok || d.error) throw new Error(d.error || `edge fn ${res.status}`);
+  return d.access_token;
+}
+
+async function supaRpc(fn, params) {
+  const hasParams = params && Object.keys(params).length > 0;
+  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${accessToken}`,
+      ...(hasParams ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: hasParams ? JSON.stringify(params) : undefined,
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.message || d.error || `rpc ${res.status}`);
+  return d;
+}
+
+// ── State helpers ────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+}
+function setLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+  show('loading');
+}
+function showError(msg, allowRetry) {
+  document.getElementById('err-msg').innerHTML = msg.replace(/\n/g, '<br>');
+  document.getElementById('retry-btn').style.display = allowRetry ? '' : 'none';
+  show('error');
+}
+
+// ── Error message map ────────────────────────────────────────
+const ERR = {
+  invalid_token:     '邀請連結無效，請確認連結是否完整。',
+  invite_not_pending:'此邀請已被使用過，無法重複加入。',
+  invite_expired:    '邀請連結已過期，請聯繫管理員重新發送。',
+  already_member:    '你已經是系統成員，不需要再次申請。',
+  no_tenant:         '系統設定異常，請聯繫管理員。',
+};
+
+// ── Main ─────────────────────────────────────────────────────
+(async () => {
+  const inviteToken = new URLSearchParams(location.search).get('token');
+
+  try {
+    setLoading('驗證身份中…');
+
+    if (typeof liff === 'undefined') { showError('LIFF SDK 未載入'); return; }
+
+    await Promise.race([
+      liff.init({ liffId: LIFF_ID }),
+      new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000)),
+    ]).catch(e => { throw new Error(e.message === 'timeout' ? 'LIFF 初始化逾時，請重新開啟。' : `LIFF 初始化失敗：${e.message}`); });
+
+    if (!liff.isLoggedIn()) {
+      // 保留完整 URL（含 token）給 redirect 後回來
+      liff.login({ redirectUri: location.href });
+      return;
+    }
+
+    const idToken = liff.getIDToken();
+    if (!idToken) { showError('無法取得 LINE 身份，請重新開啟頁面。'); return; }
+
+    // 偵測 token 過期
+    let tokenExp = null;
+    try {
+      const p = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      tokenExp = p.exp;
+    } catch(_) {}
+    if (tokenExp && tokenExp * 1000 < Date.now()) {
+      liff.logout();
+      liff.login({ redirectUri: location.href });
+      return;
+    }
+
+    setLoading('建立連線中…');
+    try {
+      accessToken = await lineAuth(idToken);
+    } catch (e) {
+      if (e.message.includes('expired')) {
+        liff.logout(); liff.login({ redirectUri: location.href }); return;
+      }
+      showError('登入失敗：' + e.message); return;
+    }
+
+    // ── 有 token：直接接受邀請 ─────────────────────────────
+    if (inviteToken) {
+      setLoading('確認邀請中…');
+      try {
+        const result = await supaRpc('accept_invite', { p_raw_token: inviteToken });
+
+        const displayName = liff.getDecodedIDToken()?.name || '';
+        document.getElementById('welcome-name').textContent = displayName ? `你好，${displayName}` : '';
+        document.getElementById('result-store').textContent    = result.store_name    || '—';
+        document.getElementById('result-position').textContent = result.position_name || '—';
+
+        const roleEl = document.getElementById('result-role');
+        const roleLabel = result.invited_role === 'manager' ? '幹部' : '員工';
+        const roleClass = result.invited_role === 'manager' ? 'manager' : 'staff';
+        roleEl.innerHTML = `<span class="role-badge ${roleClass}">${roleLabel}</span>`;
+
+        show('success');
+      } catch (e) {
+        showError(ERR[e.message] || e.message, false);
+      }
+      return;
+    }
+
+    // ── 無 token：顯示申請表單 ────────────────────────────
+    const displayName = liff.getDecodedIDToken()?.name || '';
+    const nameInput = document.getElementById('req-name');
+    nameInput.value = displayName;
+
+    const reqBtn = document.getElementById('req-btn');
+    const validate = () => { reqBtn.disabled = !nameInput.value.trim(); };
+    nameInput.addEventListener('input', validate);
+    validate();
+
+    reqBtn.addEventListener('click', async () => {
+      reqBtn.disabled = true;
+      reqBtn.textContent = '送出中…';
+      try {
+        await supaRpc('create_join_request', {
+          p_display_name: nameInput.value.trim(),
+          p_message:      document.getElementById('req-msg').value.trim() || null,
+        });
+        show('sent');
+      } catch (e) {
+        showError(ERR[e.message] || e.message, false);
+      }
+    });
+
+    show('request');
+
+  } catch (e) {
+    showError('未知錯誤：' + (e.message || String(e)), true);
+  }
+})();
+
+document.getElementById('retry-btn').onclick = () => location.reload();
+</script>
+</body>
+</html>
