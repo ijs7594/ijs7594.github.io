@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>職位異動</title>
+<style>
+  :root {
+    --bg: #F5F0E8; --surface: #FFFFFF; --border: #DDD3C0;
+    --text: #2C1A0E; --mid: #6B4C35; --dim: #9C7B63;
+    --accent: #7A3B1E; --accent-h: #5C2B14;
+    --green: #2E7D32; --red: #C62828; --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1A0F0A; --surface: #2C1A0E; --border: #4A2E1A;
+      --text: #F5F0E8; --mid: #C9A882; --dim: #8C6A50;
+      --accent: #D4845A; --accent-h: #E8956A;
+      --green: #66BB6A; --red: #EF5350;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', sans-serif; font-size: 15px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+  .wrap { width: 100%; max-width: 480px; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* States */
+  .state { display: none; }
+  .state.active { display: flex; flex-direction: column; gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+
+  /* Spinner */
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Pills */
+  .pill { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .pill.owner   { background: #3D1A0A; color: #F4A261; }
+  .pill.admin   { background: #E8F5E9; color: #2E7D32; }
+  .pill.manager { background: #E3F2FD; color: #1565C0; }
+
+  /* Position badges */
+  .pos-badge { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .pos-1  { background: #E3F2FD; color: #1565C0; }
+  .pos-2  { background: #E0F7FA; color: #006064; }
+  .pos-3  { background: #FFF3E0; color: #E65100; }
+  .pos-4  { background: #FCE4EC; color: #880E4F; }
+  .pos-99 { background: var(--border); color: var(--dim); }
+
+  /* Tabs */
+  .tab-bar { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .tab-btn { flex: 1; padding: 11px 8px; font-size: 14px; font-weight: 600; background: none; border: none; color: var(--dim); cursor: pointer; transition: color 0.15s, background 0.15s; }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .badge { display: inline-flex; align-items: center; justify-content: center; background: var(--red); color: #fff; border-radius: 10px; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; padding: 0 4px; margin-left: 5px; }
+
+  /* Select */
+  select { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--text); width: 100%; outline: none; font-family: inherit; }
+  select:focus { border-color: var(--accent); }
+
+  /* Staff cards */
+  .staff-list { display: flex; flex-direction: column; gap: 10px; }
+  .staff-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .staff-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .staff-info { flex: 1; min-width: 0; }
+  .staff-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .staff-sub  { font-size: 12px; color: var(--dim); margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .promote-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .promote-btn:hover { background: var(--accent-h); }
+
+  /* Pending cards */
+  .pending-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .pending-arrow { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .pending-meta  { font-size: 12px; color: var(--dim); line-height: 1.6; }
+  .pending-actions { display: flex; gap: 8px; }
+  .btn-approve { flex: 1; background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn-reject  { flex: 1; background: transparent; border: 1.5px solid var(--red); color: var(--red); border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-approve:disabled, .btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Buttons */
+  .btn-primary   { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-h); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 10px; padding: 11px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
+  .modal-sheet   { background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 20px 44px; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; max-height: 90vh; overflow-y: auto; }
+  .modal-handle  { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto -4px; }
+  .modal-title   { font-size: 17px; font-weight: 800; }
+  .modal-row     { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-label   { color: var(--dim); }
+  label.field    { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--mid); }
+  input[type="date"] { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--text); width: 100%; outline: none; font-family: inherit; }
+  input[type="date"]:focus { border-color: var(--accent); }
+  textarea { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 11px 14px; font-size: 15px; color: var(--text); width: 100%; min-height: 90px; font-family: inherit; resize: vertical; outline: none; }
+  textarea:focus { border-color: var(--accent); }
+
+  .notice { font-size: 13px; color: var(--dim); background: var(--bg); border-radius: 8px; padding: 10px 12px; line-height: 1.6; }
+  .empty  { text-align: center; padding: 32px 0; color: var(--dim); font-size: 14px; }
+  .err-msg { font-size: 14px; color: var(--red); background: #FEE8E8; border-radius: 8px; padding: 12px 14px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Loading -->
+  <div id="s-loading" class="state active">
+    <div class="card" style="align-items:center; padding:48px 20px; gap:12px;">
+      <div class="spinner"></div>
+      <div style="font-size:14px; color:var(--dim);" id="loading-msg">載入中…</div>
+    </div>
+  </div>
+
+  <!-- Login -->
+  <div id="s-login" class="state">
+    <div class="card" style="align-items:center; text-align:center; gap:12px;">
+      <div style="font-size:32px;">👤</div>
+      <div style="font-weight:600;">請先登入</div>
+      <button class="btn-primary" id="login-btn">LINE 登入</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="s-main" class="state">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-size:20px; font-weight:800;">職位異動</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:13px; color:var(--mid);" id="user-name"></span>
+        <span class="pill" id="role-pill"></span>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-staff"   onclick="switchTab('staff')">夥伴名單</button>
+      <button class="tab-btn"        id="tab-pending" onclick="switchTab('pending')" style="display:none;">
+        待審核<span class="badge" id="pending-badge" style="display:none;"></span>
+      </button>
+    </div>
+
+    <!-- 夥伴名單 panel -->
+    <div id="panel-staff">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <select id="store-select" style="display:none;"></select>
+        <div class="staff-list" id="staff-list">
+          <div class="empty">請選擇門店</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 待審核 panel -->
+    <div id="panel-pending" style="display:none;">
+      <div class="staff-list" id="pending-list">
+        <div class="empty">暫無待審核申請</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div id="s-error" class="state">
+    <div class="card" style="gap:12px;">
+      <div class="err-msg" id="err-msg">發生錯誤</div>
+      <button class="btn-secondary" onclick="location.reload()">重試</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 提報升職 Modal -->
+<div id="modal" style="display:none;">
+  <div class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">提報升職</div>
+      <div>
+        <div class="modal-row">
+          <span class="modal-label">夥伴</span>
+          <span style="font-weight:700;" id="m-person-name"></span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">目前職位</span>
+          <span id="m-from-pos"></span>
+        </div>
+      </div>
+      <label class="field">
+        升至職位
+        <select id="m-to-pos"><option value="">請選擇…</option></select>
+      </label>
+      <label class="field">
+        生效日期
+        <input type="date" id="m-date">
+      </label>
+      <div class="notice" id="m-notice" style="display:none;"></div>
+      <button class="btn-primary" id="m-confirm" disabled>確認送出</button>
+      <button class="btn-secondary" onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 拒絕原因 Modal -->
+<div id="modal-reject" style="display:none;">
+  <div class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">拒絕原因（選填）</div>
+      <textarea id="reject-notes" placeholder="可留下說明…"></textarea>
+      <button class="btn-primary" id="reject-confirm" style="background:var(--red);">確認拒絕</button>
+      <button class="btn-secondary" onclick="closeRejectModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+// ⚠️ 在 LINE Developers Console 新增 LIFF app，endpoint: https://ijs7594.github.io/position-change.html，填入下方
+const LIFF_ID  = 'REPLACE_WITH_LIFF_ID';
+const SUPA_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
+const SUPA_KEY = 'sb_publishable_X3HEDV1lG1ZYf1SQ3Lvc2A_huzbsrGb';
+
+let accessToken = null;
+let ctx = null;
+let currentStoreId = null;
+let promoteTarget  = null;
+let rejectTarget   = null;
+
+async function lineAuth(idToken) {
+  const res = await fetch(`${SUPA_URL}/functions/v1/line-auth`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
+    body: JSON.stringify({ id_token: idToken }),
+  });
+  const d = await res.json();
+  if (!res.ok || d.error) throw new Error(d.error || `edge fn ${res.status}`);
+  return d.access_token;
+}
+
+async function supaRpc(fn, params) {
+  const hasParams = params && Object.keys(params).length > 0;
+  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${accessToken}`,
+      ...(hasParams ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: hasParams ? JSON.stringify(params) : undefined,
+  });
+  const d = await res.json();
+  if (!res.ok) throw new Error(d.message || d.error || `rpc ${res.status}`);
+  return d;
+}
+
+function show(id) {
+  document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+}
+function setLoading(msg) { document.getElementById('loading-msg').textContent = msg; show('loading'); }
+function showError(msg)   { document.getElementById('err-msg').textContent = msg; show('error'); }
+
+function posBadge(name, sortOrder) {
+  const cls = [1,2,3,4].includes(sortOrder) ? `pos-${sortOrder}` : 'pos-99';
+  return `<span class="pos-badge ${cls}">${name || '未設定'}</span>`;
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+  if (d < 0) return '尚未到職';
+  if (d === 0) return '今日到職';
+  return `到職 ${d} 天`;
+}
+
+function switchTab(tab) {
+  document.getElementById('panel-staff').style.display   = tab === 'staff'   ? '' : 'none';
+  document.getElementById('panel-pending').style.display = tab === 'pending' ? '' : 'none';
+  document.getElementById('tab-staff').classList.toggle('active',   tab === 'staff');
+  document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
+}
+
+// ── Staff list ────────────────────────────────────────
+async function loadStaff(storeId) {
+  if (!storeId) return;
+  currentStoreId = storeId;
+  const listEl = document.getElementById('staff-list');
+  listEl.innerHTML = '<div style="text-align:center; padding:24px; color:var(--dim);">載入中…</div>';
+  try {
+    const staff = await supaRpc('staff_list', { p_store_id: storeId });
+    renderStaff(staff);
+  } catch (e) {
+    listEl.innerHTML = `<div class="err-msg">${e.message}</div>`;
+  }
+}
+
+function renderStaff(staff) {
+  const listEl = document.getElementById('staff-list');
+  if (!staff || staff.length === 0) {
+    listEl.innerHTML = '<div class="empty">這間門店還沒有夥伴</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  staff.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'staff-card';
+    const days = daysSince(s.start_date);
+    const isTopPos = s.sort_order >= 4;
+    card.innerHTML = `
+      <div class="staff-avatar">👤</div>
+      <div class="staff-info">
+        <div class="staff-name">${s.display_name}</div>
+        <div class="staff-sub">
+          ${posBadge(s.position_name, s.sort_order)}
+          ${days ? `<span>${days}</span>` : ''}
+        </div>
+      </div>
+      ${!isTopPos
+        ? `<button class="promote-btn" data-person='${JSON.stringify(s)}'>提報升職</button>`
+        : `<span style="font-size:12px; color:var(--dim);">最高職</span>`}
+    `;
+    listEl.appendChild(card);
+  });
+  listEl.querySelectorAll('.promote-btn').forEach(btn => {
+    btn.addEventListener('click', () => openModal(JSON.parse(btn.dataset.person)));
+  });
+}
+
+// ── Pending list ──────────────────────────────────────
+async function loadPending() {
+  const listEl = document.getElementById('pending-list');
+  try {
+    const pending = await supaRpc('pending_position_changes', {});
+    renderPending(pending);
+    const badge = document.getElementById('pending-badge');
+    if (pending && pending.length > 0) {
+      badge.textContent = pending.length;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) {
+    listEl.innerHTML = `<div class="err-msg">${e.message}</div>`;
+  }
+}
+
+function renderPending(pending) {
+  const listEl = document.getElementById('pending-list');
+  if (!pending || pending.length === 0) {
+    listEl.innerHTML = '<div class="empty">暫無待審核申請</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  pending.forEach(req => {
+    const card = document.createElement('div');
+    card.className = 'pending-card';
+    const date = new Date(req.effective_date).toLocaleDateString('zh-TW');
+    card.innerHTML = `
+      <div>
+        <div style="font-weight:700; margin-bottom:4px;">${req.person_name}</div>
+        <div class="pending-arrow">
+          <span style="color:var(--dim);">${req.from_position || '（未設定）'}</span>
+          <span style="color:var(--accent);">→</span>
+          <strong>${req.to_position}</strong>
+        </div>
+        <div class="pending-meta">${req.store_name || ''} ・ 生效 ${date}<br>由 ${req.proposed_by_name} 提報</div>
+      </div>
+      <div class="pending-actions">
+        <button class="btn-approve">核准</button>
+        <button class="btn-reject">拒絕</button>
+      </div>
+    `;
+    card.querySelector('.btn-approve').addEventListener('click', async function() {
+      this.disabled = true; this.textContent = '處理中…';
+      try {
+        await supaRpc('review_position_change', { p_request_id: req.id, p_action: 'approve' });
+        card.innerHTML = '<div style="color:var(--green); font-weight:600; padding:8px 0;">✓ 已核准</div>';
+        await loadPending();
+        if (currentStoreId) await loadStaff(currentStoreId);
+      } catch (e) {
+        this.disabled = false; this.textContent = '核准';
+        alert(e.message);
+      }
+    });
+    card.querySelector('.btn-reject').addEventListener('click', () => openRejectModal(req.id));
+    listEl.appendChild(card);
+  });
+}
+
+// ── Reject modal ──────────────────────────────────────
+function openRejectModal(requestId) {
+  rejectTarget = requestId;
+  document.getElementById('reject-notes').value = '';
+  document.getElementById('modal-reject').style.display = '';
+}
+function closeRejectModal() {
+  document.getElementById('modal-reject').style.display = 'none';
+  rejectTarget = null;
+}
+document.getElementById('reject-confirm').addEventListener('click', async function() {
+  if (!rejectTarget) return;
+  const notes = document.getElementById('reject-notes').value.trim() || null;
+  this.disabled = true; this.textContent = '處理中…';
+  try {
+    await supaRpc('review_position_change', { p_request_id: rejectTarget, p_action: 'reject', p_notes: notes });
+    closeRejectModal();
+    await loadPending();
+  } catch (e) { alert(e.message); }
+  finally { this.disabled = false; this.textContent = '確認拒絕'; }
+});
+
+// ── Promote modal ─────────────────────────────────────
+function openModal(person) {
+  promoteTarget = person;
+  document.getElementById('m-person-name').textContent = person.display_name;
+  document.getElementById('m-from-pos').innerHTML = posBadge(person.position_name, person.sort_order);
+  document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+
+  const posEl = document.getElementById('m-to-pos');
+  posEl.innerHTML = '<option value="">請選擇…</option>';
+  ctx.positions
+    .filter(p => (p.scope === 'store' || p.scope === 'both') && p.sort_order > (person.sort_order || 0))
+    .forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      const needsApproval = ctx.role === 'manager' && p.sort_order >= 3;
+      opt.textContent = p.name + (needsApproval ? '（送督導審核）' : '');
+      posEl.appendChild(opt);
+    });
+
+  validateModal();
+  document.getElementById('modal').style.display = '';
+}
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+  promoteTarget = null;
+}
+function validateModal() {
+  const posOk  = !!document.getElementById('m-to-pos').value;
+  const dateOk = !!document.getElementById('m-date').value;
+  document.getElementById('m-confirm').disabled = !(posOk && dateOk);
+
+  const posEl    = document.getElementById('m-to-pos');
+  const selected = posEl.options[posEl.selectedIndex];
+  const notice   = document.getElementById('m-notice');
+  if (selected && selected.value) {
+    const toPos = ctx.positions.find(p => p.id === selected.value);
+    if (toPos && ctx.role === 'manager' && toPos.sort_order >= 3) {
+      notice.textContent = '組長以上的升職需由督導或管理員審核後才會生效。';
+    } else {
+      notice.textContent = '升職確認後立即生效，職位歷史會同步更新。';
+    }
+    notice.style.display = '';
+  } else {
+    notice.style.display = 'none';
+  }
+}
+document.getElementById('m-to-pos').addEventListener('change', validateModal);
+document.getElementById('m-date').addEventListener('change', validateModal);
+document.getElementById('m-confirm').addEventListener('click', async function() {
+  if (!promoteTarget) return;
+  this.disabled = true; this.textContent = '送出中…';
+  try {
+    const result = await supaRpc('submit_position_change', {
+      p_person_id:      promoteTarget.person_id,
+      p_store_id:       currentStoreId,
+      p_to_position_id: document.getElementById('m-to-pos').value,
+      p_effective_date: document.getElementById('m-date').value,
+    });
+    closeModal();
+    await loadStaff(currentStoreId);
+    if (ctx.role !== 'manager') await loadPending();
+    alert(result.status === 'approved' ? '升職已生效！' : '提報成功，等待督導審核。');
+  } catch (e) {
+    const msgs = { must_be_promotion: '只能升職不能降職', invalid_position: '無效的職位', insufficient_role: '權限不足' };
+    alert(msgs[e.message] || e.message);
+    this.disabled = false; this.textContent = '確認送出';
+  }
+});
+
+// ── Main ─────────────────────────────────────────────
+(async () => {
+  try {
+    setLoading('初始化…');
+    await Promise.race([
+      liff.init({ liffId: LIFF_ID }),
+      new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000)),
+    ]).catch(e => { throw new Error('LIFF 初始化失敗：' + e.message); });
+
+    if (!liff.isLoggedIn()) { show('login'); return; }
+
+    const idToken = liff.getIDToken();
+    if (!idToken) { showError('無法取得 LINE 身份'); return; }
+
+    setLoading('驗證身份…');
+    try {
+      accessToken = await lineAuth(idToken);
+    } catch (e) {
+      if (e.message.includes('expired')) { liff.logout(); liff.login({ redirectUri: location.href }); return; }
+      showError('登入失敗：' + e.message); return;
+    }
+
+    setLoading('載入資料…');
+    const data = await supaRpc('invite_context', { p_: null });
+    if (data.error) throw new Error(data.error);
+    ctx = data;
+
+    const displayName = liff.getDecodedIDToken()?.name || '';
+    document.getElementById('user-name').textContent = displayName;
+    const pill = document.getElementById('role-pill');
+    const roleLabels = { owner: '執行長', admin: '管理員', manager: '店長' };
+    pill.textContent = roleLabels[ctx.role] || ctx.role;
+    pill.className = 'pill ' + (ctx.role === 'owner' ? 'owner' : ctx.role === 'admin' ? 'admin' : 'manager');
+
+    const storeEl = document.getElementById('store-select');
+    if (ctx.role !== 'manager') {
+      storeEl.style.display = '';
+      storeEl.innerHTML = '<option value="">選擇門店…</option>';
+      ctx.stores.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id; o.textContent = s.name;
+        storeEl.appendChild(o);
+      });
+      storeEl.addEventListener('change', () => loadStaff(storeEl.value));
+      if (ctx.stores.length === 1) { storeEl.value = ctx.stores[0].id; await loadStaff(ctx.stores[0].id); }
+
+      document.getElementById('tab-pending').style.display = '';
+      await loadPending();
+    } else {
+      if (ctx.stores.length > 0) await loadStaff(ctx.stores[0].id);
+    }
+
+    show('main');
+  } catch (e) {
+    showError('載入失敗：' + (e.message || String(e)));
+  }
+})();
+
+document.getElementById('login-btn').onclick = () => liff.login({ redirectUri: location.href });
+</script>
+</body>
+</html>
