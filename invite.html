@@ -560,7 +560,7 @@ function renderForm(displayName) {
       btn.classList.add('active');
       const isOrg = selectedScope === 'org';
       document.getElementById('store-group').style.display = isOrg ? 'none' : '';
-      document.getElementById('org-group').style.display   = isOrg ? '' : 'none';
+      document.getElementById('org-group').style.display   = 'none';
       // org scope: 顯示所有職位，隱藏角色 toggle
       document.getElementById('role-group').style.display  = isOrg ? 'none' : '';
       if (isOrg) selectedRole = 'staff';
