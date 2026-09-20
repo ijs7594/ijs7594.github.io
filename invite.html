@@ -299,6 +299,12 @@
       </label>
 
       <label>
+        正式到職日
+        <input type="date" id="start-date" max="">
+        <span style="font-size:12px; color:var(--dim); font-weight:400;">請查詢實際到職日再填寫</span>
+      </label>
+
+      <label>
         邀請有效期
         <select id="expiry-select">
           <option value="1 days">1 天</option>
@@ -577,6 +583,7 @@ function renderForm(displayName) {
   storeEl.addEventListener('change', validateForm);
   orgEl.addEventListener('change', validateForm);
   document.getElementById('position-select').addEventListener('change', validateForm);
+  document.getElementById('start-date').addEventListener('change', validateForm);
   document.getElementById('gen-btn').addEventListener('click', generateInvite);
 
   renderPositions();
@@ -611,7 +618,8 @@ function validateForm() {
   const scopeOk = selectedScope === 'org'
     ? !!document.getElementById('org-select').value
     : !!document.getElementById('store-select').value;
-  const ok = scopeOk && !!document.getElementById('position-select').value;
+  const ok = scopeOk && !!document.getElementById('position-select').value
+             && !!document.getElementById('start-date').value;
   document.getElementById('gen-btn').disabled = !ok;
 }
 
@@ -622,11 +630,14 @@ async function generateInvite() {
                    : ctx.role === 'manager' ? 'staff'
                    : selectedRole;
 
+  const startDate = document.getElementById('start-date').value || null;
+
   const params = {
     p_scope:        selectedScope,
     p_position_id:  positionId,
     p_invited_role: invRole,
     p_expires_in:   expiry,
+    p_start_date:   startDate,
   };
   if (selectedScope === 'store') {
     params.p_store_id = document.getElementById('store-select').value;
