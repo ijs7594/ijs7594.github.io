@@ -17,6 +17,7 @@
       --border:  rgba(0,0,0,0.06);
       --text:    #1A1A1A;
       --sub:     #888;
+      --dim:     #AAA;
     }
 
     body {
@@ -25,6 +26,34 @@
       min-height: 100vh;
       max-width: 480px;
       margin: 0 auto;
+    }
+
+    /* ── Loading / Error states ── */
+    .gate {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 300; padding: 20px;
+    }
+    .gate-box {
+      background: var(--card); border-radius: 18px;
+      padding: 40px 28px; width: 100%; max-width: 380px;
+      text-align: center; display: flex; flex-direction: column;
+      align-items: center; gap: 16px;
+    }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--caramel); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .gate-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .gate-sub   { font-size: 13px; color: var(--sub); line-height: 1.6; }
+    .gate-btn {
+      background: var(--brown); color: #fff; border: none;
+      border-radius: 12px; padding: 13px 24px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: inherit; width: 100%;
     }
 
     /* ── Header ── */
@@ -70,7 +99,11 @@
       position: relative;
     }
     .menu-item:last-child { border-bottom: none; }
-    .menu-item:active { background: #f7f4f1; }
+    .menu-item:active:not(.locked) { background: #f7f4f1; }
+    .menu-item.locked {
+      cursor: default;
+      pointer-events: none;
+    }
 
     .menu-icon {
       width: 46px; height: 46px; border-radius: 14px;
@@ -78,21 +111,27 @@
       font-size: 22px; flex-shrink: 0;
     }
     .menu-icon.orange { background: #FFF0E6; }
-    .menu-icon.green  { background: #E8F7EF; }
     .menu-icon.blue   { background: #E8F0FE; }
-    .menu-icon.amber  { background: #FFF8E1; }
-    .menu-icon.brown  { background: var(--cream); }
+    .menu-icon.orange-muted { background: #F5EDE6; }
+    .menu-icon.blue-muted   { background: #EEF2FB; }
 
     .menu-text { flex: 1; }
     .menu-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
     .menu-desc { font-size: 12px; color: var(--sub); }
+    .menu-item.locked .menu-name,
+    .menu-item.locked .menu-desc { color: var(--dim); }
+
     .menu-badge {
       display: inline-block; font-size: 10px; font-weight: 700; color: #fff;
       background: var(--seal); border-radius: 8px; padding: 1px 7px; margin-left: 6px;
       vertical-align: middle;
     }
+    .menu-badge.muted {
+      background: #CCC; color: #fff;
+    }
 
     .menu-arrow { font-size: 14px; color: #C0C0C0; flex-shrink: 0; }
+    .menu-lock  { font-size: 14px; color: #CCC; flex-shrink: 0; }
 
     /* ── Notice Banner ── */
     .notice-banner {
@@ -149,10 +188,32 @@
       font-size: 12px; color: var(--sub); background: none; border: 1px solid var(--border);
       border-radius: 20px; padding: 6px 12px; cursor: pointer; font-family: inherit;
     }
+
+    /* ── Main content wrapper ── */
+    #main-content { display: none; }
   </style>
 </head>
 <body>
 
+<!-- Loading gate -->
+<div class="gate" id="gate-loading">
+  <div class="gate-box">
+    <div class="spinner"></div>
+    <div class="gate-title">驗證身份中…</div>
+  </div>
+</div>
+
+<!-- Not member gate -->
+<div class="gate" id="gate-not-member" style="display:none;">
+  <div class="gate-box">
+    <div style="font-size:40px;">🔒</div>
+    <div class="gate-title">尚未加入系統</div>
+    <div class="gate-sub">請透過店長傳送的邀請連結加入，才能使用夥伴入口。</div>
+    <button class="gate-btn" onclick="location.href='https://ijs7594.github.io/join.html'">前往加入頁面</button>
+  </div>
+</div>
+
+<!-- Store gate -->
 <div class="store-gate" id="store-gate" style="display:none;">
   <div class="store-gate-box">
     <img class="app-logo-img" src="assets/logo.png" alt="今年貴焿" style="max-width:220px;margin-bottom:12px;" />
@@ -162,93 +223,195 @@
   </div>
 </div>
 
-<!-- Header -->
-<div class="app-header">
-  <img class="app-logo-img" src="assets/logo.png" alt="今年貴焿" />
-  <div class="app-sub">夥伴互動入口</div>
-</div>
+<!-- Main content -->
+<div id="main-content">
 
-<div class="current-store-bar" id="current-store-bar" style="display:none;">
-  <div>
-    <div class="current-store-label">目前門店</div>
-    <div class="current-store-name" id="current-store-name">—</div>
+  <div class="app-header">
+    <img class="app-logo-img" src="assets/logo.png" alt="今年貴焿" />
+    <div class="app-sub">夥伴互動入口</div>
   </div>
-  <button class="switch-store-btn" onclick="openStoreGate()">切換</button>
-</div>
 
-<!-- 日常工具 -->
-<div class="section">
-  <div class="section-label">日常工具</div>
-  <div class="menu-list">
-
-    <a class="menu-item" href="training.html?from=staff">
-      <div class="menu-icon orange">🎓</div>
-      <div class="menu-text">
-        <div class="menu-name">教育訓練</div>
-        <div class="menu-desc">公安食安 · SOP · 管理技能</div>
-      </div>
-      <div class="menu-arrow">›</div>
-    </a>
-
-    <a class="menu-item" href="finance-hub.html?from=staff" id="link-finance">
-      <div class="menu-icon blue">📆</div>
-      <div class="menu-text">
-        <div class="menu-name">營收帳務</div>
-        <div class="menu-desc">日報表 · 應收應付與毛利</div>
-      </div>
-      <div class="menu-arrow">›</div>
-    </a>
-
-    <a class="menu-item" href="checkin.html?from=staff" id="link-checkin">
-      <div class="menu-icon orange">🪞</div>
-      <div class="menu-text">
-        <div class="menu-name">月底自我盤點 <span class="menu-badge">店長專屬</span></div>
-        <div class="menu-desc">每月一次 · 心情 · 團隊氣氛 · 印象最深的評論</div>
-      </div>
-      <div class="menu-arrow">›</div>
-    </a>
-
+  <div class="current-store-bar" id="current-store-bar" style="display:none;">
+    <div>
+      <div class="current-store-label">目前門店</div>
+      <div class="current-store-name" id="current-store-name">—</div>
+    </div>
+    <button class="switch-store-btn" id="switch-store-btn">切換</button>
   </div>
-</div>
 
-<!-- Notice -->
-<div class="notice-banner">
-  <div class="notice-icon">🙏</div>
-  <div>
-    <div class="notice-title">排假提醒</div>
-    <div class="notice-body">每月 18 號前請完成排假申請，感謝夥伴們互相成就。</div>
+  <div class="section">
+    <div class="section-label">日常工具</div>
+    <div class="menu-list">
+
+      <!-- 教育訓練：所有人可用 -->
+      <a class="menu-item" id="item-training" href="training.html?from=staff">
+        <div class="menu-icon orange">🎓</div>
+        <div class="menu-text">
+          <div class="menu-name">教育訓練</div>
+          <div class="menu-desc">公安食安 · SOP · 管理技能</div>
+        </div>
+        <div class="menu-arrow">›</div>
+      </a>
+
+      <!-- 營收帳務：幹部專屬 -->
+      <a class="menu-item" id="item-finance" href="finance-hub.html?from=staff">
+        <div class="menu-icon blue" id="icon-finance">📆</div>
+        <div class="menu-text">
+          <div class="menu-name">營收帳務 <span class="menu-badge" id="badge-finance" style="display:none;">幹部專屬</span></div>
+          <div class="menu-desc">日報表 · 應收應付與毛利</div>
+        </div>
+        <div class="menu-arrow" id="arrow-finance">›</div>
+        <div class="menu-lock" id="lock-finance" style="display:none;">🔒</div>
+      </a>
+
+      <!-- 月底自我盤點：幹部專屬 -->
+      <a class="menu-item" id="item-checkin" href="checkin.html?from=staff">
+        <div class="menu-icon orange" id="icon-checkin">🪞</div>
+        <div class="menu-text">
+          <div class="menu-name">月底自我盤點 <span class="menu-badge" id="badge-checkin">店長專屬</span></div>
+          <div class="menu-desc">每月一次 · 心情 · 團隊氣氛 · 印象最深的評論</div>
+        </div>
+        <div class="menu-arrow" id="arrow-checkin">›</div>
+        <div class="menu-lock" id="lock-checkin" style="display:none;">🔒</div>
+      </a>
+
+    </div>
   </div>
+
+  <div class="notice-banner">
+    <div class="notice-icon">🙏</div>
+    <div>
+      <div class="notice-title">排假提醒</div>
+      <div class="notice-body">每月 18 號前請完成排假申請，感謝夥伴們互相成就。</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    今年貴焿古早味麵線羹<br />
+    <span>使人和睦的人有福了。</span>
+  </div>
+
 </div>
 
-<div class="footer">
-  今年貴焿古早味麵線羹<br />
-  <span>使人和睦的人有福了。</span>
-</div>
-
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  const SUPABASE_URL = 'https://zsowgiobylacwabjjvub.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzb3dnaW9ieWxhY3dhYmpqdnViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5Mzg4NDMsImV4cCI6MjA5OTUxNDg0M30.SvAd1SgRl1oAt4wNTPuXHeiP4omRcFAb-S8DY5EJvEw';
+  // ⚠️ 建 LIFF app：endpoint = https://ijs7594.github.io/staff.html，scope: openid profile
+  const LIFF_ID   = '2010930752-u0MhMXd5';
+  const SUPA_URL  = 'https://zsowgiobylacwabjjvub.supabase.co';
+  const SUPA_KEY  = 'sb_publishable_X3HEDV1lG1ZYf1SQ3Lvc2A_huzbsrGb';
+
+  let accessToken = null;
+  let userRole    = 'staff';  // owner | admin | manager | staff
+  let managerStores = [];     // 幹部從 invite_context 拿到的門店清單
 
   function esc(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    return String(s || '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  let stores = [];
-
-  async function initStoreGate() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/stores?select=id,name,status&order=created_at.asc`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  // ── Auth helpers ────────────────────────────────────────
+  async function lineAuth(idToken) {
+    const res = await fetch(`${SUPA_URL}/functions/v1/line-auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
+      body: JSON.stringify({ id_token: idToken }),
     });
-    let allStores = await res.json();
-    if (!Array.isArray(allStores)) allStores = [];
-    stores = allStores.filter(s => s.status === '營運中');
+    const d = await res.json();
+    if (!res.ok || d.error) throw new Error(d.error || `auth ${res.status}`);
+    return d.access_token;
+  }
 
-    const savedId = localStorage.getItem('staff_store_id');
+  async function supaRpc(fn, params) {
+    const hasParams = params && Object.keys(params).length > 0;
+    const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${accessToken}`,
+        ...(hasParams ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: hasParams ? JSON.stringify(params) : undefined,
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.message || d.error || `rpc ${res.status}`);
+    return d;
+  }
+
+  // ── Gate helpers ─────────────────────────────────────────
+  function showGate(id) {
+    document.getElementById('gate-loading').style.display    = 'none';
+    document.getElementById('gate-not-member').style.display = 'none';
+    if (id === 'loading')     document.getElementById('gate-loading').style.display    = 'flex';
+    if (id === 'not-member')  document.getElementById('gate-not-member').style.display = 'flex';
+  }
+  function showMain() {
+    document.getElementById('gate-loading').style.display    = 'none';
+    document.getElementById('gate-not-member').style.display = 'none';
+    document.getElementById('main-content').style.display    = '';
+  }
+
+  // ── Role gating ──────────────────────────────────────────
+  function applyRoleGating(role) {
+    const isElevated = role === 'owner' || role === 'admin' || role === 'manager';
+
+    // 營收帳務
+    const financeItem = document.getElementById('item-finance');
+    if (!isElevated) {
+      financeItem.classList.add('locked');
+      financeItem.removeAttribute('href');
+      document.getElementById('icon-finance').className  = 'menu-icon blue-muted';
+      document.getElementById('badge-finance').style.display = '';
+      document.getElementById('arrow-finance').style.display = 'none';
+      document.getElementById('lock-finance').style.display  = '';
+    }
+
+    // 月底自我盤點
+    const checkinItem = document.getElementById('item-checkin');
+    if (!isElevated) {
+      checkinItem.classList.add('locked');
+      checkinItem.removeAttribute('href');
+      document.getElementById('icon-checkin').className  = 'menu-icon orange-muted';
+      const badgeCheckin = document.getElementById('badge-checkin');
+      badgeCheckin.textContent = '店長專屬';
+      badgeCheckin.className   = 'menu-badge muted';
+      document.getElementById('arrow-checkin').style.display = 'none';
+      document.getElementById('lock-checkin').style.display  = '';
+    }
+  }
+
+  // ── Store bar ────────────────────────────────────────────
+  function setStoreName(id, name) {
+    document.getElementById('current-store-bar').style.display = 'flex';
+    document.getElementById('current-store-name').textContent  = name;
+    // Append store id to links that need it
+    ['item-finance', 'item-checkin'].forEach(itemId => {
+      const a = document.getElementById(itemId);
+      if (!a || a.classList.contains('locked')) return;
+      const base = (a.getAttribute('href') || '').split('?')[0];
+      a.href = `${base}?from=staff&store=${id}`;
+    });
+  }
+
+  // ── Store gate (for staff without manager context) ───────
+  let allStores = [];
+  async function fetchAndShowStoreGate() {
+    // Fetch store list with anon key (non-sensitive: store names only)
+    try {
+      const res = await fetch(
+        `${SUPA_URL}/rest/v1/stores?select=id,name,status&order=created_at.asc`,
+        { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }
+      );
+      let data = await res.json();
+      if (!Array.isArray(data)) data = [];
+      allStores = data.filter(s => s.status === '營運中');
+    } catch (_) { allStores = []; }
+
+    const savedId   = localStorage.getItem('staff_store_id');
     const savedName = localStorage.getItem('staff_store_name');
-    const stillValid = savedId && stores.some(s => s.id === savedId);
+    const stillValid = savedId && allStores.some(s => s.id === savedId);
 
     if (stillValid) {
-      applyStore(savedId, savedName);
+      setStoreName(savedId, savedName);
     } else {
       openStoreGate();
     }
@@ -256,9 +419,13 @@
 
   function openStoreGate() {
     const list = document.getElementById('store-gate-list');
-    list.innerHTML = stores.map(s =>
-      `<button class="store-gate-btn" onclick="pickStore('${s.id}', '${esc(s.name)}')">${esc(s.name)}</button>`
-    ).join('');
+    if (allStores.length === 0) {
+      list.innerHTML = '<div style="font-size:13px;color:#999;text-align:center;">無法載入門店列表</div>';
+    } else {
+      list.innerHTML = allStores.map(s =>
+        `<button class="store-gate-btn" onclick="pickStore('${s.id}','${esc(s.name)}')">${esc(s.name)}</button>`
+      ).join('');
+    }
     document.getElementById('store-gate').style.display = 'flex';
   }
 
@@ -266,21 +433,94 @@
     localStorage.setItem('staff_store_id', id);
     localStorage.setItem('staff_store_name', name);
     document.getElementById('store-gate').style.display = 'none';
-    applyStore(id, name);
+    setStoreName(id, name);
   }
 
-  function applyStore(id, name) {
-    document.getElementById('current-store-bar').style.display = 'flex';
-    document.getElementById('current-store-name').textContent = name;
-    ['link-finance', 'link-checkin'].forEach(linkId => {
-      const a = document.getElementById(linkId);
-      if (!a) return;
-      const base = a.getAttribute('href').split('?')[0];
-      a.href = `${base}?from=staff&store=${id}`;
-    });
-  }
+  document.getElementById('switch-store-btn').addEventListener('click', openStoreGate);
 
-  initStoreGate();
+  // ── Main ─────────────────────────────────────────────────
+  (async () => {
+    showGate('loading');
+
+    try {
+      // 1. LIFF init
+      await Promise.race([
+        liff.init({ liffId: LIFF_ID }),
+        new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000)),
+      ]).catch(e => { throw new Error('LIFF 初始化失敗：' + e.message); });
+
+      // 2. Login
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: location.href });
+        return;
+      }
+
+      // 3. Token
+      const idToken = liff.getIDToken();
+      if (!idToken) throw new Error('無法取得 LINE 身份');
+
+      // Token 過期偵測
+      try {
+        const p = JSON.parse(atob(idToken.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+        if (p.exp * 1000 < Date.now()) { liff.logout(); liff.login({ redirectUri: location.href }); return; }
+      } catch(_) {}
+
+      // 4. Supabase auth
+      try {
+        accessToken = await lineAuth(idToken);
+      } catch (e) {
+        if (e.message.includes('expired')) { liff.logout(); liff.login({ redirectUri: location.href }); return; }
+        throw e;
+      }
+
+      // 5. Try invite_context to get role + stores
+      try {
+        const ctx = await supaRpc('invite_context', { p_: null });
+        userRole      = ctx.role || 'manager';
+        managerStores = ctx.stores || [];
+      } catch (e) {
+        if (e.message === 'not_member') {
+          showGate('not-member');
+          return;
+        }
+        // insufficient_role → regular staff member
+        userRole      = 'staff';
+        managerStores = [];
+      }
+
+      // 6. Show main content with role gating
+      showMain();
+      applyRoleGating(userRole);
+
+      // 7. Store context
+      if (managerStores.length > 0) {
+        // Manager: use their assigned store(s)
+        const s = managerStores[0];
+        setStoreName(s.id, s.name);
+        if (managerStores.length > 1) {
+          // Multiple stores: show switch button with their stores
+          document.getElementById('switch-store-btn').addEventListener('click', () => {
+            const list = document.getElementById('store-gate-list');
+            list.innerHTML = managerStores.map(st =>
+              `<button class="store-gate-btn" onclick="pickStore('${st.id}','${esc(st.name)}')">${esc(st.name)}</button>`
+            ).join('');
+            document.getElementById('store-gate').style.display = 'flex';
+          });
+        }
+      } else {
+        // Staff: localStorage + anon store gate
+        await fetchAndShowStoreGate();
+      }
+
+    } catch (e) {
+      // Unexpected error: show not-member gate with message
+      console.error('[staff]', e);
+      const box = document.querySelector('#gate-not-member .gate-box');
+      box.querySelector('.gate-title').textContent = '載入失敗';
+      box.querySelector('.gate-sub').textContent   = e.message || '請重新開啟頁面';
+      showGate('not-member');
+    }
+  })();
 </script>
 
 </body>
