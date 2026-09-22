@@ -98,6 +98,24 @@
   .notice { font-size: 13px; color: var(--dim); background: var(--bg); border-radius: 8px; padding: 10px 12px; line-height: 1.6; }
   .empty  { text-align: center; padding: 32px 0; color: var(--dim); font-size: 14px; }
   .err-msg { font-size: 14px; color: var(--red); background: #FEE8E8; border-radius: 8px; padding: 12px 14px; line-height: 1.5; }
+
+  /* Overview */
+  .overview-list { display: flex; flex-direction: column; gap: 12px; }
+  .ov-store { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .ov-store-header {
+    padding: 11px 16px; background: var(--accent); color: #fff;
+    font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ov-count { font-size: 12px; font-weight: 600; opacity: 0.75; }
+  .ov-store-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .ov-member {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; background: var(--bg);
+    font-size: 13px;
+  }
+  .ov-name { font-weight: 700; flex: 1; }
+  .ov-days { font-size: 11px; color: var(--dim); }
 </style>
 </head>
 <body>
@@ -131,10 +149,11 @@
     </div>
 
     <div class="tab-bar">
-      <button class="tab-btn active" id="tab-staff"   onclick="switchTab('staff')">夥伴名單</button>
-      <button class="tab-btn"        id="tab-pending" onclick="switchTab('pending')" style="display:none;">
+      <button class="tab-btn active" id="tab-staff"    onclick="switchTab('staff')">夥伴名單</button>
+      <button class="tab-btn"        id="tab-pending"  onclick="switchTab('pending')" style="display:none;">
         待審核<span class="badge" id="pending-badge" style="display:none;"></span>
       </button>
+      <button class="tab-btn"        id="tab-overview" onclick="switchTab('overview')" style="display:none;">總覽</button>
     </div>
 
     <!-- 夥伴名單 panel -->
@@ -151,6 +170,13 @@
     <div id="panel-pending" style="display:none;">
       <div class="staff-list" id="pending-list">
         <div class="empty">暫無待審核申請</div>
+      </div>
+    </div>
+
+    <!-- 總覽 panel -->
+    <div id="panel-overview" style="display:none;">
+      <div class="overview-list" id="overview-list">
+        <div class="empty">載入中…</div>
       </div>
     </div>
   </div>
@@ -270,10 +296,48 @@ function daysSince(dateStr) {
 }
 
 function switchTab(tab) {
-  document.getElementById('panel-staff').style.display   = tab === 'staff'   ? '' : 'none';
-  document.getElementById('panel-pending').style.display = tab === 'pending' ? '' : 'none';
-  document.getElementById('tab-staff').classList.toggle('active',   tab === 'staff');
-  document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
+  document.getElementById('panel-staff').style.display    = tab === 'staff'    ? '' : 'none';
+  document.getElementById('panel-pending').style.display  = tab === 'pending'  ? '' : 'none';
+  document.getElementById('panel-overview').style.display = tab === 'overview' ? '' : 'none';
+  document.getElementById('tab-staff').classList.toggle('active',    tab === 'staff');
+  document.getElementById('tab-pending').classList.toggle('active',  tab === 'pending');
+  document.getElementById('tab-overview').classList.toggle('active', tab === 'overview');
+  if (tab === 'overview') loadOverview();
+}
+
+// ── Overview ──────────────────────────────────────────
+async function loadOverview() {
+  const listEl = document.getElementById('overview-list');
+  listEl.innerHTML = '<div class="empty">載入中…</div>';
+  try {
+    const results = await Promise.all(
+      ctx.stores.map(s => supaRpc('staff_list', { p_store_id: s.id }).then(staff => ({ store: s, staff })))
+    );
+    listEl.innerHTML = '';
+    results.forEach(({ store, staff }) => {
+      const card = document.createElement('div');
+      card.className = 'ov-store';
+      const count = staff ? staff.length : 0;
+      const bodyHtml = count === 0
+        ? '<div class="empty" style="padding:16px 0;">尚無夥伴</div>'
+        : staff.map(s => `
+          <div class="ov-member">
+            <span class="ov-name">${s.display_name}</span>
+            ${posBadge(s.position_name, s.sort_order)}
+            ${s.start_date ? `<span class="ov-days">${daysSince(s.start_date)}</span>` : ''}
+          </div>`).join('');
+      card.innerHTML = `
+        <div class="ov-store-header">
+          <span>${store.name}</span>
+          <span class="ov-count">${count} 人</span>
+        </div>
+        <div class="ov-store-body">${bodyHtml}</div>
+      `;
+      listEl.appendChild(card);
+    });
+  } catch (e) {
+    listEl.innerHTML = `<div class="err-msg">${e.message}</div>`;
+  }
 }
 
 // ── Staff list ────────────────────────────────────────
@@ -520,7 +584,8 @@ document.getElementById('m-confirm').addEventListener('click', async function() 
       storeEl.addEventListener('change', () => loadStaff(storeEl.value));
       if (ctx.stores.length === 1) { storeEl.value = ctx.stores[0].id; await loadStaff(ctx.stores[0].id); }
 
-      document.getElementById('tab-pending').style.display = '';
+      document.getElementById('tab-pending').style.display  = '';
+      document.getElementById('tab-overview').style.display = '';
       await loadPending();
     } else {
       if (ctx.stores.length > 0) await loadStaff(ctx.stores[0].id);
