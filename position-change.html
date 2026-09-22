@@ -65,6 +65,8 @@
   .staff-sub  { font-size: 12px; color: var(--dim); margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .promote-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
   .promote-btn:hover { background: var(--accent-h); }
+  .edit-btn { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 14px; cursor: pointer; flex-shrink: 0; color: var(--dim); }
+  .edit-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Pending cards */
   .pending-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -90,8 +92,8 @@
   .modal-row:last-of-type { border-bottom: none; }
   .modal-label   { color: var(--dim); }
   label.field    { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--mid); }
-  input[type="date"] { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--text); width: 100%; outline: none; font-family: inherit; }
-  input[type="date"]:focus { border-color: var(--accent); }
+  input[type="date"], input[type="text"] { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--text); width: 100%; outline: none; font-family: inherit; }
+  input[type="date"]:focus, input[type="text"]:focus { border-color: var(--accent); }
   textarea { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 11px 14px; font-size: 15px; color: var(--text); width: 100%; min-height: 90px; font-family: inherit; resize: vertical; outline: none; }
   textarea:focus { border-color: var(--accent); }
 
@@ -218,6 +220,29 @@
       <div class="notice" id="m-notice" style="display:none;"></div>
       <button class="btn-primary" id="m-confirm" disabled>確認送出</button>
       <button class="btn-secondary" onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 編輯夥伴 Modal -->
+<div id="modal-edit" style="display:none;">
+  <div class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">編輯夥伴資料</div>
+      <label class="field">
+        顯示名稱
+        <input type="text" id="e-name" placeholder="姓名">
+      </label>
+      <label class="field">
+        到職日期
+        <input type="date" id="e-date">
+      </label>
+      <button class="btn-primary" id="e-save">儲存</button>
+      <button class="btn-secondary" onclick="closeEditModal()">取消</button>
+      <div style="border-top: 1px solid var(--border); padding-top: 12px;">
+        <button id="e-deactivate" style="width:100%; background:transparent; border:1.5px solid var(--red); color:var(--red); border-radius:10px; padding:11px; font-size:15px; font-weight:600; cursor:pointer;">停用此帳號</button>
+      </div>
     </div>
   </div>
 </div>
@@ -378,11 +403,15 @@ function renderStaff(staff) {
       ${!isTopPos
         ? `<button class="promote-btn" data-person='${JSON.stringify(s)}'>提報升職</button>`
         : `<span style="font-size:12px; color:var(--dim);">最高職</span>`}
+      <button class="edit-btn" data-person='${JSON.stringify(s)}'>✏️</button>
     `;
     listEl.appendChild(card);
   });
   listEl.querySelectorAll('.promote-btn').forEach(btn => {
     btn.addEventListener('click', () => openModal(JSON.parse(btn.dataset.person)));
+  });
+  listEl.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditModal(JSON.parse(btn.dataset.person)));
   });
 }
 
@@ -446,6 +475,49 @@ function renderPending(pending) {
     listEl.appendChild(card);
   });
 }
+
+// ── Edit modal ────────────────────────────────────────
+let editTarget = null;
+function openEditModal(person) {
+  editTarget = person;
+  document.getElementById('e-name').value  = person.display_name || '';
+  document.getElementById('e-date').value  = person.start_date   || '';
+  document.getElementById('modal-edit').style.display = '';
+}
+function closeEditModal() {
+  document.getElementById('modal-edit').style.display = 'none';
+  editTarget = null;
+}
+document.getElementById('e-save').addEventListener('click', async function() {
+  if (!editTarget) return;
+  const name = document.getElementById('e-name').value.trim();
+  const date = document.getElementById('e-date').value || null;
+  this.disabled = true; this.textContent = '儲存中…';
+  try {
+    await supaRpc('update_person', {
+      p_person_id:    editTarget.person_id,
+      p_display_name: name || null,
+      p_start_date:   date,
+    });
+    closeEditModal();
+    if (currentStoreId) await loadStaff(currentStoreId);
+  } catch (e) { alert(e.message); }
+  finally { this.disabled = false; this.textContent = '儲存'; }
+});
+document.getElementById('e-deactivate').addEventListener('click', async function() {
+  if (!editTarget) return;
+  if (!confirm(`確定要停用「${editTarget.display_name}」的帳號？停用後他將無法登入系統。`)) return;
+  this.disabled = true; this.textContent = '處理中…';
+  try {
+    await supaRpc('update_person', {
+      p_person_id:  editTarget.person_id,
+      p_deactivate: true,
+    });
+    closeEditModal();
+    if (currentStoreId) await loadStaff(currentStoreId);
+  } catch (e) { alert(e.message); }
+  finally { this.disabled = false; this.textContent = '停用此帳號'; }
+});
 
 // ── Reject modal ──────────────────────────────────────
 function openRejectModal(requestId) {
