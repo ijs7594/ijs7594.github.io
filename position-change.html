@@ -343,6 +343,7 @@ async function loadOverview() {
       const card = document.createElement('div');
       card.className = 'ov-store';
       const count = staff ? staff.length : 0;
+      const canEdit = ctx.role === 'owner' || ctx.role === 'admin';
       const bodyHtml = count === 0
         ? '<div class="empty" style="padding:16px 0;">尚無夥伴</div>'
         : staff.map(s => `
@@ -350,6 +351,7 @@ async function loadOverview() {
             <span class="ov-name">${s.display_name}</span>
             ${posBadge(s.position_name, s.sort_order)}
             ${s.start_date ? `<span class="ov-days">${daysSince(s.start_date)}</span>` : ''}
+            ${canEdit ? `<button class="edit-btn ov-edit-btn" data-person='${JSON.stringify(s)}'>✏️</button>` : ''}
           </div>`).join('');
       card.innerHTML = `
         <div class="ov-store-header">
@@ -359,6 +361,9 @@ async function loadOverview() {
         <div class="ov-store-body">${bodyHtml}</div>
       `;
       listEl.appendChild(card);
+    });
+    listEl.querySelectorAll('.ov-edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => openEditModal(JSON.parse(btn.dataset.person)));
     });
   } catch (e) {
     listEl.innerHTML = `<div class="err-msg">${e.message}</div>`;
