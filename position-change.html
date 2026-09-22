@@ -403,7 +403,9 @@ function renderStaff(staff) {
       ${!isTopPos
         ? `<button class="promote-btn" data-person='${JSON.stringify(s)}'>提報升職</button>`
         : `<span style="font-size:12px; color:var(--dim);">最高職</span>`}
-      <button class="edit-btn" data-person='${JSON.stringify(s)}'>✏️</button>
+      ${(ctx.role === 'owner' || ctx.role === 'admin')
+        ? `<button class="edit-btn" data-person='${JSON.stringify(s)}'>✏️</button>`
+        : ''}
     `;
     listEl.appendChild(card);
   });
