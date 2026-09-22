@@ -154,11 +154,18 @@
         <span id="result-role">—</span>
       </div>
     </div>
+    <div class="card" style="gap:10px;">
+      <label>
+        你希望怎麼被稱呼？
+        <input type="text" id="profile-name" placeholder="填入本名（選填）">
+      </label>
+      <div class="notice" style="font-size:12px;">LINE 暱稱可能不是本名，這裡填的名字會在系統裡顯示。不填就用 LINE 暱稱。</div>
+    </div>
     <div class="notice" style="margin-top:4px; line-height:1.7;">
       總部正在為每位夥伴建立成長記錄——你的到職日、職位、每個里程碑都會在這裡留存。<br>
       未來系統每個月會告訴你跟你有關的事。目前功能陸續建置中，有更新我們會通知你。
     </div>
-    <button class="btn-primary" onclick="location.href='https://ijs7594.github.io/staff.html'" style="margin-top:4px;">前往夥伴入口</button>
+    <button class="btn-primary" id="go-portal-btn" style="margin-top:4px;">確認並前往入口</button>
   </div>
 
   <!-- error -->
@@ -314,6 +321,7 @@ const ERR = {
 
         const displayName = liff.getDecodedIDToken()?.name || '';
         document.getElementById('welcome-name').textContent = displayName ? `你好，${displayName}` : '';
+        document.getElementById('profile-name').value = displayName;
 
         const scope = result.scope || 'store';
         const unitLabel = scope === 'org' ? '單位' : scope === 'tenant' ? '組織' : '門店';
@@ -366,6 +374,37 @@ const ERR = {
 })();
 
 document.getElementById('retry-btn').onclick = () => location.reload();
+
+async function updateDisplayName(name) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/person`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'Accept-Profile': 'core',
+      'Content-Profile': 'core',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({ display_name: name }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.message || d.error || `${res.status}`);
+  }
+}
+
+document.getElementById('go-portal-btn').addEventListener('click', async function() {
+  const input = document.getElementById('profile-name');
+  const name  = input.value.trim();
+  const lineName = liff.getDecodedIDToken()?.name || '';
+  if (name && name !== lineName) {
+    this.disabled = true;
+    this.textContent = '更新中…';
+    try { await updateDisplayName(name); } catch (_) {}
+  }
+  location.href = 'https://ijs7594.github.io/staff.html';
+});
 </script>
 </body>
 </html>
