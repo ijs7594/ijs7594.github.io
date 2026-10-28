@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>站別訓練手冊 · 今年貴焿助理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --brown-dark:  #2C1A0E;
+      --brown-main:  #8B5E3C;
+      --caramel:     #C17B4E;
+      --sand:        #D4A574;
+      --warm-white:  #FAF7F2;
+      --card-bg:     #FFFFFF;
+      --text-dark:   #2C1A0E;
+      --text-mid:    #6B4C35;
+      --text-light:  #9E7B60;
+      --border:      #EDE0D0;
+      --why-bg:      #FFF8ED;
+      --why-border:  #F0DCB8;
+    }
+    body {
+      font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: var(--warm-white);
+      color: var(--text-dark);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 200px; min-width: 200px; background: var(--brown-dark); display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .avatar-sq { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--caramel), var(--brown-main)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .brand-name { font-size: 14px; font-weight: 600; color: #fff; }
+    .brand-sub  { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+    .nav-list { display: flex; flex-direction: column; gap: 2px; padding: 16px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; text-decoration: none; color: rgba(255,255,255,0.5); font-size: 13px; transition: background 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+    .nav-item.active { background: rgba(255,255,255,0.13); color: #fff; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-text { font-weight: 500; font-size: 13px; }
+    .nav-sub-text { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; flex-wrap: wrap; }
+    .topbar-icon { font-size: 22px; }
+    .topbar-title { font-size: 17px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+    .version-badge { margin-left: auto; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: var(--warm-white); border: 1.5px solid var(--border); color: var(--text-light); }
+
+    .intro-banner {
+      margin: 20px 24px 0; background: var(--card-bg); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 16px 20px; font-size: 13px; line-height: 1.8; color: var(--text-mid);
+    }
+    .intro-banner b { color: var(--text-dark); }
+
+    /* ── Station tabs ── */
+    .station-row { padding: 16px 24px 0; display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+    .station-pill {
+      padding: 9px 18px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--card-bg); font-family: inherit; font-size: 13px; font-weight: 700;
+      color: var(--text-mid); cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .station-pill.active { background: var(--brown-main); color: #fff; border-color: var(--brown-main); }
+    .station-pill .cnt { font-size: 11px; opacity: 0.75; }
+
+    .content { flex: 1; overflow-y: auto; padding: 16px 24px 48px; }
+
+    /* ── Topic card ── */
+    .topic-card { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+    .topic-header { display: flex; align-items: center; gap: 12px; padding: 15px 18px; cursor: pointer; user-select: none; }
+    .topic-header:hover { background: var(--warm-white); }
+    .topic-num { width: 26px; height: 26px; border-radius: 8px; background: var(--warm-white); border: 1.5px solid var(--border); color: var(--text-mid); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .topic-name { flex: 1; font-size: 14.5px; font-weight: 700; }
+    .chevron { font-size: 11px; color: var(--text-light); transition: transform 0.2s; }
+    .topic-card.open .chevron { transform: rotate(180deg); }
+    .topic-body { display: none; border-top: 1px solid var(--border); padding: 16px 18px 18px; }
+    .topic-card.open .topic-body { display: block; }
+
+    .block-label { font-size: 11.5px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; margin-bottom: 8px; }
+    .points-list { list-style: none; margin-bottom: 16px; }
+    .points-list li { font-size: 13.5px; line-height: 1.75; padding-left: 16px; position: relative; margin-bottom: 4px; color: var(--text-dark); }
+    .points-list li::before { content: "•"; position: absolute; left: 0; color: var(--caramel); font-weight: 700; }
+
+    .why-box { background: var(--why-bg); border: 1.5px solid var(--why-border); border-radius: 12px; padding: 14px 16px; }
+    .why-title { font-size: 12px; font-weight: 700; color: var(--brown-main); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .why-list { list-style: none; }
+    .why-list li { font-size: 13.5px; line-height: 1.8; padding-left: 16px; position: relative; margin-bottom: 6px; color: var(--text-mid); }
+    .why-list li:last-child { margin-bottom: 0; }
+    .why-list li::before { content: "→"; position: absolute; left: 0; color: var(--brown-main); }
+
+    .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--brown-dark); border-top: 1px solid rgba(255,255,255,0.1); height: 60px; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; color: rgba(255,255,255,0.45); font-size: 10px; flex: 1; padding: 6px 4px; }
+    .mobile-nav-item.active { color: #fff; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding-bottom: 80px; }
+      .mobile-nav { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="avatar-sq">🌱</div>
+    <div>
+      <div class="brand-name">今年貴焿助理</div>
+      <div class="brand-sub">貴焿共好系統</div>
+    </div>
+  </div>
+  <div class="nav-list">
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">🏠</span>
+      <div><div class="nav-text">總覽</div><div class="nav-sub-text">Dashboard</div></div>
+    </a>
+    <a class="nav-item" href="training.html">
+      <span class="nav-icon">🎓</span>
+      <div><div class="nav-text">教育訓練</div><div class="nav-sub-text">店長／組長必讀</div></div>
+    </a>
+    <a class="nav-item" href="sop.html">
+      <span class="nav-icon">📖</span>
+      <div><div class="nav-text">一日流程</div><div class="nav-sub-text">時段作業手冊</div></div>
+    </a>
+    <a class="nav-item active" href="sop-manual.html">
+      <span class="nav-icon">📚</span>
+      <div><div class="nav-text">站別訓練手冊</div><div class="nav-sub-text">SOP＋為何這樣教</div></div>
+    </a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-icon">📚</span>
+    <div>
+      <div class="topbar-title">站別訓練手冊</div>
+      <div class="topbar-sub">依據今年貴焿標準作業程序（第10版）整理，逐項附上訓練員該教的理由</div>
+    </div>
+    <div class="version-badge">第10版 · 修訂 2026/07/15</div>
+  </div>
+
+  <div class="intro-banner">
+    <b>給訓練員的話：</b>這份手冊每一項都分成兩塊——「怎麼做」是原始 SOP 的標準，「為什麼這樣教」是這條規則背後真正的理由（食安、成本、口感一致、客訴預防……）。
+    教新人的時候，不要只丟步驟給他背，先讓他懂「為什麼」，他才會在遇到 SOP 沒寫到的狀況時，自己判斷該怎麼做，而不是卡住等人問。
+  </div>
+
+  <div class="station-row" id="station-row"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<nav class="mobile-nav">
+  <a class="mobile-nav-item" href="index.html"><span class="mn-icon">🏠</span><span>總覽</span></a>
+  <a class="mobile-nav-item" href="training.html"><span class="mn-icon">🎓</span><span>教育訓練</span></a>
+  <a class="mobile-nav-item active" href="sop-manual.html"><span class="mn-icon">📚</span><span>訓練手冊</span></a>
+  <a class="mobile-nav-item" href="sop.html"><span class="mn-icon">📖</span><span>一日流程</span></a>
+</nav>
+
+<script>
+  const STATIONS = [
+    {
+      id: 'counter', label: '櫃台服務', icon: '🛎️',
+      topics: [
+        {
+          title: '麵線擺放與加料原則',
+          points: [
+            '放料順序：先魚羹、肉羹，再腸仔，最後放蚵仔',
+            '配料鋪開勿堆疊，蚵仔尤其要在配料匙上先鋪開再加',
+            '配料勿蓋住香菜（配色美觀）',
+            '在鋼杯中清點好數量再加入碗中，加太多時「不得在客人面前夾掉」'
+          ],
+          why: [
+            '蚵仔最貴、最搶眼，放最上層是讓客人第一眼就感受到「有誠意」——貴的料要看得到，客人才覺得值得。',
+            '鋪開不堆疊是因為堆疊會讓實際份量看起來變少，容易被誤會「份量不夠」，也讓加料時很難算準數量。',
+            '當著客人面夾掉多加的配料，即使份量本來是對的，客人也只會記得「被拿走東西」的畫面——所以規則是先在鋼杯裡算好，不要讓客人看到被拿走的動作。',
+            '配料是食材成本裡最容易失控的地方，一匙抓不準，一天下來就是實質的利潤流失，精準計算背後是成本控制。'
+          ]
+        },
+        {
+          title: '盛麵線姿勢與技巧',
+          points: [
+            '左手拿碗傾斜70度，右手拿勺子中段',
+            '2勺以內完成，多餘麵線從碗邊俐落切斷',
+            '盛完後將碗轉180度檢查碗邊是否清潔',
+            '確認清潔、勺面朝上放、蓋上鍋蓋'
+          ],
+          why: [
+            '固定姿勢與勺數，是為了讓不同人盛出來的口感、份量都一致——連鎖店最重要的事，就是客人不管去哪一家分店，吃到的東西要一樣。',
+            '2勺內完成不只是為了效率：勾芡過的麵線攪動次數越多，澱粉會出水變稀糊，動作越少，口感越紮實。',
+            '轉180度檢查碗邊，是因為滷汁滴在碗邊，客人拿到的第一印象就是「這家店乾不乾淨」，這個小動作直接影響客人對整體衛生的信任感。'
+          ]
+        },
+        {
+          title: '麵線份量控制（內用／外帶／外送）',
+          points: [
+            '內用：距碗口0.6cm，加完料要維持表面張力',
+            '外帶：距碗口1cm；外送平台：距碗口1.3cm',
+            '客人指定「調味料多」或「加料」時，一律抓1.3cm，避免加蓋太滿',
+            '盛麵控量一次到位，避免加料後再加麵蓋住配料'
+          ],
+          why: [
+            '三種距離不是隨便訂的，是根據使用情境反推出來的：外送有路程晃動、加蓋壓力，麵線量抓太滿容易溢出或悶到變糊，內用馬上吃則可以抓到表面張力做最大值的呈現。',
+            '一次到位是效率也是品質——事後加麵會蓋住原本鋪好的配料，破壞掉前面「配色美觀、鋪開不堆疊」的努力。'
+          ]
+        },
+        {
+          title: '人員站位配置（A／B／C 模式）',
+          points: [
+            '1人：獨自完成點餐到結帳全流程',
+            '2人：A主攻點餐／盛麵／調味，B主攻POS／加配料，結帳打包共同協調',
+            '3人：A點餐盛麵調味，B加配料點POS結帳，C支援B、抽袋打包爐區',
+            '訂單較多時，盛麵人員盛足12碗（3行×4列）再一次推去左邊製餐'
+          ],
+          why: [
+            '尖峰時段最怕「大家搶著做同一件事，其他事沒人做」，明確分工讓有限人力發揮最大效率，不會手忙腳亂也不會有人閒著。',
+            '這套配置是從實際尖峰經驗提煉出來的最佳解，新人不用自己摸索「我現在該做什麼」，照著角色走就能跟上團隊節奏。'
+          ]
+        },
+        {
+          title: '調味料添加標準',
+          points: [
+            '蒜泥1平匙、香菜1小撮（約50元硬幣大不可散亂）',
+            '醋繞一小圈；胡椒煮製已加不另外加',
+            '辣椒依辣度分：微辣1/3匙、小辣1匙、中辣2匙、大辣3匙，辣椒籽與辣椒油要平均',
+            '離峰時香菜維持小碗保持新鮮，現場電扇直吹要用濕紙巾蓋保濕'
+          ],
+          why: [
+            '每一項都用具體量詞而不是「適量」，因為「適量」因人而異，會造成每次吃到的味道不一樣——客人記得的是「上次比較好吃」或「這次比較鹹」，標準化才能維持回購率。',
+            '辣椒籽和辣椒油要平均，是因為一個管辣度、一個管香氣，只舀到其中一種會讓客人覺得「不夠辣但很油」或「很辣但沒味道」。'
+          ]
+        },
+        {
+          title: '包裝方式',
+          points: [
+            '小袋裝1碗／2小碗，大袋裝2~3碗，碗與碗間須加隔板',
+            '抽袋手法：抽袋→搓開袋口→提把向外→兩段式快速上拉',
+            '大量外帶依碗數對應4斤／5斤袋組，5斤袋組打結前要用膠帶補強側邊',
+            '包裝時確認碗邊清潔，遞餐雙手奉上並對客人行注目禮'
+          ],
+          why: [
+            '隔板是為了防止碗與碗互相擠壓、湯汁灑出來——客人拿到打翻的餐點，不會怪自己拿的方式，只會怪店家包裝不好。',
+            '膠帶補強5斤袋組是真實發生過翻覆的教訓轉化成的標準，屬於「用前人犯過的錯」換來的規則，不是憑空加的步驟。'
+          ]
+        },
+        {
+          title: '邦提圈使用（外送平台）',
+          points: [
+            '同一張訂單2袋以上，先綁活結再用邦提圈串在一起',
+            '拉緊放置外送取餐區，防止外送員遺漏',
+            '與外送員核對單號、核對數量並簽名'
+          ],
+          why: [
+            '外送員拿錯餐、漏拿一部分是門店最容易被平台扣分、被客訴的來源之一。邦提圈把多袋餐點實體綁在一起，從物理上杜絕「拿走一半留一半」的失誤，比單靠口頭提醒可靠。'
+          ]
+        },
+        {
+          title: '訂單做記號方法',
+          points: [
+            '碗數少不複雜：打勾畫圈標記（切勿打叉），並口頭告知客人',
+            '碗數多複雜度高：用正楷字體標示在碗蓋上',
+            '項目多或特殊平台訂單：訂單紙與碗蓋標上對應數字'
+          ],
+          why: [
+            '目的是讓客人自己就能核對，減少「開封後才發現缺件、再回頭找店家」的糾紛，把品管的最後一關交還給客人自己確認，同時降低現場人員的記憶負擔。'
+          ]
+        },
+        {
+          title: '內用送餐服務',
+          points: [
+            '送餐時說「您的餐點好囉」，擺好後說「小心燙喔，請慢用」',
+            '上餐一律攜帶抹布，隨時擦拭桌面保持清潔',
+            '桌面未收拾時說「不好意思幫您整理一下桌面唷」'
+          ],
+          why: [
+            '固定話術＋隨身抹布，是把「服務品質」拆成每個人都能複製的具體動作，不用靠個人臨場反應去決定要不要主動關心客席，確保每一桌客人得到一樣的體驗。'
+          ]
+        },
+        {
+          title: '平台客訴處理',
+          points: [
+            '少加配料：溝通下次補回，請客人備註提醒；無法接受再請他向平台申請退費',
+            '遺漏品項：直接申請退費',
+            '系統問題請客人直接於平台聯繫，門市禮貌表達歉意',
+            '尖峰時段餐點未開始製作、外送員已到，直接告知製餐時間讓對方決定等待或轉單'
+          ],
+          why: [
+            '少配料優先選「下次補回」而不是「當場退費」，是因為退費對店家是直接成本損失，補回則讓客人有理由再回來——這是把客訴轉化成回購機會的商業邏輯，不只是安撫情緒。',
+            '固定話術（「非常抱歉給您帶來了不便，請問具體是什麼問題？」）是因為第一線人員遇到客訴容易情緒化或說錯話，先用話術穩住場面，再處理實際問題。'
+          ]
+        },
+        {
+          title: '電話禮儀與外送單登記',
+          points: [
+            '三聲內接起，致歡迎詞「今年貴焿○○店您好！」',
+            '訂單確認四要素：何時（日期星期時間）、地點、聯絡人與電話、餐點配料',
+            '調味料複雜時主動詢問是否分開包，用英文字首縮寫（C香菜/S辣椒/G蒜泥/V醋）',
+            '再次複誦數量與金額；現場排隊時取餐時間需延長10-15分鐘'
+          ],
+          why: [
+            '電話裡客人看不到表情，語氣就是唯一的服務體驗，這也是為什麼特別強調「音量適中、音調上揚」。',
+            '訂單四要素是從實際出錯案例歸納出來「漏了就會出包」的資訊，尤其外送地址、訂餐人與取餐人電話不同的狀況，是真實常發生的爭議來源，先問清楚比事後補救便宜太多。'
+          ]
+        },
+        {
+          title: '軍中單位特殊訂單',
+          points: [
+            '寫法與一般訂單相同，但需特別注意避免送錯單位',
+            '需詢問是否需統一編號收據、豬肉證明、匯款委託書',
+            '訂單前一日下午14:00後由晚班夥伴致電覆核'
+          ],
+          why: [
+            '軍中單位對合規文件（統編、豬肉證明）的要求比一般客人嚴格，缺件會影響對方單位的核銷流程；前一日電話覆核是為了在還來得及補救的時間點抓出問題，而不是送達當天才發現漏掉什麼。'
+          ]
+        },
+        {
+          title: '基本食材備貨比例',
+          points: [
+            '依鍋數（1鍋／半鍋／1/4鍋）對應碗數（44/22/10小碗）',
+            '腸子：大小腸各1/3、1/6、1/12包',
+            '蚵仔：約0.7／0.35／0.15杯'
+          ],
+          why: [
+            '標準備貨比例是為了避免「備太多浪費食材」或「備太少導致尖峰缺貨」，這兩者都直接影響當天的毛利率——備貨表其實是把成本控制寫成了操作步驟。'
+          ]
+        },
+        {
+          title: '食材存放與新鮮度判斷',
+          points: [
+            '麵線：接近半勺開始勾芡，巔峰前半小時保溫鍋維持兩鍋',
+            '魚肉羹：使用前熱水燙過，配料杯底碎屑於空檔倒入麵線拌勻',
+            '腸子：冷掉變乾硬油膩時倒回鍋中回熱恢復彈性',
+            '蚵仔：應晶瑩剔透、水份澄清；水混濁時整杯換水，1小時內售完為原則'
+          ],
+          why: [
+            '蚵仔水混濁就要換水，是食品安全的底線——蚵仔是最容易變質的食材，水質是最直接能觀察到的新鮮度指標，不能用「看起來還好」帶過。',
+            '這些都是「怎麼判斷該不該用」的經驗值，寫下來是為了讓新人不用等吃壞肚子的客訴才學會怎麼看新鮮度。'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'stove', label: '爐台區', icon: '🔥',
+      topics: [
+        {
+          title: '滷腸仔',
+          points: [
+            '一組：小腸2600g＋大腸整包；依比例可縮至半組、1/4組',
+            '先倒小腸（已有滷汁）再倒大腸，攪拌10圈後火力1悶1-2分鐘關火',
+            '收店：腸仔撈起，滷汁冰起來隔天覆熱使用',
+            '每滷一組後，滷汁倒置集中丟棄，不循環使用'
+          ],
+          why: [
+            '先小腸後大腸，是讓已經有滷汁的小腸把味道帶給大腸，兩者才能均勻入味。',
+            '隔夜滷汁覆熱再用是善用食材、控制成本，但每滷一組就集中丟棄，是為了避免滷汁反覆使用造成品質劣化、產生風味或衛生問題——省成本跟顧食安之間的那條線，SOP已經幫忙畫好了。'
+          ]
+        },
+        {
+          title: '拌蚵仔',
+          points: [
+            '一杯洗好瀝乾的蚵仔配四平匙地瓜粉均勻覆蓋',
+            '由外緣向中心翻動，手不刻意接觸乾粉',
+            '檢查是否結塊，特大尺寸蚵仔優先用於單點燙鮮蚵'
+          ],
+          why: [
+            '地瓜粉均勻覆蓋是燙蚵時外皮Q彈口感的關鍵，粉太少燙出來會軟爛，太多會結塊變不好吃，這個粉量是反覆試驗出來的最佳值。',
+            '手不直接碰乾粉是衛生考量，避免手上濕氣、油脂讓粉提前結塊，也減少直接接觸生食的機會。'
+          ]
+        },
+        {
+          title: '泡麵線',
+          points: [
+            '籃子十字擺法，倒入時袋子提高避免弄濕發臭',
+            '中麵線放木耳50克、筍絲100克，計時2:30分／3分（依鍋量、店長制定）',
+            '小麵線按比例減少木耳筍絲'
+          ],
+          why: [
+            '計時是為了讓麵線吸水膨脹到一致的程度——泡太短偏硬，泡太久會爛掉不成型，這個時間是反覆試驗出的最佳值，不是隨口訂的數字。'
+          ]
+        },
+        {
+          title: '煮麵線勾芡（核心技術）',
+          points: [
+            '大滾沸騰計時10-15分鐘，倒入醬料前先確認鍋中未重複倒過',
+            '勾芡水比例：1鍋水1000cc粉350克，半鍋水500cc粉175克，1/4鍋水250cc粉87.5克',
+            '確認大滾後關火，湯勺順時針繞圈形成漩渦，中火將勾芡水從漩渦外圍慢慢倒入快快攪',
+            '緊急狀況：轉最小火悶10分鐘；不急：關火悶15分鐘'
+          ],
+          why: [
+            '這是整份SOP技術含量最高的一段，直接決定「貴焿麵線」的招牌口感。勾芡水倒在鍋中心容易結塊、沸騰不夠會糊化不完全——這些都是真實會發生的失敗案例，寫進SOP是為了讓新手不用自己踩一次坑才學會。',
+            '「慢慢倒快快攪」是手法上的節奏口訣，倒太快會瞬間結塊，攪太慢芡水會沉底燒焦，這個節奏本身就是防止失敗的技術。'
+          ]
+        },
+        {
+          title: '麵線燒焦預防',
+          points: [
+            '下麵線水位不足卻開大火會乾燒',
+            '悶好的麵線靜置過久、鍋底澱粉沉澱，未攪拌就開大火會燒焦',
+            '醬料未拌勻就開火也會燒焦',
+            '發現燒焦立即換鍋'
+          ],
+          why: [
+            '把三種燒焦成因寫清楚，是讓新人知道「為什麼要先攪拌再開火」，而不是死記「開火前先攪拌」這句話卻不知道不攪會怎樣——理解原因才會在趕時間時仍然記得做這一步。',
+            '燒焦立即換鍋而不是撈掉焦的部分將就用，是因為焦味會擴散到整鍋湯頭，影響的是當天所有出餐的口碑。'
+          ]
+        },
+        {
+          title: '開店流程',
+          points: [
+            '前場：開水電瓦斯→接水同時開POS/平台設備→加入麵線開大火→蒸米血→燙蚵→滷腸子',
+            '早上5:55前要完成一鍋勾好的麵線',
+            '後場：客桌椅定位→清洗保溫鍋→調配抹布浸泡水→排定工作分配表'
+          ],
+          why: [
+            '固定順序是為了不遺漏任何一項準備工作；「5:55要完成一鍋勾好的麵線」這種卡點時間，是回推開店時間算出的必要進度，遲了就會開天窗，讓開店變成「用時間倒推」而不是「憑感覺趕」。'
+          ]
+        },
+        {
+          title: '打烊流程',
+          points: [
+            '打烊前2-3小時：清潔客席、補貨（麵線醬料地瓜粉魚肉羹大小腸退冰）、判斷收店煮麵量',
+            '打烊前1小時：刷洗客席工作區、結算營收現金盤點、回傳交班結帳條、關閉所有設備電源'
+          ],
+          why: [
+            '打烊分階段是時間管理：越早該做的先做完，最後只留下不能提早做的事（如結算當日營收），避免打烊拖太晚影響隔天人力，也避免匆忙中漏掉關電源、關瓦斯這類安全性動作。'
+          ]
+        },
+        {
+          title: '單點品項製作（燙蚵／滷腸／豆腐／米血）',
+          points: [
+            '麻辣堅果豆腐：對切、醬油膏均勻覆蓋7克、麻辣堅果均勻覆蓋13克，勿放超過24小時',
+            '滷鴨米血：淨重170~175克立體堆放、花生粉10克均勻覆蓋，特殊調味料不主動提問，堅果辣椒不提供添加'
+          ],
+          why: [
+            '重量規格化是成本與份量一致性的把關；豆腐「勿放超過24小時」是食安提醒——切開後暴露面積增加，變質風險提高，這條規則背後是實際會發生的食安風險，不是隨口寫的保守建議。'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'prep', label: '後場備料', icon: '🧺',
+      topics: [
+        {
+          title: '包辣椒調味料',
+          points: [
+            '蒜泥、醋：大包1號裝滿、小包0號裝滿',
+            '香菜：大包4號裝30g、小包1號裝適量',
+            '辣椒：大包1號裝15g、小包0號裝8g，辣椒籽與辣椒油要平均'
+          ],
+          why: [
+            '標準克數讓每一包的辣度、鹹度一致，客人不會拿到「這包特別辣」或「特別淡」的隨機體驗，這是把調味的公平感做到外帶包裝上。'
+          ]
+        },
+        {
+          title: '剪大腸',
+          points: [
+            '攤開約50元硬幣大小，10片約33±3g為標準',
+            '發現異物須排除確認無遺漏未剪的腸子才裝袋',
+            '一包約1500克分裝冷凍保存'
+          ],
+          why: [
+            '大腸來自屠宰場，可能混有小石頭等異物，這條規則是食安與顧客安全的最後把關，必須逐一檢查，不能因為趕工跳過。'
+          ]
+        },
+        {
+          title: '秤地瓜粉與麵線',
+          points: [
+            '地瓜粉：1鍋350g、半鍋175g、1/4鍋87.5g',
+            '麵線：1鍋1760g、半鍋880g、1/4鍋440g（PE 5斤袋，每袋約分裝3.5包）',
+            '分裝10大袋須於30分鐘內完成（含收拾），太舊或潮濕的袋子不可用'
+          ],
+          why: [
+            '精準秤重是勾芡成功與否的前提，粉量不對，前面煮麵線的所有技巧都會失效；30分鐘完成的時限是效率管理，避免備料佔用太多人力時間，也是對新人的具體練習目標。'
+          ]
+        },
+        {
+          title: '洗蚵',
+          points: [
+            '漏盆加冰水蓋過蚵仔1cm，用手撥動並目視觸摸挑殼',
+            '洗蚵時間需控制在7分鐘/包，一律不戴手套',
+            '洗完水槽周圍要刷洗乾淨，避免吸引蒼蠅'
+          ],
+          why: [
+            '不戴手套是為了用手感直接判斷蚵仔的碎殼與異物，戴手套會降低觸覺敏感度，反而容易漏檢；洗太久鮮度會下降，所以時間限制本身就是品質控制的一環，不只是效率要求。'
+          ]
+        },
+        {
+          title: '蒸鴨米血',
+          points: [
+            '底部放架子，1/3包搭配200熱水、半包搭配250熱水',
+            '蒸好後上下攪拌均勻受熱，補蓋內鍋蓋維持保溫不失水分'
+          ],
+          why: [
+            '補蓋內鍋蓋維持保溫、不讓水分蒸發，是因為米血一旦變乾口感會變柴，這個小動作是在出餐前就先把口感顧好，而不是等客人吃到才發現問題。'
+          ]
+        },
+        {
+          title: '洗切香菜',
+          points: [
+            '剪去根部粗梗，流動水搓洗根部去泥沙，挑除枯黃爛葉',
+            '風扇計時吹10分鐘翻一次面，梗切0.6cm、葉切1cm段',
+            '前處理完成放保鮮盒只裝8分滿，避免壓壞香菜'
+          ],
+          why: [
+            '只裝8分滿是避免香菜互相擠壓變黑變爛，香菜是整碗麵線唯一的綠色點綴，賣相直接影響「這碗看起來新不新鮮」的第一印象。'
+          ]
+        },
+        {
+          title: '調蒜泥',
+          points: [
+            '蒜泥600g（一斤）配飲用水600cc視情況微調',
+            '分次加水攪拌至最適稠度，冷藏保存'
+          ],
+          why: [
+            '分次加水是因為蒜泥的含水量每批不完全一樣，一次加滿容易過稀，這是靠手感調整、但比例先給一個基準值，讓新人不會亂加水加到蒜泥變成蒜水。'
+          ]
+        },
+        {
+          title: '木耳處理',
+          points: [
+            '乾木耳泡水8分滿密隔林壓住冷藏，發泡4小時',
+            '搓洗換水、剪去蒂頭，井字型剪法切成不超過8~10cm',
+            '裝瓶標記日期冷藏'
+          ],
+          why: [
+            '井字型剪法與長度限制是為了讓木耳跟麵線一起入口時方便咀嚼，不會有整條木耳卡在嘴裡的體驗，這是口感設計，不只是切菜步驟。'
+          ]
+        },
+        {
+          title: '裝筍',
+          points: [
+            '檢查外觀是否膨脹（發酵異常），異常需聯繫廠商退貨並記錄批號',
+            '敲開桶蓋倒出瀝乾，目視剔除過粗過老的筍絲，裝瓶標記日期冷藏'
+          ],
+          why: [
+            '外觀膨脹代表可能發酵變質，這一步是把食安檢查放在「用之前」而不是「客人吃到才發現」，記錄批號則是萬一真的出問題，能快速回溯是哪一批貨的責任歸屬。'
+          ]
+        },
+        {
+          title: '廠商進貨驗貨',
+          points: [
+            '魚肉羹1顆6g為標準；蚵瀝水後5斤約2950g',
+            '糖心蛋注意外觀破損，蛋黃溢漏當天拍照回傳廠商',
+            '先進先出，舊庫存移出後新品再放最頂端',
+            '未急速冷凍的魚肉羹容易有孔洞口感不佳，需交叉擺放並回報主管'
+          ],
+          why: [
+            '先進先出加上重量抽查，是把守食材新鮮度與供應商誠信的第一道關卡，一旦這關鬆懈，後面所有的口感標準都會失真——這一步做不好，前面教的所有盛麵、調味標準都會白費。'
+          ]
+        },
+        {
+          title: '割紙板',
+          points: [
+            '4斤袋用紙板裁23cm×23cm，5斤袋用19.5cm×38cm',
+            '3碗袋裝用紙板裁12cm×12cm',
+            '美工刀不利時折斷刀頭保持鋒利，刀片用面紙包裹後丟棄'
+          ],
+          why: [
+            '尺寸標準化是為了讓紙板剛好貼合袋子底部避免湯汁外漏，也確保不同人裁切出來的用料一致，不會有的太大浪費紙箱、有的太小沒撐住底部。'
+          ]
+        },
+        {
+          title: '清洗抹布',
+          points: [
+            '殘渣沖洗乾淨後入水桶，洗衣粉3匙、漂白水半瓶蓋，水蓋過抹布浸泡2小時',
+            '壓著抹布來回搓洗至水清澈，晾乾'
+          ],
+          why: [
+            '抹布是接觸食物檯面最頻繁的物品，消毒流程不是形式，是實際的衛生把關——浸泡2小時是漂白水發揮殺菌效果所需的時間，時間不夠等於消毒沒做完整。'
+          ]
+        }
+      ]
+    }
+  ];
+
+  let currentStation = 'counter';
+  let openTopics = {};
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderStationRow() {
+    const el = document.getElementById('station-row');
+    el.innerHTML = STATIONS.map(st => `
+      <button class="station-pill${st.id === currentStation ? ' active' : ''}" onclick="setStation('${st.id}')">
+        <span>${st.icon}</span><span>${st.label}</span><span class="cnt">${st.topics.length}項</span>
+      </button>`).join('');
+  }
+
+  function renderContent() {
+    const el = document.getElementById('content');
+    const st = STATIONS.find(s => s.id === currentStation);
+    el.innerHTML = st.topics.map((t, i) => {
+      const key = st.id + '-' + i;
+      const isOpen = openTopics[key];
+      return `
+        <div class="topic-card${isOpen ? ' open' : ''}">
+          <div class="topic-header" onclick="toggleTopic('${key}')">
+            <div class="topic-num">${i + 1}</div>
+            <div class="topic-name">${esc(t.title)}</div>
+            <div class="chevron">▼</div>
+          </div>
+          <div class="topic-body">
+            <div class="block-label">怎麼做</div>
+            <ul class="points-list">${t.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+            <div class="why-box">
+              <div class="why-title">💡 為什麼這樣教</div>
+              <ul class="why-list">${t.why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function setStation(id) {
+    currentStation = id;
+    renderStationRow();
+    renderContent();
+  }
+
+  function toggleTopic(key) {
+    openTopics[key] = !openTopics[key];
+    renderContent();
+  }
+
+  renderStationRow();
+  renderContent();
+</script>
+
+<script>
+  if (new URLSearchParams(location.search).get('from') === 'staff') {
+    document.querySelector('.nav-list').innerHTML = `
+      <a class="nav-item" href="staff.html">
+        <span class="nav-icon">←</span>
+        <div><div class="nav-text">返回夥伴互動入口</div></div>
+      </a>`;
+    document.querySelector('.mobile-nav').innerHTML = `
+      <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>`;
+  }
+</script>
+
+</body>
+</html>

@@ -140,10 +140,6 @@
       <span class="nav-icon">🎓</span>
       <div><div class="nav-text">教育訓練</div><div class="nav-sub">店長／組長必讀</div></div>
     </a>
-    <a class="nav-item" href="scripts.html">
-      <span class="nav-icon">✍️</span>
-      <div><div class="nav-text">Scripts</div><div class="nav-sub">腳本庫</div></div>
-    </a>
   </div>
 </nav>
 
@@ -164,6 +160,14 @@
         <div>
           <div class="article-title">一日作業流程</div>
           <div class="article-desc">開店到打烊的標準作業手冊</div>
+        </div>
+        <div class="article-arrow">→</div>
+      </a>
+      <a class="article-card" href="sop-manual.html">
+        <div class="article-icon">📚</div>
+        <div>
+          <div class="article-title">站別訓練手冊</div>
+          <div class="article-desc">櫃台／爐台／後場逐項標準，附「為什麼這樣教」</div>
         </div>
         <div class="article-arrow">→</div>
       </a>
@@ -201,6 +205,7 @@
     document.querySelector('.mobile-nav').innerHTML = `
       <a class="mobile-nav-item active" href="staff.html"><span class="mn-icon">←</span><span>返回入口</span></a>`;
     document.querySelectorAll('.article-card[href="sop.html"]').forEach(a => a.href = 'sop.html?from=staff');
+    document.querySelectorAll('.article-card[href="sop-manual.html"]').forEach(a => a.href = 'sop-manual.html?from=staff');
   }
 </script>
 
